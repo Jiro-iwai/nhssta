@@ -1,0 +1,10 @@
+###
+### delay definition file for arc_property.py
+###
+#
+#cell   in   out   Delaytype  (delay_params)
+#
+inv      0    y     uniform  (9.0, 21.0)
+#
+not      0    y     uniform  (9.0, 21.0)
+#

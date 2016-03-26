@@ -1,0 +1,34 @@
+# ex2
+# 1 inputs
+# 3 outputs
+# 20 inverter
+# 20 gates ( 20 INV )
+
+INPUT(A)
+
+OUTPUT(11)
+OUTPUT(20)
+OUTPUT(Y)
+
+11 = INV(A)
+12 = INV(11)
+13 = INV(12)
+14 = INV(13)
+15 = INV(14)
+16 = INV(15)
+17 = INV(16)
+18 = INV(17)
+19 = INV(18)
+20 = INV(19)
+21 = INV(20)
+22 = INV(21)
+23 = INV(22)
+24 = INV(23)
+25 = INV(24)
+26 = INV(25)
+27 = INV(26)
+28 = INV(27)
+29 = INV(28)
+Y  = INV(29)
+
+

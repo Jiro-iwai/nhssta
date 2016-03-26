@@ -1,0 +1,35 @@
+#! /bin/sh
+
+NHSSTA=../src/nhssta
+
+rm -f result1_
+$NHSSTA -l -c -d my.dlib -b my.bench | grep -v "^#" > result1_
+diff -c result1_ result1
+
+rm -f result2_
+$NHSSTA -l -c -d ex4_gauss.dlib -b ex4.bench | grep -v "^#" > result2_
+diff -c result2_ result2
+
+rm -f result3_
+$NHSSTA -l -c -d ex4_gauss.dlib -b s27.bench | grep -v "^#" > result3_
+diff -c result3_ result3
+
+rm -f result4_
+$NHSSTA -l -d gaussdelay.dlib -b s298.bench | grep -v "^#" > result4_
+diff -c result4_ result4
+
+rm -f result5_
+$NHSSTA -l -d gaussdelay.dlib -b s344.bench | grep -v "^#" > result5_
+diff -c result5_ result5
+
+rm -f result6_
+$NHSSTA -l -d gaussdelay.dlib -b s820.bench | grep -v "^#" > result6_
+diff -c result6_ result6
+
+rm -f result7_
+$NHSSTA -l -c -d ex4_gauss.dlib -b ex3.bench | grep -v "^#" > result7_
+diff -c result7_ result7
+
+rm -f result8_
+$NHSSTA -l -c -d dos.dlib -b dos.bench | grep -v "^#" > result8_
+diff -c result8_ result8

@@ -1,0 +1,25 @@
+###
+### delay definition file for arc_property.py
+###
+#
+#cell   in   out   Delaytype  (delay_params)
+#
+inv      0    y     const  (15.0)
+#
+not      0    y     const  (15.0)
+#
+nand     0    y     const  (24.0)
+nand     1    y     const  (20.0)
+#
+and      0    y     const  (38.0)
+and      1    y     const  (41.0)
+#
+nor      0    y     const  (22.0)
+nor      1    y     const  (22.0)
+#
+or       0    y     const  (29.0)
+or       1    y     const  (32.0)
+#
+dff      ck   q     const  (30.0)
+dff      d    q     const  (0.0)
+#

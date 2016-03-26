@@ -1,0 +1,33 @@
+###
+### delay definition file for arc_property.py
+###
+#
+#cell   in   out   Delaytype  (delay_params)
+#
+inv      0    y     gauss  (15.0, 2.0)
+#
+not      0    y     gauss  (15.0, 2.0)
+#
+nand     0    y     gauss  (24.0, 3.0)
+nand     1    y     gauss  (20.0, 3.0)
+nand     2    y     gauss  (20.0, 3.0)
+nand     3    y     gauss  (20.0, 3.0)
+#
+and      0    y     gauss  (38.0, 4.0)
+and      1    y     gauss  (41.0, 4.0)
+and      2    y     gauss  (41.0, 4.0)
+and      3    y     gauss  (41.0, 4.0)
+#
+nor      0    y     gauss  (22.0, 3.0)
+nor      1    y     gauss  (22.0, 3.0)
+nor      2    y     gauss  (22.0, 3.0)
+nor      3    y     gauss  (22.0, 3.0)
+#
+or       0    y     gauss  (29.0, 3.5)
+or       1    y     gauss  (32.0, 3.5)
+or       2    y     gauss  (32.0, 3.5)
+or       3    y     gauss  (32.0, 3.5)
+#
+dff      ck   q     gauss  (30.0, 3.5)
+dff      d    q     const  (0.0)
+#

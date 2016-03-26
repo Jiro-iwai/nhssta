@@ -1,0 +1,41 @@
+###
+### delay definition file for arc_property.py
+###
+#
+#cell   in   out   Delaytype  (delay_params)
+#
+inv      0    y     uniform  (17.0, 23.0)
+#
+not      0    y     uniform  (17.0, 23.0)
+#
+nand     0    y     uniform  (27.0, 33.0)
+nand     1    y     uniform  (27.0, 35.0)
+nand     2    y     uniform  (27.0, 37.0)
+nand     3    y     uniform  (27.0, 39.0)
+nand     4    y     uniform  (27.0, 41.0)
+nand     5    y     uniform  (27.0, 43.0)
+#
+and      0    y     uniform  (37.0, 43.0)
+and      1    y     uniform  (37.0, 45.0)
+and      2    y     uniform  (37.0, 47.0)
+and      3    y     uniform  (37.0, 49.0)
+and      4    y     uniform  (37.0, 51.0)
+and      5    y     uniform  (37.0, 53.0)
+#
+nor      0    y     uniform  (34.0, 38.0)
+nor      1    y     uniform  (34.0, 40.0)
+nor      2    y     uniform  (34.0, 42.0)
+nor      3    y     uniform  (34.0, 44.0)
+nor      4    y     uniform  (34.0, 46.0)
+nor      5    y     uniform  (34.0, 48.0)
+#
+or       0    y     uniform  (43.0, 46.0)
+or       1    y     uniform  (43.0, 46.5)
+or       2    y     uniform  (43.0, 46.0)
+or       3    y     uniform  (43.0, 46.5)
+or       4    y     uniform  (43.0, 46.0)
+or       5    y     uniform  (43.0, 46.5)
+#
+dff      ck   q     gauss    (28.0, 3.0)
+dff      d    q     const  (0.0)
+#

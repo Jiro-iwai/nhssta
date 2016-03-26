@@ -1,0 +1,18 @@
+# ex2
+# 3 inputs
+# 1 outputs
+# 5 gates ( 1 NAND, 2 INV, 1 OR, 1 AND )
+
+INPUT(A)
+INPUT(B)
+INPUT(C)
+
+OUTPUT(Y)
+
+N1 = NAND(A, N2)
+N2 = INV(B)
+N3 = INV(N1)
+N4 = OR(N2, C)
+Y  = AND(N3, N4)
+
+
