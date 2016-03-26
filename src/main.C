@@ -2,12 +2,11 @@
 // Author: IWAI Jiro
 
 #include <iostream>
-#include <boost/spirit/include/classic.hpp>
-
+#include <boost/spirit.hpp>
 #include "Ssta.h"
 
 using namespace std;
-using namespace boost::spirit::qi;
+using namespace boost::spirit;
 
 void usage(const char* first, const char* last) {
     cerr << "usage: nhssta" << endl;
