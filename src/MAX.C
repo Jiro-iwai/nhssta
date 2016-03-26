@@ -1,10 +1,8 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
-// $Id: MAX.C,v 1.3 2007/08/14 18:01:20 jiro Exp $
 
 #include <cassert>
 #include <cmath>
-
 #include "MAX.h"
 #include "SUB.h"
 #include "Covariance.h"

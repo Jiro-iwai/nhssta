@@ -1,6 +1,5 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
-// $Id: SUB.C,v 1.1 2007/08/14 18:01:20 jiro Exp $
 
 #include "SUB.h"
 #include "Covariance.h"

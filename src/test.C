@@ -1,15 +1,9 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
-// $Id: test.C,v 1.4 2008/11/16 17:27:18 jiro Exp $
 
 #include <cmath>
 #include <iostream>
 #include <vector>
-
-//#include "Statistics.h"
-//#include "Gate.h"
-//#include "Parser.h"
-//#include "Ssta.h"
 #include "Expression.h"
 
 namespace Nh {

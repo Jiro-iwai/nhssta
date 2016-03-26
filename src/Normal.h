@@ -1,6 +1,5 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
-// $Id: Normal.h,v 1.2 2006/06/18 16:11:03 jiro Exp $
 
 #ifndef NORMAL__H
 #define NORMAL__H
@@ -15,30 +14,30 @@ namespace RandomVariable {
     class _Normal_ : public _RandomVariable_ {
     public:
 
-	_Normal_();
+		_Normal_();
 
-	_Normal_
-	(
-	 double mean,
-	 double variance
-	 );
+		_Normal_
+		(
+			double mean,
+			double variance
+			);
 
-	virtual ~_Normal_();
+		virtual ~_Normal_();
 
-	Normal clone() const;
+		Normal clone() const;
 
     private:
 
-	virtual const RandomVariable& left() const;
-	virtual const RandomVariable& right() const;
+		virtual const RandomVariable& left() const;
+		virtual const RandomVariable& right() const;
 
     };
 
     class Normal : public SmartPtr<_Normal_> {
     public:
-	Normal() : SmartPtr<_Normal_>(0) {}
-	Normal( double mean, double variance ) :
-	    SmartPtr<_Normal_>( new _Normal_(mean,variance) ) {}
+		Normal() : SmartPtr<_Normal_>(0) {}
+		Normal( double mean, double variance ) :
+			SmartPtr<_Normal_>( new _Normal_(mean,variance) ) {}
     };
 }
 

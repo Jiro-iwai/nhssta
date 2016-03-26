@@ -1,11 +1,9 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
-// $Id: RandomVariable.C,v 1.3 2006/12/10 14:36:17 jiro Exp $
 
 #include <cassert>
 #include <cmath>
 #include <iostream>
-
 #include "RandomVariable.h"
 
 namespace RandomVariable {

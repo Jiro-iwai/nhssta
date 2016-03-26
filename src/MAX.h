@@ -1,6 +1,5 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
-// $Id: MAX.h,v 1.2 2006/06/18 16:11:03 jiro Exp $
 
 #ifndef MAX__H
 #define MAX__H
@@ -17,17 +16,17 @@ namespace RandomVariable {
 
     public:
 
-	OpMAX( const RandomVariable& left, const RandomVariable& righ );
-	virtual ~OpMAX();
+		OpMAX( const RandomVariable& left, const RandomVariable& righ );
+		virtual ~OpMAX();
 
-	const RandomVariable& max0() const { return max0_; }
+		const RandomVariable& max0() const { return max0_; }
 
     private:
 
-	virtual double calc_mean() const ;
-	virtual double calc_variance() const;
+		virtual double calc_mean() const ;
+		virtual double calc_variance() const;
 
-	RandomVariable max0_;
+		RandomVariable max0_;
     };
 
     RandomVariable MAX(const RandomVariable& a, const RandomVariable& b);
@@ -37,14 +36,14 @@ namespace RandomVariable {
     class OpMAX0 : public _RandomVariable_ {
     public:
 
-	OpMAX0( const RandomVariable& left );
-	virtual ~OpMAX0();
+		OpMAX0( const RandomVariable& left );
+		virtual ~OpMAX0();
 
     private:
 
-	virtual double calc_mean() const ;
-	virtual double calc_variance() const;
-	virtual const RandomVariable& right() const;
+		virtual double calc_mean() const ;
+		virtual double calc_variance() const;
+		virtual const RandomVariable& right() const;
     };
 
     RandomVariable MAX0(const RandomVariable& a);

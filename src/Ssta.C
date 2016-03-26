@@ -1,13 +1,11 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro	     
-// $Id: Ssta.C,v 1.5 2007/08/14 18:01:20 jiro Exp $
 
 #include <iostream>
 #include <cassert>
 #include <cmath>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
-
 #include "Util.h"
 #include "Ssta.h"
 #include "ADD.h"

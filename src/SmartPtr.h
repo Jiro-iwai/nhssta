@@ -1,6 +1,5 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro
-// $Id: SmartPtr.h,v 1.1.1.1 2006/06/10 17:59:11 jiro Exp $
 
 #ifndef SMART_PTR__H
 #define SMART_PTR__H
@@ -18,36 +17,36 @@ class SmartPtr { // 汎用 smart pointer
 public:
 
     SmartPtr( T* pointee = 0 )
-	: pointee_(pointee){ refer(); }
+		: pointee_(pointee){ refer(); }
 
     SmartPtr( const SmartPtr& org )
-	: pointee_(org.pointee_){ refer(); }
+		: pointee_(org.pointee_){ refer(); }
 
     virtual ~SmartPtr(){ release(); }
 
     SmartPtr& operator = ( const SmartPtr& rhs ){
-	if( pointee_ == rhs.pointee_ )
-	    return (*this);
-	release();
-	pointee_ = rhs.pointee_;
-	refer();
-	return (*this);
+		if( pointee_ == rhs.pointee_ )
+			return (*this);
+		release();
+		pointee_ = rhs.pointee_;
+		refer();
+		return (*this);
     }
 
     bool operator == ( const SmartPtr& rhs ) const {
-	return ( pointee_ == rhs.pointee_ );
+		return ( pointee_ == rhs.pointee_ );
     }
 
     bool operator != ( const SmartPtr& rhs ) const {
-	return ( pointee_ != rhs.pointee_ );
+		return ( pointee_ != rhs.pointee_ );
     }
 
     virtual bool operator < ( const SmartPtr& rhs ) const {
-	return ( pointee_ < rhs.pointee_ );
+		return ( pointee_ < rhs.pointee_ );
     }
 
     virtual bool operator > ( const SmartPtr& rhs ) const {
-	return ( pointee_ > rhs.pointee_ );
+		return ( pointee_ > rhs.pointee_ );
     }
 
     T* operator -> () const { return (pointee_); }
@@ -56,22 +55,22 @@ public:
 
     template < class U >
     operator SmartPtr<U>() const { // 型変換
-	U* u = dynamic_cast<U*>(pointee_); ////
-	if( u == 0 )
-	    throw SmartPtrException("SmartPtr: failed to dynamic cast");
-	return SmartPtr<U>(u);
+		U* u = dynamic_cast<U*>(pointee_); ////
+		if( u == 0 )
+			throw SmartPtrException("SmartPtr: failed to dynamic cast");
+		return SmartPtr<U>(u);
     }
 
 private:
 
     void refer(){
-	if( pointee_ )
-	    pointee_->refer();
+		if( pointee_ )
+			pointee_->refer();
     }
 
     void release(){
-	if( pointee_ )
-	    pointee_->release();
+		if( pointee_ )
+			pointee_->release();
     }
 
     T* pointee_; // 実体
@@ -86,8 +85,8 @@ public:
     void refer() { ++counter_; }
 
     void release() {
-	if( --counter_ == 0 )
-	    delete this;
+		if( --counter_ == 0 )
+			delete this;
     }
 
     int refCount() const { return (counter_); }
