@@ -1,6 +1,5 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro
-// $Id: Parser.C,v 1.1.1.1 2006/06/10 17:59:11 jiro Exp $
 
 #include "Parser.h"
 
@@ -75,5 +74,3 @@ void Parser::checkEnd(){
     if( token_ != end() )
         unexpectedToken_(*token_);
 }
-
-

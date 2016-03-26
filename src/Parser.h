@@ -1,6 +1,5 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro
-// $Id: Parser.h,v 1.1.1.1 2006/06/10 17:59:11 jiro Exp $
 
 #ifndef PARSER__H
 #define PARSER__H
@@ -22,19 +21,19 @@ public:
 
     class exception {
     public:
-	exception(const std::string& what): what_(what) {}
-	const std::string& what() { return what_; }
+		exception(const std::string& what): what_(what) {}
+		const std::string& what() { return what_; }
     private:
-	std::string what_ ;
+		std::string what_ ;
     };
 
     Parser
     (
-     const std::string& file,
-     const char begin_comment,
-     const char* keep_separator,
-     const char* drop_separator = " \t"
-     );
+		const std::string& file,
+		const char begin_comment,
+		const char* keep_separator,
+		const char* drop_separator = " \t"
+		);
 
     ~Parser() { delete tokenizer_; }
 
@@ -44,16 +43,16 @@ public:
 
     template < class U >
     void getToken( U& u )
-    {
-	checkTermination();
-	try {
-	    u = boost::lexical_cast<U>(*token_);
-	} catch ( boost::bad_lexical_cast& e ){
-	    unexpectedToken_(*token_);
-	}
-	pre_ = *token_;
-	token_++;
-    }
+		{
+			checkTermination();
+			try {
+				u = boost::lexical_cast<U>(*token_);
+			} catch ( boost::bad_lexical_cast& e ){
+				unexpectedToken_(*token_);
+			}
+			pre_ = *token_;
+			token_++;
+		}
 
     void checkSepalator( char sepalator );
     void checkEnd();

@@ -1,11 +1,9 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
-// $Id: Covariance.C,v 1.5 2007/08/14 18:01:21 jiro Exp $
 
 #include <cassert>
 #include <cmath>
 #include <typeinfo>
-
 #include "Statistics.h"
 #include "Util.h"
 

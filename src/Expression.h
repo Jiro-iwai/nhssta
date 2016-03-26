@@ -1,6 +1,5 @@
 // -*- c++ -*-
 // Author: Jiro Iwai
-// $Id: Expression.h,v 1.4 2006/06/18 16:11:48 jiro Exp $
 
 #ifndef EXPRESSION__H
 #define EXPRESSION__H
@@ -14,7 +13,7 @@
 class ExpressionException {
 public:
     ExpressionException(const std::string& what): what_(what) {
-	assert(0);
+		assert(0);
     }
     const std::string& what() { return what_; }
 private:
@@ -70,15 +69,15 @@ public:
 protected:
 
     enum Op {
-	CONST = 0,
-	PARAM, 
-	PLUS,
-	MINUS,
-	MUL,
-	DIV,
-	POWER,
-	EXP,
-	LOG
+		CONST = 0,
+		PARAM, 
+		PLUS,
+		MINUS,
+		MUL,
+		DIV,
+		POWER,
+		EXP,
+		LOG
     };
 
     static void print_all();
@@ -89,10 +88,10 @@ protected:
 
     Expression_
     (
-     const Op& op, 
-     const Expression& left, 
-     const Expression& right
-     );
+		const Op& op, 
+		const Expression& left, 
+		const Expression& right
+		);
 
     virtual ~Expression_();
 
