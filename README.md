@@ -98,7 +98,7 @@ $ nhssta -d [.dlibファイル] -b [.benchファイル] [-l] [-c]
 
 ```
 $ ../src/nhssta -l -c -d ex4_gauss.dlib -b ex4.bench 
-nhssta 0.0.8 (Fri May 26 00:34:30 2006)
+nhssta 0.0.8 (Sat Jan 21 01:39:32 2017)
 
 #
 # LAT
