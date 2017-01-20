@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 
 all: 
-	./nhssta_test
+	sh ./nhssta_test
 
 clean:
 	rm -f *_
