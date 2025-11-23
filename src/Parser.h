@@ -8,14 +8,12 @@
 #include <fstream>
 #include <stdexcept>
 #include <type_traits>
-#include <boost/tokenizer.hpp>
+#include "Tokenizer.h"
 
 class Parser {
 
 private:
 
-    typedef boost::char_separator<char> Separator;
-    typedef boost::tokenizer<Separator> Tokenizer;
     typedef Tokenizer::iterator Token;
 
 public:
@@ -99,7 +97,8 @@ private:
     std::string file_;
     std::string line_;
     std::ifstream infile_;
-    Separator sepalator_;
+    std::string drop_separator_;
+    std::string keep_separator_;
     const char begin_comment_;
     Tokenizer* tokenizer_;
     std::string pre_;
