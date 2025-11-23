@@ -109,7 +109,7 @@ coverage: coverage-clean
 		echo "Generating HTML coverage report with lcov..."; \
 		lcov --capture --directory . --directory ../test --output-file $(COVERAGE_DIR)/coverage.info --no-external --ignore-errors inconsistent,unsupported,format,source 2>&1 | grep -E "(Found|Scanning|Writing)" | head -3 || true; \
 		if [ -f "$(COVERAGE_DIR)/coverage.info" ] && [ -s "$(COVERAGE_DIR)/coverage.info" ]; then \
-			genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/html --ignore-errors inconsistent,unsupported,format,source 2>&1 | tail -2 || true; \
+			genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/html --ignore-errors inconsistent,unsupported,format,source,category 2>&1 | tail -2 || true; \
 			echo "Coverage report generated in $(COVERAGE_DIR)/html/index.html"; \
 		else \
 			echo "No coverage data found. Run tests first."; \
