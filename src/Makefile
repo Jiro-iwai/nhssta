@@ -1,5 +1,16 @@
 SHELL = /bin/sh
 
+# Verbose mode: set V=1 to see full compilation commands
+# Usage: make V=1 test
+V ?= 0
+ifeq ($(V),1)
+    Q :=
+    ECHO := @echo
+else
+    Q := @
+    ECHO := @echo
+endif
+
 CXX ?= g++
 CXXFLAGS = -g -Wall -std=c++17 
 #INCLUDE = -I/usr/include/boost-1_33_1
@@ -38,10 +49,12 @@ LIB_OBJS = Covariance.o MAX.o SUB.o Normal.o \
 	Parser.o Ssta.o Expression.o
 
 $(TARGET) : $(OBJS) 
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS)
+	$(ECHO) "Linking $(TARGET) from $(words $(OBJS)) object files"
+	$(Q)$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS)
 
 %.o : %.C
-	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+	$(ECHO) "Compiling $< -> $@"
+	$(Q)if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
 		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) -c $<; \
 	else \
 		$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<; \
@@ -130,8 +143,9 @@ coverage-clean:
 	@find . -name "*.gcov" -delete
 
 $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
-	@mkdir -p ../test
-	@if echo "$(CXXFLAGS)" | grep -qE "(coverage|profile-arcs)"; then \
+	$(Q)mkdir -p ../test
+	$(ECHO) "Linking $(TEST_TARGET) from $(words $(TEST_OBJS)) test objects and $(words $(LIB_OBJS)) library objects"
+	$(Q)if echo "$(CXXFLAGS)" | grep -qE "(coverage|profile-arcs)"; then \
 		if [ "$(CXX)" = "g++" ] || echo "$(CXX)" | grep -q "/g++"; then \
 			$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS) $(COVERAGE_LIBS); \
 		else \
@@ -142,8 +156,9 @@ $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 	fi
 
 ../test/%.o: ../test/%.cpp
-	@mkdir -p ../test
-	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+	$(Q)mkdir -p ../test
+	$(ECHO) "Compiling $< -> $@"
+	$(Q)if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
 		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
 	else \
 		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \

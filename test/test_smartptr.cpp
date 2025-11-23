@@ -83,7 +83,7 @@ TEST_F(SmartPtrTest, GateSmartPtrLifecycle) {
     EXPECT_EQ(gate->type_name(), "test_gate");
     
     // Create instance
-    Instance inst = gate->create_instance();
+    Instance inst = gate.create_instance();
     EXPECT_FALSE(inst->name().empty());
 }
 

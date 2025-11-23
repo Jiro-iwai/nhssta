@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "../src/RandomVariable.h"
 #include "../src/Normal.h"
+#include "../src/ADD.h"
 #include <cmath>
 
 using RandomVar = RandomVariable::RandomVariable;
@@ -62,5 +63,27 @@ TEST_F(RandomVariableTest, MeanCalculation) {
     RandomVar rv = n;
     double mean = rv->mean();
     EXPECT_DOUBLE_EQ(mean, 15.0);
+}
+
+TEST_F(RandomVariableTest, CopySharesUnderlyingStorage) {
+    RandomVariable::Normal n(2.0, 1.0);
+    RandomVar rv1 = n;
+    RandomVar rv2 = rv1;
+
+    rv1->set_name("shared");
+    EXPECT_EQ(rv2->name(), "shared");
+    EXPECT_EQ(rv1.get(), rv2.get());
+}
+
+TEST_F(RandomVariableTest, OperationResultSurvivesSourceScope) {
+    RandomVar sum;
+    {
+        RandomVariable::Normal a(3.0, 0.25);
+        RandomVariable::Normal b(4.0, 0.25);
+        sum = a + b;
+    }
+
+    EXPECT_DOUBLE_EQ(sum->mean(), 7.0);
+    EXPECT_DOUBLE_EQ(sum->variance(), 0.5);
 }
 

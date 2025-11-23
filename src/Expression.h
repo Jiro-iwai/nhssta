@@ -7,6 +7,8 @@
 #include <cassert>
 #include <map>
 #include <set>
+#include <memory>
+#include <type_traits>
 #include "SmartPtr.h"
 #include "Exception.h"
 
@@ -19,10 +21,50 @@ using ExpressionException = Nh::RuntimeException;
 
 class Expression_;
 
-// Expression is differentialable type.
-typedef SmartPtr<Expression_> Expression;
+class ExpressionHandle {
+public:
+    using element_type = Expression_;
 
-class Expression_ : public RCObject {
+    ExpressionHandle() = default;
+    ExpressionHandle(std::nullptr_t) : body_(nullptr) {}
+    explicit ExpressionHandle(Expression_* body)
+        : body_(body ? std::shared_ptr<Expression_>(body) : nullptr) {}
+    explicit ExpressionHandle(std::shared_ptr<Expression_> body)
+        : body_(std::move(body)) {}
+
+    template <class Derived,
+              class = std::enable_if_t<std::is_base_of<Expression_, Derived>::value>>
+    explicit ExpressionHandle(const std::shared_ptr<Derived>& body)
+        : body_(std::static_pointer_cast<Expression_>(body)) {}
+
+    Expression_* operator->() const { return body_.get(); }
+    Expression_& operator*() const { return *body_; }
+    Expression_* get() const { return body_.get(); }
+    std::shared_ptr<Expression_> shared() const { return body_; }
+    explicit operator bool() const { return static_cast<bool>(body_); }
+
+    bool operator==(const ExpressionHandle& rhs) const { return body_.get() == rhs.body_.get(); }
+    bool operator!=(const ExpressionHandle& rhs) const { return !(*this == rhs); }
+    bool operator<(const ExpressionHandle& rhs) const { return body_.get() < rhs.body_.get(); }
+    bool operator>(const ExpressionHandle& rhs) const { return body_.get() > rhs.body_.get(); }
+
+    template <class U>
+    std::shared_ptr<U> dynamic_pointer_cast() const {
+        auto ptr = std::dynamic_pointer_cast<U>(body_);
+        if (!ptr) {
+            throw Nh::RuntimeException("Expression: failed to dynamic cast");
+        }
+        return ptr;
+    }
+
+private:
+    std::shared_ptr<Expression_> body_;
+};
+
+// Expression is differentialable type.
+using Expression = ExpressionHandle;
+
+class Expression_ : public RCObject, public std::enable_shared_from_this<Expression_> {
 public:
 
     friend class Variable;
@@ -61,10 +103,6 @@ public:
     // differential
     virtual Expression d(const Expression& y);
 
-    [[nodiscard]] int id() const { return id_; }
-
-protected:
-
     enum Op {
 		CONST = 0,
 		PARAM, 
@@ -91,6 +129,10 @@ protected:
 		);
 
     virtual ~Expression_();
+
+    [[nodiscard]] int id() const { return id_; }
+
+protected:
 
     [[nodiscard]] const Expression& left() const { return left_; }
     [[nodiscard]] const Expression& right() const { return right_; }
@@ -139,10 +181,10 @@ private:
     virtual Expression d(const Expression& y);
 };
 
-class Const : public SmartPtr<Const_> {
+class Const : public Expression {
 public:
     Const(double value);
-    virtual ~Const() {}
+    ~Const() = default;
 };
 
 ////////////////
@@ -155,10 +197,10 @@ public:
     Expression d(const Expression& y) override;
 };
 
-class Variable : public SmartPtr<Variable_> {
+class Variable : public Expression {
 public:
     Variable();
-    virtual ~Variable() {}
+    ~Variable() = default;
 
     ////// substitution from (double)
     Variable& operator = (double value);

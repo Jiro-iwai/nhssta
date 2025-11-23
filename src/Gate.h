@@ -6,6 +6,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 #include "SmartPtr.h"
 #include "Statistics.h"
 #include "Exception.h"
@@ -16,7 +17,7 @@ namespace Nh {
     typedef ::RandomVariable::RandomVariable RandomVariable;
 
     class _Instance_;
-    typedef SmartPtr<_Instance_> Instance;
+    class Instance;
     typedef std::map<std::string,RandomVariable> Signals;
 
     /////
@@ -50,11 +51,16 @@ namespace Nh {
 			const std::string& out = "y"
 			) const;
 
-		Instance create_instance();
-
 		typedef std::pair<std::string,std::string> IO;
 		typedef std::map<IO,Normal> Delays;
 		const Delays& delays() { return delays_; }
+
+		std::string allocate_instance_name() {
+			std::string inst_name = type_name_;
+			inst_name += ":";
+			inst_name += std::to_string(num_instances_++);
+			return inst_name;
+		}
 
     private:
 
@@ -63,13 +69,22 @@ namespace Nh {
 		Delays delays_;
     };
 
-    class Gate : public SmartPtr<_Gate_> {
+    class Gate {
     public:
 		// Backward compatibility: keep exception as alias to Nh::RuntimeException
 		// This will be removed in a later phase
 		using exception = Nh::RuntimeException;
-		Gate() : SmartPtr<_Gate_>( new _Gate_() ) {}
-		Gate(_Gate_* body) : SmartPtr<_Gate_>(body) {}
+		Gate();
+		explicit Gate(std::shared_ptr<_Gate_> body);
+
+		_Gate_* operator->() const { return body_.get(); }
+		_Gate_& operator*() const { return *body_; }
+		std::shared_ptr<_Gate_> get() const { return body_; }
+
+		Instance create_instance() const;
+
+    private:
+		std::shared_ptr<_Gate_> body_;
     };
 
 
@@ -94,6 +109,23 @@ namespace Nh {
 		std::string name_;
 		Signals inputs_;
 		Signals outputs_;
+    };
+
+    class Instance {
+    public:
+		Instance() = default;
+		explicit Instance(std::shared_ptr<_Instance_> body)
+			: body_(std::move(body)) {}
+
+		_Instance_* operator->() const { return body_.get(); }
+		_Instance_& operator*() const { return *body_; }
+		std::shared_ptr<_Instance_> get() const { return body_; }
+
+		bool operator==(const Instance& rhs) const { return body_.get() == rhs.body_.get(); }
+		bool operator!=(const Instance& rhs) const { return !(*this == rhs); }
+
+    private:
+		std::shared_ptr<_Instance_> body_;
     };
 }
 

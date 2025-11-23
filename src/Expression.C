@@ -6,13 +6,14 @@
 #include <algorithm>
 #include <functional>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include "Expression.h"
 
 int Expression_::current_id_ = 0;
 Expression_::Expressions Expression_::eTbl_;
 
-static Expression null(0);
+static Expression null(nullptr);
 static const Const zero(0.0);
 static const Const one(1.0);
 static const Const minus_one(-1.0);
@@ -110,7 +111,7 @@ double Expression_::value() {
 
 Expression Expression_::d(const Expression& y) {
 
-	Expression x(this);
+	Expression x(shared_from_this());
 	Expression dx;
 
 	auto i = dfrntls_.find(y);
@@ -262,14 +263,14 @@ void print_all(){
 
 //////////////////////////
 
-Const::Const(double value) : SmartPtr<Const_>(new Const_(value)) {}
+Const::Const(double value) : Expression(std::make_shared<Const_>(value)) {}
 
 Expression Const_::d(const Expression& y) { return zero; }
 
 //////////////////////////
 
 Expression Variable_::d(const Expression& y) {
-	if( Expression(this) == y ){
+	if( Expression(shared_from_this()) == y ){
 		return one;
 	}
 	return zero;
@@ -282,7 +283,7 @@ double Variable_::value() {
 	return (value_); 
 }
 
-Variable::Variable() : SmartPtr<Variable_>(new Variable_()) {}
+Variable::Variable() : Expression(std::make_shared<Variable_>()) {}
 
 Variable& Variable::operator = (double value) { (*this)->set_value(value); return *this; } 
 
@@ -295,7 +296,7 @@ Expression operator + (const Expression& a, const Expression& b){
 	if( b == zero ) {
 		return a;
 	}
-	return Expression{ new Expression_(Expression_::PLUS, a, b) };
+	return Expression(std::make_shared<Expression_>(Expression_::PLUS, a, b));
 }
 
 Expression operator + (double a, const Expression& b){
@@ -322,7 +323,7 @@ Expression operator - (const Expression& a, const Expression& b){
 	if( b == zero ) {
 		return a;
 	} 
-	return Expression{ new Expression_(Expression_::MINUS, a, b) };
+	return Expression(std::make_shared<Expression_>(Expression_::MINUS, a, b));
 }
 
 Expression operator - (double a, const Expression& b){
@@ -340,7 +341,7 @@ Expression operator - (const Expression& a){
 	if( a == minus_one ) {
 		return one;
 	} 
-	return Expression{ new Expression_(Expression_::MUL, minus_one, a) };
+	return Expression(std::make_shared<Expression_>(Expression_::MUL, minus_one, a));
 }
 
 //////////////////////////
@@ -355,7 +356,7 @@ Expression operator * (const Expression& a, const Expression& b){
 	if( b == one ) {
 		return a;
 	} 
-	return Expression{ new Expression_(Expression_::MUL, a, b) };
+	return Expression(std::make_shared<Expression_>(Expression_::MUL, a, b));
 }
 
 Expression operator * (double a, const Expression& b){
@@ -384,7 +385,7 @@ Expression operator / (const Expression& a, const Expression& b){
 	if( a == b ) {
 		return one;
 	}
-	return Expression{ new Expression_(Expression_::DIV, a, b) };
+	return Expression(std::make_shared<Expression_>(Expression_::DIV, a, b));
 }
 
 Expression operator / (const Expression& a, double b){
@@ -410,7 +411,7 @@ Expression operator ^ (const Expression& a, const Expression& b){
 	if( a == zero ) {
 		return zero;
 	}
-	return Expression{ new Expression_(Expression_::POWER, a, b) };
+	return Expression(std::make_shared<Expression_>(Expression_::POWER, a, b));
 }
 
 Expression operator ^ (const Expression& a, double b){
@@ -425,11 +426,11 @@ Expression operator ^ (double a, const Expression& b){
 //////////////////////////
 
 Expression exp (const Expression& a){
-	return Expression{ new Expression_(Expression_::EXP, a, null) };
+	return Expression(std::make_shared<Expression_>(Expression_::EXP, a, null));
 }
 
 Expression log (const Expression& a){
-	return Expression{ new Expression_(Expression_::LOG, a, null) };
+	return Expression(std::make_shared<Expression_>(Expression_::LOG, a, null));
 }
 
 //////////////////////////

@@ -4,6 +4,7 @@
 #ifndef NORMAL__H
 #define NORMAL__H
 
+#include <memory>
 #include "RandomVariable.h"
 
 namespace RandomVariable {
@@ -33,11 +34,13 @@ namespace RandomVariable {
 
     };
 
-    class Normal : public SmartPtr<_Normal_> {
+    class Normal : public RandomVariable {
     public:
-		Normal() : SmartPtr<_Normal_>(0) {}
+		Normal() = default;
 		Normal( double mean, double variance ) :
-			SmartPtr<_Normal_>( new _Normal_(mean,variance) ) {}
+			RandomVariable(std::make_shared<_Normal_>(mean,variance)) {}
+
+		Normal clone() const;
     };
 }
 

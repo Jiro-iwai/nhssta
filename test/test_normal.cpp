@@ -32,7 +32,7 @@ TEST_F(NormalTest, ZeroVariance) {
 // Test Normal clone
 TEST_F(NormalTest, Clone) {
     Normal n1(10.0, 4.0);
-    Normal n2 = n1->clone();
+    Normal n2 = n1.clone();
     
     EXPECT_DOUBLE_EQ(n2->mean(), n1->mean());
     EXPECT_DOUBLE_EQ(n2->variance(), n1->variance());

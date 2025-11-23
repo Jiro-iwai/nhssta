@@ -53,6 +53,12 @@
 - ローカルで `make tidy` を実行してチェックできます
 - CIでも自動的にチェックされます
 
+### メモリ管理ポリシー
+
+- ドメイン固有のハンドル型（`RandomVariable`, `Expression`, `Gate`, `Instance`, `CovarianceMatrix` など）は、内部的に `std::shared_ptr` を保持します
+- 新しく所有権を導入する際は、既存のハンドル型を利用するか、`std::shared_ptr`/`std::unique_ptr` を直接使用してください
+- 旧来の `SmartPtr` テンプレートは `NH_ENABLE_LEGACY_SMARTPTR=1` を定義した場合のみコンパイルできるようにし、プロダクションコードでは使用しないでください（`RCObject` は将来的な削除に備えて互換目的でのみ残っています）
+
 ## 開発フロー
 
 ### ローカルでの開発

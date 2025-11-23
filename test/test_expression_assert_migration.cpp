@@ -203,3 +203,36 @@ TEST_F(ExpressionAssertMigrationTest, TestComplexExpression) {
     EXPECT_TRUE(true);
 }
 
+TEST_F(ExpressionAssertMigrationTest, ExpressionSurvivesOperandScope) {
+    Expression expr;
+    double value = 0.0;
+
+    {
+        Variable x;
+        x = 4.0;
+        expr = x + 1.0;
+    }
+
+    EXPECT_DOUBLE_EQ((value << expr), 5.0);
+}
+
+TEST_F(ExpressionAssertMigrationTest, SharedSubexpressionEvaluatesConsistently) {
+    Variable x;
+    Expression sub;
+    Expression expr1;
+    Expression expr2;
+    double value = 0.0;
+
+    x = 2.0;
+    sub = x + 1.0;
+    expr1 = sub + 5.0;
+    expr2 = sub * 3.0;
+
+    EXPECT_DOUBLE_EQ((value << expr1), 8.0);
+    EXPECT_DOUBLE_EQ((value << expr2), 9.0);
+
+    x = 3.0;
+    EXPECT_DOUBLE_EQ((value << expr1), 9.0);
+    EXPECT_DOUBLE_EQ((value << expr2), 12.0);
+}
+

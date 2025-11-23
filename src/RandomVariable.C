@@ -10,8 +10,8 @@ namespace RandomVariable {
 
     _RandomVariable_::_RandomVariable_():
         name_(""),
-        left_(0),
-        right_(0),
+        left_(nullptr),
+        right_(nullptr),
         mean_(0),
         variance_(0),
         is_set_mean_(false),
@@ -31,8 +31,8 @@ namespace RandomVariable {
         const std::string& name
         ):
         name_(name),
-        left_(0),
-        right_(0),
+        left_(nullptr),
+        right_(nullptr),
         mean_(mean),
         variance_(variance),
         is_set_mean_(false),
