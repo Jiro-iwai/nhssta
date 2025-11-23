@@ -19,7 +19,7 @@ CXXFLAGS = -g -Wall -std=c++17
 # INCLUDE = -I$(BOOST_DIR)/include
 INCLUDE = 
 CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
-	random_variable.cpp add.cpp util.cpp gate.cpp \
+	random_variable.cpp add.cpp util_numerical.cpp gate.cpp \
 	parser.cpp ssta.cpp expression.cpp main.cpp
 OBJS = $(CXXSRCS:.cpp=.o) 
 DEPS = $(CXXSRCS:.cpp=.d) 
@@ -40,13 +40,13 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_main_cli.cpp ../test/test_parser_lexical_cast.cpp \
 	../test/test_parser_tokenizer.cpp ../test/test_exception_unification.cpp \
 	../test/test_gate.cpp ../test/test_ssta_unit.cpp \
-	../test/test_expression_assert_migration.cpp
+	../test/test_expression_assert_migration.cpp ../test/test_util.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 
 # Core library objects (without main.cpp)
 LIB_OBJS = covariance.o max.o sub.o normal.o \
-	random_variable.o add.o util.o gate.o \
+	random_variable.o add.o util_numerical.o gate.o \
 	parser.o ssta.o expression.o
 
 $(TARGET) : $(OBJS) 
