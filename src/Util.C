@@ -11,6 +11,7 @@ namespace RandomVariable {
     /* ------------ table ------------- */
 
     /* mean_max_tab -5 5 0.05 */
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     double mean_max_tab[]={
 		4.95574e-08,
 		6.18037e-08,
@@ -215,6 +216,7 @@ namespace RandomVariable {
 		5 };
 
     /* mean_x_max_tab -5 5 0.05 */
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     double mean_x_max_tab[]={
 		1,
 		1,
@@ -419,6 +421,7 @@ namespace RandomVariable {
 		2.6733e-07 };
 
     /* mean_max^2_tab -5 5 0.05 */
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
     double mean_max2_tab[]={
 		0.999999,
 		0.999999,
@@ -636,40 +639,43 @@ namespace RandomVariable {
     double MeanMax(double a) {
         if (a < -cut) {
             return 0.0;
-        } else if (cut < a) {
-            return a;
-        } else {
-            int l, u;
-            set_range(a, l, u);
-            double r = (mean_max_tab[l] + mean_max_tab[u]) * 0.5;
-            return r;
         }
+        if (cut < a) {
+            return a;
+        }
+        int l = 0;
+        int u = 0;
+        set_range(a, l, u);
+        double r = (mean_max_tab[l] + mean_max_tab[u]) * 0.5;
+        return r;
     }
 
     double MeanPhiMax(double a) {
         if (a < -cut) {
             return 1.0;
-        } else if (cut < a) {
-            return 0.0;
-        } else {
-            int l, u;
-            set_range(a, l, u);
-            double r = (mean_x_max_tab[l] + mean_x_max_tab[u]) * 0.5;
-            return r;
         }
+        if (cut < a) {
+            return 0.0;
+        }
+        int l = 0;
+        int u = 0;
+        set_range(a, l, u);
+        double r = (mean_x_max_tab[l] + mean_x_max_tab[u]) * 0.5;
+        return r;
     }
 
     double MeanMax2(double a) {
         if (a < -cut) {
             return 1.0;
-        } else if (cut < a) {
-            return a * a;
-        } else {
-            int l, u;
-            set_range(a, l, u);
-            double r = (mean_max2_tab[l] + mean_max2_tab[u]) * 0.5;
-            return r;
         }
+        if (cut < a) {
+            return a * a;
+        }
+        int l = 0;
+        int u = 0;
+        set_range(a, l, u);
+        double r = (mean_max2_tab[l] + mean_max2_tab[u]) * 0.5;
+        return r;
     }
 }
 

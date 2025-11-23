@@ -49,17 +49,16 @@ public:
         size_t index_;
     };
 
-    Tokenizer(const std::string& str, const std::string& drop_separator, const std::string& keep_separator)
-        : tokens_() {
+    Tokenizer(const std::string& str, const std::string& drop_separator, const std::string& keep_separator) {
         tokenize(str, drop_separator, keep_separator);
     }
 
-    iterator begin() const {
-        return iterator(&tokens_, 0);
+    [[nodiscard]] iterator begin() const {
+        return {&tokens_, 0};
     }
 
-    iterator end() const {
-        return iterator(&tokens_, tokens_.size());
+    [[nodiscard]] iterator end() const {
+        return {&tokens_, tokens_.size()};
     }
 
 private:
@@ -83,7 +82,7 @@ private:
                     current_token.clear();
                 }
                 // Add separator as a token
-                tokens_.push_back(std::string(1, c));
+                tokens_.emplace_back(1, c);
                 ++i;
             }
             // Check if it's a drop separator

@@ -7,6 +7,7 @@
 #include "Exception.h"
 
 #ifndef NH_ENABLE_LEGACY_SMARTPTR
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define NH_ENABLE_LEGACY_SMARTPTR 0
 #endif
 
@@ -87,23 +88,25 @@ private:
 class RCObject { // ���Ȳ����¬�� class
 public:
 
-    RCObject() : counter_(0){}
-    virtual ~RCObject(){}
+    RCObject() = default;
+    virtual ~RCObject() = default;
 
     void refer() { ++counter_; }
 
     void release() {
-		if( --counter_ == 0 )
+		if( --counter_ == 0 ) {
 			delete this;
+		}
     }
 
-    int refCount() const { return (counter_); }
+    [[nodiscard]] int refCount() const { return (counter_); }
+
+    RCObject( const RCObject& org ) = delete;
+    RCObject& operator = ( const RCObject& rhs ) = delete;
 
 private:
 
-    int counter_;
-    RCObject( const RCObject& org );
-    RCObject& operator = ( const RCObject& rhs );
+    int counter_ = 0;
 };
 
 #endif // SMART_PTR__H

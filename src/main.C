@@ -20,6 +20,7 @@ void usage(const char* first, const char* last) {
     exit(1);
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
 void set_option(int argc, char *argv[], Nh::Ssta* ssta) {
     for (int i = 1; i < argc; i++) {
         string arg = argv[i];

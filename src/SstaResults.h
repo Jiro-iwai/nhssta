@@ -33,7 +33,7 @@ namespace Nh {
         std::map<std::pair<std::string, std::string>, double> correlations;
         
         // Get correlation between two nodes
-        double getCorrelation(const std::string& node1, const std::string& node2) const {
+        [[nodiscard]] double getCorrelation(const std::string& node1, const std::string& node2) const {
             auto it = correlations.find(std::make_pair(node1, node2));
             if (it != correlations.end()) {
                 return it->second;

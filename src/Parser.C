@@ -21,6 +21,7 @@ std::istream& Parser::getLine() {
     delete tokenizer_;
     std::istream& r = std::getline(infile_,line_); // not support Mac. "\r"
     line_number_++;
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
     tokenizer_ = new Tokenizer(line_, drop_separator_, keep_separator_);
     if( ( begin() == end() || (*begin())[0] == begin_comment_ ) && !r.eof() ) {
         return getLine();
@@ -39,6 +40,7 @@ void Parser::unexpectedToken(){
     unexpectedToken_(pre_);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void Parser::unexpectedToken_(const std::string& token) {
     std::string what = "unexpected token \"";
     what += token;
