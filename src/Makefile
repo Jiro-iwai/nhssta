@@ -26,7 +26,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_ssta_logic_integration.cpp ../test/test_parser.cpp \
 	../test/test_performance.cpp ../test/test_expression_print.cpp \
 	../test/test_main_cli.cpp ../test/test_parser_lexical_cast.cpp \
-	../test/test_parser_tokenizer.cpp ../test/test_exception_unification.cpp
+	../test/test_parser_tokenizer.cpp ../test/test_exception_unification.cpp \
+	../test/test_gate.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 
