@@ -12,3 +12,7 @@ example/result*_
 *.gcno
 *.gcov
 coverage/
+
+# etags/ctags
+TAGS
+tags
