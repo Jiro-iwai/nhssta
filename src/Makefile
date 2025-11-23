@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-CXX = g++
+CXX ?= g++
 CXXFLAGS = -g -Wall -std=c++17 
 #INCLUDE = -I/usr/include/boost-1_33_1
 BOOST_DIR = /opt/homebrew/opt/boost
@@ -130,7 +130,7 @@ coverage-clean:
 $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 	@mkdir -p ../test
 	@if echo "$(CXXFLAGS)" | grep -qE "(coverage|profile-arcs)"; then \
-		if echo "$(CXX)" | grep -qE "g\+\+"; then \
+		if [ "$(CXX)" = "g++" ] || echo "$(CXX)" | grep -q "/g\+\+"; then \
 			$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS) $(COVERAGE_LIBS); \
 		else \
 			$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS); \
