@@ -9,7 +9,7 @@
 #include "add.hpp"
 #include "sub.hpp"
 #include "max.hpp"
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 namespace RandomVariable {
 

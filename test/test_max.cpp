@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "../src/max.hpp"
 #include "../src/normal.hpp"
-#include "../src/exception.hpp"
+#include <nhssta/exception.hpp>
 #include <cmath>
 
 using RandomVar = RandomVariable::RandomVariable;

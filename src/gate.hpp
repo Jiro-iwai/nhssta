@@ -9,7 +9,7 @@
 #include <memory>
 #include "smart_ptr.hpp"
 #include "statistics.hpp"
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 namespace Nh {
 

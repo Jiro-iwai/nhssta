@@ -3,7 +3,7 @@
 #include "../src/normal.hpp"
 #include "../src/add.hpp"
 #include "../src/max.hpp"
-#include "../src/exception.hpp"
+#include <nhssta/exception.hpp>
 #include <cmath>
 
 using RandomVar = RandomVariable::RandomVariable;

@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include "tokenizer.hpp"
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 class Parser {
 

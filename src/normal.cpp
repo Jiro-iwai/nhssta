@@ -3,7 +3,7 @@
 
 #include <cassert>
 #include "normal.hpp"
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 namespace RandomVariable {
 

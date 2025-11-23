@@ -17,7 +17,7 @@ CXXFLAGS = -g -Wall -std=c++17
 # If you need Boost for legacy code, uncomment and set BOOST_DIR:
 # BOOST_DIR = /opt/homebrew/opt/boost
 # INCLUDE = -I$(BOOST_DIR)/include
-INCLUDE = 
+INCLUDE = -I../include 
 CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
 	random_variable.cpp add.cpp util_numerical.cpp gate.cpp \
 	parser.cpp ssta.cpp expression.cpp main.cpp
@@ -27,7 +27,7 @@ TARGET = nhssta
 
 # Google Test configuration
 GTEST_DIR := /opt/homebrew/opt/googletest
-GTEST_INCLUDE := -I$(GTEST_DIR)/include
+GTEST_INCLUDE := -I$(GTEST_DIR)/include -I../include
 GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
 
 # Test sources (relative to src directory)
@@ -40,7 +40,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_main_cli.cpp ../test/test_parser_lexical_cast.cpp \
 	../test/test_parser_tokenizer.cpp ../test/test_exception_unification.cpp \
 	../test/test_gate.cpp ../test/test_ssta_unit.cpp \
-	../test/test_expression_assert_migration.cpp ../test/test_util.cpp
+	../test/test_expression_assert_migration.cpp ../test/test_util.cpp \
+	../test/test_public_api_headers.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 
