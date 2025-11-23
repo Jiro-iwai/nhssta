@@ -3,7 +3,7 @@ DIR = src
 
 CXX      = g++
 #CXXFLAGS = -g -Wall -mno-cygwin
-CXXFLAGS = -O
+CXXFLAGS = -O -std=c++17
 CXXLIBS  = 
 AR       = ar
 ARFLAGS  = cru
@@ -28,4 +28,10 @@ clean:
 
 check:
 	cd example; make
+
+.PHONY: test
+
+test:
+	@for i in $(DIR) ; \
+	     do (test -d $$i && cd $$i && $(MAKE) test) || exit 1; done
 

@@ -4,8 +4,8 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
+#include <iomanip>
+#include <string>
 #include "Util.h"
 #include "Ssta.h"
 #include "ADD.h"
@@ -239,7 +239,7 @@ namespace Nh {
 
             const std::string& signal_name = *j;
             const RandomVariable& signal = signals_[signal_name];
-            std::string pin = boost::lexical_cast<std::string>(ith);
+            std::string pin = std::to_string(ith);
             inst->set_input(pin, signal);
 
             ith++;
@@ -336,7 +336,7 @@ namespace Nh {
             what += "\"";
             what += " at line ";
             int line = parser.getNumLine();
-            what += boost::lexical_cast<std::string>(line);
+            what += std::to_string(line);
             what += " of file \"";
             what += parser.getFileName();
             what += "\"";
@@ -411,9 +411,9 @@ namespace Nh {
         for( ; si != signals_.end(); si++ ) {
             const RandomVariable& sigi = si->second;
             double sigma = sqrt(si->second->variance());
-            std::cout << boost::format("%-15s") % sigi->name().c_str();
-            std::cout << boost::format("%10.3f") % si->second->mean();
-            std::cout << boost::format("%9.3f") % sigma << std::endl;
+            std::cout << std::left << std::setw(15) << sigi->name();
+            std::cout << std::right << std::setw(10) << std::fixed << std::setprecision(3) << si->second->mean();
+            std::cout << std::right << std::setw(9) << std::fixed << std::setprecision(3) << sigma << std::endl;
         }
 
         std::cout << "#---------------------------------" << std::endl;
@@ -445,7 +445,7 @@ namespace Nh {
         Signals::const_iterator si = signals_.begin();
         for( ; si != signals_.end(); si++ ) {
             const RandomVariable& sigi = si->second;
-            std::cout << boost::format("%s\t") % sigi->name().c_str();
+            std::cout << sigi->name() << "\t";
         }
         std::cout << std::endl;
 
@@ -455,14 +455,14 @@ namespace Nh {
         for( ; si != signals_.end(); si++ ) {
             const RandomVariable& sigi = si->second;
             double vi = sigi->variance();
-            std::cout << boost::format("%s\t") % sigi->name().c_str();
+            std::cout << sigi->name() << "\t";
 
             Signals::const_iterator sj = signals_.begin();
             for( ; sj != signals_.end(); sj++ ) {
                 const RandomVariable& sigj = sj->second;
                 double vj = sigj->variance();
                 double cov = covariance(sigi,sigj);
-                std::cout << boost::format("%4.3f\t") % (cov/sqrt(vi*vj));
+                std::cout << std::fixed << std::setprecision(3) << std::setw(4) << (cov/sqrt(vi*vj)) << "\t";
                 std::cout.flush();
             }
 

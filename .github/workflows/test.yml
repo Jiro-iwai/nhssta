@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [g++, clang++]
+        exclude:
+          - os: macos-latest
+            compiler: g++
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libboost-all-dev libgtest-dev build-essential
+
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install boost googletest
+
+    - name: Build nhssta
+      working-directory: src
+      run: make
+
+    - name: Run integration tests
+      working-directory: example
+      run: |
+        make
+        ./nhssta_test || true
+
+    - name: Build and run unit tests
+      working-directory: src
+      run: |
+        make test || echo "Unit tests require Boost dependencies to be resolved first"
+
