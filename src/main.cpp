@@ -18,7 +18,7 @@ void usage(const char* first, const char* last) {
     cerr << " -c, --correlation  prints correlation matrix of LAT"
 		 << endl;
     cerr << " -h, --help         gives this help" << endl;
-    exit(1);
+    throw Nh::RuntimeException("Invalid command-line arguments");
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
@@ -116,17 +116,17 @@ int main(int argc, char *argv[]) {
         cerr << "OK" << endl;
 
     } catch ( Nh::Exception& e ) {
-		cerr << e.what() << endl;
-		exit(1);
+		cerr << "error: " << e.what() << endl;
+		return 1;
 
     } catch ( exception& e ) {
 		cerr << "error: " << e.what() << endl;
-		exit(2);
+		return 2;
 
     } catch ( ... ) {
-		cerr << "unknown error" << endl;
-		exit(3);
+		cerr << "error: unknown error" << endl;
+		return 3;
     }
 
-    exit(0);
+    return 0;
 }
