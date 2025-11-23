@@ -17,8 +17,10 @@ This directory contains the test suite for nhssta, using Google Test framework.
 ## Running Tests
 
 ### Prerequisites
-- Google Test must be installed (via Homebrew on macOS: `brew install googletest`)
-- Boost libraries (currently required for main program, will be addressed in Phase 1)
+- **C++17対応のコンパイラ**（g++ 7.0以上、clang++ 5.0以上）
+- **Google Test** をインストール:
+  - macOS: `brew install googletest`
+  - Ubuntu: `sudo apt-get install libgtest-dev`
 
 ### Build and Run Tests
 
@@ -48,11 +50,21 @@ Tests are compiled into a single test binary:
 - Integration test structure created
 - CI/CD configuration added
 
-**Note**: Currently, tests cannot be fully executed due to Boost dependencies in the main program. This will be addressed in Phase 1 (Modern C++ Migration).
+**Phase 1 (Modern C++ Migration)**: ✅ Complete
+- Boost dependencies removed
+- All 197 tests passing
+
+## Current Test Coverage
+
+- **197 tests** across **21 test suites**
+- Unit tests for core components (RandomVariable, Expression, Gate, Parser, Ssta)
+- Integration tests for end-to-end functionality
+- Performance benchmarks
+- Code coverage measurement support
 
 ## Future Improvements
 
-- Phase 1: Resolve Boost dependencies to enable full test execution
-- Phase 2: Expand test coverage for Gate, Parser, and Ssta classes
-- Phase 3: Add performance benchmarks
+- Expand test coverage for edge cases
+- Add more performance benchmarks
+- Enhance integration test scenarios
 
