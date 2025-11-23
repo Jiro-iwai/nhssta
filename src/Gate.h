@@ -31,12 +31,12 @@ namespace Nh {
 		_Gate_(const std::string type_name) :
 			type_name_(type_name) {
 		}
-		virtual ~_Gate_(){};
+		virtual ~_Gate_() = default;
 
 		void set_type_name(const std::string type_name) {
 			type_name_ = type_name;
 		}
-		const std::string& type_name() const { return type_name_; }
+		[[nodiscard]] const std::string& type_name() const { return type_name_; }
 
 		void set_delay
 		(
@@ -45,7 +45,7 @@ namespace Nh {
 			const Normal& delay
 			);
 
-		const Normal& delay
+		[[nodiscard]] const Normal& delay
 		(
 			const std::string& in,
 			const std::string& out = "y"
@@ -79,9 +79,9 @@ namespace Nh {
 
 		_Gate_* operator->() const { return body_.get(); }
 		_Gate_& operator*() const { return *body_; }
-		std::shared_ptr<_Gate_> get() const { return body_; }
+		[[nodiscard]] std::shared_ptr<_Gate_> get() const { return body_; }
 
-		Instance create_instance() const;
+		[[nodiscard]] Instance create_instance() const;
 
     private:
 		std::shared_ptr<_Gate_> body_;
@@ -94,7 +94,7 @@ namespace Nh {
     public:
 
 		_Instance_(const Gate& gate) : gate_(gate) {}
-		~_Instance_(){}
+		~_Instance_() = default;
 
 		void set_name(const std::string name) { name_ = name; }
 		const std::string& name() const { return name_;	}

@@ -95,7 +95,7 @@ namespace Nh {
 				throw Nh::RuntimeException(what);
 			}
 
-			_Gate_::Delays::const_iterator i = gate_->delays().begin();
+			auto i = gate_->delays().begin();
 			for( ; i != gate_->delays().end(); i++ ) {
 
 				const std::string& ith_out_name = i->first.second;
@@ -105,11 +105,11 @@ namespace Nh {
 				Normal gate_delay = gate_->delay(ith_in_name, out_name);
 				RandomVariable delay = gate_delay.clone(); ////
 
-				Signals::const_iterator k = inputs_.find(ith_in_name);
+				auto k = inputs_.find(ith_in_name);
 				if( k != inputs_.end() ) {
 					const RandomVariable& irv = k->second;
 
-					Signals::const_iterator j = outputs_.find(out_name);
+					auto j = outputs_.find(out_name);
 					if( j != outputs_.end() ) {
 						assert(&(*(i->second)));
 						RandomVariable orv = j->second;

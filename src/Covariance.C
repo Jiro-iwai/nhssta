@@ -38,9 +38,9 @@ namespace RandomVariable {
             return true;
         }
 
-        const _Normal_* a_normal = dynamic_cast<const _Normal_*>(a.get());
-        const _Normal_* b_normal = dynamic_cast<const _Normal_*>(b.get());
-        if( a_normal && b_normal ){
+        auto a_normal = dynamic_cast<const _Normal_*>(a.get());
+        auto b_normal = dynamic_cast<const _Normal_*>(b.get());
+        if( a_normal != nullptr && b_normal != nullptr ){
             if( a == b ){
                 cov = a->variance();
             } else {
@@ -56,7 +56,7 @@ namespace RandomVariable {
         const RandomVariable& x, const RandomVariable& y
         )
     {
-        const OpMAX0* y_max0 = dynamic_cast<const OpMAX0*>(y.get());
+        auto y_max0 = dynamic_cast<const OpMAX0*>(y.get());
         assert( y_max0 != nullptr );
         const RandomVariable& z = y->left();
         double c = covariance(x,z);

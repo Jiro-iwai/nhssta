@@ -43,7 +43,7 @@ namespace RandomVariable {
 
         _CovarianceMatrix_* operator->() const { return body_.get(); }
         _CovarianceMatrix_& operator*() const { return *body_; }
-        std::shared_ptr<_CovarianceMatrix_> shared() const { return body_; }
+        [[nodiscard]] std::shared_ptr<_CovarianceMatrix_> shared() const { return body_; }
 
     private:
         std::shared_ptr<_CovarianceMatrix_> body_;
