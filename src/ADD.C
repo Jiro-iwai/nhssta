@@ -1,6 +1,7 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
 
+#include <memory>
 #include "ADD.h"
 #include "Covariance.h"
 
@@ -29,6 +30,6 @@ double OpADD::calc_variance() const {
 }
 
 RandomVariable operator+(const RandomVariable& a, const RandomVariable& b) {
-    return SmartPtr<OpADD>(new OpADD(a, b));
+    return RandomVariable(std::make_shared<OpADD>(a, b));
 }
 }

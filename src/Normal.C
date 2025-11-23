@@ -35,4 +35,9 @@ namespace RandomVariable {
 		Normal p( mean_, variance_ );
 		return p;
     }
+
+    Normal Normal::clone() const {
+        auto ptr = this->dynamic_pointer_cast<_Normal_>();
+        return ptr->clone();
+    }
 }

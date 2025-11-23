@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <memory>
 #include "Statistics.h"
 #include "Util.h"
 #include "ADD.h"
@@ -130,7 +131,7 @@ namespace RandomVariable {
 
             } else if( dynamic_cast<const OpMAX*>(a.get()) != nullptr ){
                 const RandomVariable& x = a->left();
-                const SmartPtr<OpMAX>& m(a);
+                auto m = a.dynamic_pointer_cast<const OpMAX>();
                 const RandomVariable& z = m->max0();
                 double cov0 = covariance(z,b);
                 double cov1 = covariance(x,b);
@@ -138,7 +139,7 @@ namespace RandomVariable {
 
             } else if( dynamic_cast<const OpMAX*>(b.get()) != nullptr ){
                 const RandomVariable& x = b->left();
-                const SmartPtr<OpMAX>& m(b);
+                auto m = b.dynamic_pointer_cast<const OpMAX>();
                 const RandomVariable& z = m->max0();
                 double cov0 = covariance(z,a);
                 double cov1 = covariance(x,a);

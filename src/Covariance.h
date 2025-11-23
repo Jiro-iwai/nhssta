@@ -5,6 +5,7 @@
 #define NH_COVARIANCE__H
 
 #include <map>
+#include <memory>
 #include "RandomVariable.h"
 #include "Normal.h"
 
@@ -34,10 +35,18 @@ namespace RandomVariable {
 		Matrix cmat;
     };
 
-    class CovarianceMatrix : public SmartPtr<_CovarianceMatrix_> {
+    class CovarianceMatrix {
     public:
-		CovarianceMatrix() : SmartPtr<_CovarianceMatrix_>
-			( new _CovarianceMatrix_() ) {}
+        CovarianceMatrix() : body_(std::make_shared<_CovarianceMatrix_>()) {}
+        explicit CovarianceMatrix(std::shared_ptr<_CovarianceMatrix_> body)
+            : body_(std::move(body)) {}
+
+        _CovarianceMatrix_* operator->() const { return body_.get(); }
+        _CovarianceMatrix_& operator*() const { return *body_; }
+        std::shared_ptr<_CovarianceMatrix_> shared() const { return body_; }
+
+    private:
+        std::shared_ptr<_CovarianceMatrix_> body_;
     };
 
     double covariance(const Normal& a, const Normal& b);

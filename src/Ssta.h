@@ -4,6 +4,7 @@
 #ifndef NH_SSTA__H
 #define NH_SSTA__H
 
+#include <memory>
 #include <set>
 #include <map>
 #include <list>
@@ -55,9 +56,34 @@ namespace Nh {
 			Ins ins_;
 		};
 
-		class NetLine : public SmartPtr<NetLineBody> {
+		class NetLine {
 		public:
-			NetLine() : SmartPtr<NetLineBody>( new NetLineBody() ) {}
+			NetLine() : body_(std::make_shared<NetLineBody>()) {}
+			explicit NetLine(std::shared_ptr<NetLineBody> body)
+				: body_(std::move(body)) {
+				if (!body_) {
+					throw RuntimeException("NetLine: null body");
+				}
+			}
+
+			NetLine(const NetLine&) = default;
+			NetLine(NetLine&&) noexcept = default;
+			NetLine& operator=(const NetLine&) = default;
+			NetLine& operator=(NetLine&&) noexcept = default;
+			~NetLine() = default;
+
+			NetLineBody* operator->() const { return body_.get(); }
+			NetLineBody& operator*() const { return *body_; }
+
+			bool operator==(const NetLine& rhs) const { return body_.get() == rhs.body_.get(); }
+			bool operator!=(const NetLine& rhs) const { return !(*this == rhs); }
+			bool operator<(const NetLine& rhs) const { return body_.get() < rhs.body_.get(); }
+			bool operator>(const NetLine& rhs) const { return body_.get() > rhs.body_.get(); }
+
+			std::shared_ptr<NetLineBody> get() const { return body_; }
+
+		private:
+			std::shared_ptr<NetLineBody> body_;
 		};
 
 		void read_dlib_line(Parser& parser);

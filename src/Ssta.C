@@ -272,7 +272,7 @@ namespace Nh {
                     Gates::const_iterator gi = gates_.find(gate_name);
 
                     Gate gate = gi->second;
-                    Instance inst = gate->create_instance();
+                    Instance inst = gate.create_instance();
 
                     set_instance_input(inst, ins);
 
@@ -310,7 +310,7 @@ namespace Nh {
         Gate dff = gi->second;
 
         Normal delay = dff->delay("ck","q");
-        Normal dff_delay = delay->clone();
+        Normal dff_delay = delay.clone();
         RandomVariable out = in + dff_delay; /////
 
         check_signal(out_signal_name);

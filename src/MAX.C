@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <memory>
 #include "MAX.h"
 #include "SUB.h"
 #include "Covariance.h"
@@ -39,13 +40,13 @@ double OpMAX::calc_variance() const {
 }
 
 RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
-    return SmartPtr<OpMAX>(new OpMAX(a, b));
+    return RandomVariable(std::make_shared<OpMAX>(a, b));
 }
 
     /////
 
 OpMAX0::OpMAX0(const RandomVariable& left)
-    : _RandomVariable_(left, RandomVariable(0)) {
+    : _RandomVariable_(left, RandomVariable(nullptr)) {
     level_ = left->level() + 1;
 }
 
@@ -80,6 +81,6 @@ const RandomVariable& OpMAX0::right() const {
 }
 
 RandomVariable MAX0(const RandomVariable& a) {
-    return SmartPtr<OpMAX0>(new OpMAX0(a));
+    return RandomVariable(std::make_shared<OpMAX0>(a));
 }
 }

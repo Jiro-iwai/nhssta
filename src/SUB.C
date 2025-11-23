@@ -1,6 +1,7 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
 
+#include <memory>
 #include "SUB.h"
 #include "Covariance.h"
 
@@ -30,7 +31,7 @@ namespace RandomVariable {
     }
 
     RandomVariable operator- (const RandomVariable& a, const RandomVariable& b){
-        return SmartPtr<OpSUB>( new OpSUB( a, b ) );
+        return RandomVariable(std::make_shared<OpSUB>(a, b));
     }
 }
 

@@ -5,11 +5,29 @@
 #include <cassert>
 #include <cmath>
 #include <string>
+#include <memory>
 #include "Gate.h"
 #include "ADD.h"
 #include "Exception.h"
 
 namespace Nh {
+
+    Gate::Gate()
+        : body_(std::make_shared<_Gate_>()) {}
+
+    Gate::Gate(std::shared_ptr<_Gate_> body)
+        : body_(std::move(body)) {
+        if (!body_) {
+            throw Nh::RuntimeException("Gate: null body");
+        }
+    }
+
+    Instance Gate::create_instance() const {
+        auto inst_body = std::make_shared<_Instance_>(*this);
+        Instance inst(inst_body);
+        inst->set_name((*this)->allocate_instance_name());
+        return inst;
+    }
 
     ////
 
@@ -46,14 +64,6 @@ namespace Nh {
 
 		assert(&(*(i->second)));
 		return i->second;
-    }
-
-    Instance _Gate_::create_instance() {
-		Instance inst( new _Instance_( Gate(this) ) );
-		std::string inst_name = type_name_ + ":";
-		inst_name += std::to_string(num_instances_++);
-		inst->set_name(inst_name);
-		return inst;
     }
 
     /////
@@ -93,7 +103,7 @@ namespace Nh {
 
 				const std::string& ith_in_name = i->first.first;
 				Normal gate_delay = gate_->delay(ith_in_name, out_name);
-				RandomVariable delay = gate_delay->clone(); ////
+				RandomVariable delay = gate_delay.clone(); ////
 
 				Signals::const_iterator k = inputs_.find(ith_in_name);
 				if( k != inputs_.end() ) {

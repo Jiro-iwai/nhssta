@@ -6,9 +6,15 @@
 
 #include "Exception.h"
 
+#ifndef NH_ENABLE_LEGACY_SMARTPTR
+#define NH_ENABLE_LEGACY_SMARTPTR 0
+#endif
+
 // Backward compatibility: keep SmartPtrException as alias to Nh::RuntimeException
 // This will be removed in a later phase
 using SmartPtrException = Nh::RuntimeException;
+
+#if NH_ENABLE_LEGACY_SMARTPTR
 
 template < class T >
 class SmartPtr { // ���� smart pointer
@@ -75,6 +81,8 @@ private:
 
     T* pointee_; // ����
 };
+
+#endif // NH_ENABLE_LEGACY_SMARTPTR
 
 class RCObject { // ���Ȳ����¬�� class
 public:
