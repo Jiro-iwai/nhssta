@@ -26,7 +26,12 @@ DEPS = $(CXXSRCS:.cpp=.d)
 TARGET = nhssta
 
 # Google Test configuration
-GTEST_DIR := /opt/homebrew/opt/googletest
+# GTEST_DIR can be overridden via environment variable
+# Default paths for common installations:
+#   macOS (Homebrew): /opt/homebrew/opt/googletest or /usr/local/opt/googletest
+#   Ubuntu/Debian: /usr
+#   Custom: Set GTEST_DIR environment variable
+GTEST_DIR ?= /opt/homebrew/opt/googletest
 GTEST_INCLUDE := -I$(GTEST_DIR)/include -I../include
 GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
 
