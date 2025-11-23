@@ -9,6 +9,7 @@
 #include "add.hpp"
 #include "sub.hpp"
 #include "max.hpp"
+#include "exception.hpp"
 
 namespace RandomVariable {
 
@@ -57,17 +58,23 @@ namespace RandomVariable {
         )
     {
         const auto* y_max0 = dynamic_cast<const OpMAX0*>(y.get());
-        assert( y_max0 != nullptr );
+        if (y_max0 == nullptr) {
+            throw Nh::RuntimeException("covariance_x_max0_y: y must be OpMAX0 type");
+        }
         const RandomVariable& z = y->left();
         double c = covariance(x,z);
         double mu = z->mean();
         double vz = z->variance();
-        assert( 0.0 < vz );
+        if (vz <= 0.0) {
+            throw Nh::RuntimeException("covariance_x_max0_y: variance must be positive, got " + std::to_string(vz));
+        }
         double sz = sqrt(vz);
         double ms = -mu/sz;
         double mpx = MeanPhiMax(ms);
         double cov = c*mpx;
-        assert( !std::isnan(cov) );
+        if (std::isnan(cov)) {
+            throw Nh::RuntimeException("covariance_x_max0_y: covariance calculation resulted in NaN");
+        }
         return (cov);
     }
 
@@ -82,7 +89,10 @@ namespace RandomVariable {
         double v1 = b->variance();
         double max_cov = sqrt(v0*v1);
         if( max_cov < minimum_variance ){
-            assert( cov < minimum_variance );
+            if (cov >= minimum_variance) {
+                throw Nh::RuntimeException("check_covariance: covariance " + std::to_string(cov) + 
+                    " exceeds maximum possible value " + std::to_string(minimum_variance));
+            }
             return;
         }
         double cor = cov / max_cov;
@@ -181,7 +191,7 @@ namespace RandomVariable {
                 cov = 0.0;
 
             } else {
-                assert(0);
+                throw Nh::RuntimeException("covariance: unsupported RandomVariable type combination for covariance calculation");
 
             }
 

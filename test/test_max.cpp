@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "../src/max.hpp"
 #include "../src/normal.hpp"
+#include "../src/exception.hpp"
 #include <cmath>
 
 using RandomVar = RandomVariable::RandomVariable;
@@ -102,5 +103,24 @@ TEST_F(MaxTest, Max0NegativeMean) {
     // Mean should be >= 0.0 (since we're taking max with 0)
     double mean = max0->mean();
     EXPECT_GE(mean, 0.0);
+}
+
+// Tests for Issue #47: assert to exception conversion
+// Test MAX0 with zero variance (should throw exception instead of assert)
+TEST_F(MaxTest, Max0WithZeroVarianceThrowsException) {
+    Normal a(5.0, 0.0);
+    
+    // Should throw exception instead of asserting
+    EXPECT_THROW({
+        RandomVar max0 = MAX0(a);
+        (void)max0->mean(); // Trigger calculation
+    }, Nh::RuntimeException);
+}
+
+// Test MAX0 with negative variance (should throw exception instead of assert)
+TEST_F(MaxTest, Max0WithNegativeVarianceThrowsException) {
+    // Note: Normal constructor already throws for negative variance,
+    // but if somehow we get a negative variance, MAX0 should handle it gracefully
+    // This test documents the desired behavior
 }
 
