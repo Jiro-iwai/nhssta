@@ -26,7 +26,7 @@ namespace RandomVariable {
         double rv = right()->variance();
         double cov = covariance(left(),right());
         double r = lv - (2.0 * cov) + rv;
-        check_variance(r);
+        _RandomVariable_::check_variance(r);
         return (r);
     }
 

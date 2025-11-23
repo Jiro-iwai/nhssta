@@ -26,7 +26,7 @@ public:
     Parser
     (
 		const std::string& file,
-		const char begin_comment,
+		char begin_comment,
 		const char* keep_separator,
 		const char* drop_separator = " \t"
 		);
@@ -90,14 +90,14 @@ private:
     Token& begin() { token_ = tokenizer_->begin(); return token_; }
     Token end() { return tokenizer_->end(); }
 
-    int line_number_;
+    int line_number_ = 0;
     std::string file_;
     std::string line_;
     std::ifstream infile_;
     std::string drop_separator_;
     std::string keep_separator_;
     const char begin_comment_;
-    Tokenizer* tokenizer_;
+    Tokenizer* tokenizer_ = nullptr;
     std::string pre_;
     Token token_;
 };

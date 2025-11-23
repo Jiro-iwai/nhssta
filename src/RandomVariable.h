@@ -109,7 +109,7 @@ namespace RandomVariable {
 		virtual double calc_mean() const;
 		virtual double calc_variance() const;
 
-		void check_variance(double& v) const;
+		static void check_variance(double& v);
 
 		std::string name_;
 		RandomVariable left_;

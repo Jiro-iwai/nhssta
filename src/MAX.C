@@ -35,7 +35,7 @@ double OpMAX::calc_variance() const {
     double zv = z->variance();
     double cov = covariance(x, z);
     double r = xv + (2.0 * cov) + zv;
-    check_variance(r);
+    _RandomVariable_::check_variance(r);
     return (r);
 }
 
@@ -72,7 +72,7 @@ double OpMAX0::calc_variance() const {
     double mm = MeanMax(ms);
     double mm2 = MeanMax2(ms);
     double r = va * (mm2 - mm * mm);
-    check_variance(r);
+    _RandomVariable_::check_variance(r);
     return (r);
 }
 
