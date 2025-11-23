@@ -11,7 +11,7 @@ OpADD::OpADD(const RandomVariable& left, const RandomVariable& right)
     level_ = std::max(left->level(), right->level());
 }
 
-OpADD::~OpADD() {}
+OpADD::~OpADD() = default;
 
 double OpADD::calc_mean() const {
     double lm = left()->mean();
@@ -23,7 +23,7 @@ double OpADD::calc_variance() const {
     double lv = left()->variance();
     double rv = right()->variance();
     double cov = covariance(left(), right());
-    double r = lv + 2.0 * cov + rv;
+    double r = lv + (2.0 * cov) + rv;
     check_variance(r);
     return (r);
 }

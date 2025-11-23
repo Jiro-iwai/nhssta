@@ -17,7 +17,7 @@ OpMAX::OpMAX(const RandomVariable& left, const RandomVariable& right)
     level_ = std::max(left->level(), right->level()) + 1;
 }
 
-OpMAX::~OpMAX() {}
+OpMAX::~OpMAX() = default;
 
 double OpMAX::calc_mean() const {
     const RandomVariable& x = left();
@@ -33,7 +33,7 @@ double OpMAX::calc_variance() const {
     double xv = x->variance();
     double zv = z->variance();
     double cov = covariance(x, z);
-    double r = xv + 2.0 * cov + zv;
+    double r = xv + (2.0 * cov) + zv;
     check_variance(r);
     return (r);
 }
@@ -49,7 +49,7 @@ OpMAX0::OpMAX0(const RandomVariable& left)
     level_ = left->level() + 1;
 }
 
-OpMAX0::~OpMAX0() {}
+OpMAX0::~OpMAX0() = default;
 
 double OpMAX0::calc_mean() const {
     double mu = left()->mean();

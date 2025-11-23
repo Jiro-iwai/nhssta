@@ -11,13 +11,13 @@ namespace RandomVariable {
 	class OpADD : public _RandomVariable_ {
 	public:
 
-		OpADD( const RandomVariable& left, const RandomVariable& righ );
-		virtual ~OpADD();
+		OpADD( const RandomVariable& left, const RandomVariable& right );
+		~OpADD() override;
 
 	private:
 
-		virtual double calc_mean() const;
-		virtual double calc_variance() const;
+		[[nodiscard]] double calc_mean() const override;
+		[[nodiscard]] double calc_variance() const override;
 	};
 
 	RandomVariable operator + (const RandomVariable& a, const RandomVariable& b);

@@ -22,14 +22,14 @@ namespace RandomVariable {
 			double variance
 			);
 
-		virtual ~_Normal_();
+		~_Normal_() override;
 
-		Normal clone() const;
+		[[nodiscard]] Normal clone() const;
 
     private:
 
-		virtual const RandomVariable& left() const;
-		virtual const RandomVariable& right() const;
+		const RandomVariable& left() const override;
+		const RandomVariable& right() const override;
 
     };
 
