@@ -51,6 +51,8 @@ public:
 
     T& operator * () const { return (*pointee_); }
 
+    T* get() const { return pointee_; }
+
     template < class U >
     operator SmartPtr<U>() const { // ���Ѵ�
 		U* u = dynamic_cast<U*>(pointee_); ////
