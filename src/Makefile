@@ -47,7 +47,7 @@ $(TARGET) : $(OBJS)
 	rm -f $@
 	$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@
 
-.PHONY: test test-build tidy
+.PHONY: test test-build tidy coverage coverage-clean
 
 # Test target
 test: $(TARGET) $(TEST_TARGET)
@@ -71,9 +71,45 @@ tidy:
 test-build: $(TEST_TARGET)
 	@echo "Test binary built successfully: $(TEST_TARGET)"
 
+# Coverage configuration
+COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
+COVERAGE_LIBS = -lgcov
+COVERAGE_DIR = ../coverage
+
+# Coverage build flags (separate from regular build)
+COVERAGE_CXXFLAGS = $(CXXFLAGS) $(COVERAGE_FLAGS)
+
+# Coverage test target
+coverage: coverage-clean
+	@echo "Building with coverage instrumentation..."
+	@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" clean
+	@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" test-build
+	@echo "Running tests with coverage..."
+	@cd .. && ./test/nhssta_test > /dev/null 2>&1 || true
+	@echo "Generating coverage report..."
+	@mkdir -p $(COVERAGE_DIR)
+	@gcov -b -c -l -p $(LIB_OBJS) 2>/dev/null || echo "Note: gcov may not be available"
+	@if command -v lcov >/dev/null 2>&1; then \
+		echo "Generating HTML coverage report with lcov..."; \
+		lcov --capture --directory . --output-file $(COVERAGE_DIR)/coverage.info --no-external --quiet || true; \
+		genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/html --quiet || true; \
+		echo "Coverage report generated in $(COVERAGE_DIR)/html/index.html"; \
+	else \
+		echo "lcov not found. Install with: brew install lcov (macOS) or apt-get install lcov (Ubuntu)"; \
+		echo "Coverage .gcov files generated in src/ directory"; \
+	fi
+
+# Clean coverage files
+coverage-clean:
+	@echo "Cleaning coverage files..."
+	@rm -rf $(COVERAGE_DIR)
+	@find . -name "*.gcda" -delete
+	@find . -name "*.gcno" -delete
+	@find . -name "*.gcov" -delete
+
 $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 	@mkdir -p ../test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS) $(COVERAGE_LIBS)
 
 ../test/%.o: ../test/%.cpp
 	@mkdir -p ../test
