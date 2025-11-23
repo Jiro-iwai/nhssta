@@ -21,25 +21,45 @@ using ExpressionException = Nh::RuntimeException;
 
 class Expression_;
 
+// Handle pattern for Expression: thin wrapper around std::shared_ptr
+//
+// Ownership semantics:
+// - Copying a Handle is lightweight: it shares ownership via std::shared_ptr
+// - Passing by value (Expression) transfers/shares ownership
+// - Passing by const reference (const Expression&) is a non-owning reference
+// - Storing as member variable creates ownership relationship
+//
+// Value category:
+// - Copy is cheap (only copies shared_ptr, not the underlying object)
+// - Move is cheap (transfers shared_ptr ownership)
+// - Use const reference for read-only access when ownership is not needed
 class ExpressionHandle {
 public:
     using element_type = Expression_;
 
     ExpressionHandle() = default;
     ExpressionHandle(std::nullptr_t) : body_(nullptr) {}
+    
+    // Takes ownership of the raw pointer (creates new shared_ptr)
     explicit ExpressionHandle(Expression_* body)
         : body_(body != nullptr ? std::shared_ptr<Expression_>(body) : nullptr) {}
+    
+    // Takes ownership via move (transfers shared_ptr ownership)
     explicit ExpressionHandle(std::shared_ptr<Expression_> body)
         : body_(std::move(body)) {}
 
+    // Takes ownership via copy (shares shared_ptr ownership)
     template <class Derived,
               class = std::enable_if_t<std::is_base_of_v<Expression_, Derived>>>
     explicit ExpressionHandle(const std::shared_ptr<Derived>& body)
         : body_(std::static_pointer_cast<Expression_>(body)) {}
 
+    // Non-owning access: returns raw pointer (no ownership transfer)
     Expression_* operator->() const { return body_.get(); }
     Expression_& operator*() const { return *body_; }
     [[nodiscard]] Expression_* get() const { return body_.get(); }
+    
+    // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
     [[nodiscard]] std::shared_ptr<Expression_> shared() const { return body_; }
     explicit operator bool() const { return static_cast<bool>(body_); }
 
@@ -58,10 +78,16 @@ public:
     }
 
 private:
+    // Owned shared_ptr: this Handle owns the underlying object
+    // Copying the Handle shares this ownership (lightweight copy)
     std::shared_ptr<Expression_> body_;
 };
 
-// Expression is differentialable type.
+// Type alias: Expression is a Handle (thin wrapper around std::shared_ptr)
+// Usage:
+// - Pass by value when ownership should be shared: void func(Expression expr)
+// - Pass by const reference for read-only access: void func(const Expression& expr)
+// - Store as member variable to create ownership: Expression left_;
 using Expression = ExpressionHandle;
 
 class Expression_ : public RCObject, public std::enable_shared_from_this<Expression_> {
