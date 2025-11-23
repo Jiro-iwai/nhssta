@@ -49,9 +49,9 @@ $(TARGET) : $(OBJS)
 .PHONY: test test-build tidy
 
 # Test target
-test: $(TEST_TARGET)
+test: $(TARGET) $(TEST_TARGET)
 	@echo "Running unit tests..."
-	@./$(TEST_TARGET) || echo "Note: Some tests may require Boost dependencies to be resolved"
+	@cd .. && ./test/nhssta_test || echo "Note: Some tests may require Boost dependencies to be resolved"
 
 # clang-tidy target
 tidy:
