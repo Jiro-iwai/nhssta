@@ -22,7 +22,7 @@ namespace Nh {
 
     /////
 
-    class _Gate_ : public RCObject {
+    class _Gate_ {
     public:
 
 		friend class _Instance_;
@@ -31,7 +31,7 @@ namespace Nh {
 		explicit _Gate_(const std::string& type_name) :
 			num_instances_(0), type_name_(type_name) {
 		}
-		~_Gate_() override = default;
+		virtual ~_Gate_() = default;
 
 		void set_type_name(const std::string& type_name) {
 			type_name_ = type_name;
@@ -102,11 +102,11 @@ namespace Nh {
 
     /////
 
-    class _Instance_ : public RCObject {
+    class _Instance_ {
     public:
 
 		_Instance_(const Gate& gate) : gate_(gate) {}
-		~_Instance_() override = default;
+		virtual ~_Instance_() = default;
 
 		void set_name(const std::string& name) { name_ = name; }
 		[[nodiscard]] const std::string& name() const { return name_;	}

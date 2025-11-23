@@ -90,7 +90,7 @@ private:
 // - Store as member variable to create ownership: Expression left_;
 using Expression = ExpressionHandle;
 
-class Expression_ : public RCObject, public std::enable_shared_from_this<Expression_> {
+class Expression_ : public std::enable_shared_from_this<Expression_> {
 public:
 
     friend class Variable;
@@ -154,7 +154,7 @@ public:
 		const Expression& right
 		);
 
-    ~Expression_() override;
+    virtual ~Expression_();
 
     [[nodiscard]] int id() const { return id_; }
 
@@ -201,7 +201,7 @@ void print_all();
 class Const_ : public Expression_ {
 public:
     Const_(double value) : Expression_(value) {}
-    ~Const_() override = default;
+    ~Const_() = default;
 private:
     // differential
     Expression d(const Expression& y) override;
@@ -218,7 +218,7 @@ public:
 class Variable_ : public Expression_ {
 public:
     Variable_() = default;
-    ~Variable_() override = default;
+    ~Variable_() = default;
     double value() override;
     Expression d(const Expression& y) override;
 };

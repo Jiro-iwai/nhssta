@@ -11,14 +11,14 @@
 
 namespace RandomVariable {
 
-    class _CovarianceMatrix_ : public RCObject {
+    class _CovarianceMatrix_ {
     public:
 
 		using RowCol = std::pair<RandomVariable,RandomVariable>;
 		using Matrix = std::map<RowCol,double>;
 
 		_CovarianceMatrix_() = default;
-		~_CovarianceMatrix_() override = default;
+		virtual ~_CovarianceMatrix_() = default;
 
 		bool lookup( const RandomVariable& a,
 					 const RandomVariable& b, double& cov ) const;
