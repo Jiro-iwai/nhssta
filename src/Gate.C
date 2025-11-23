@@ -31,7 +31,7 @@ namespace Nh {
 
 		IO io(in, out);
 
-		Delays::const_iterator i = delays_.find(io);
+		auto i = delays_.find(io);
 		if( i == delays_.end() ) {
 			std::string what = "delay from pin \"";
 			what += in;
@@ -69,13 +69,13 @@ namespace Nh {
 
     RandomVariable _Instance_::output(const std::string& out_name) {
 
-		Signals::const_iterator i = outputs_.find(out_name);
+		auto i = outputs_.find(out_name);
 
 		if( i != outputs_.end() ) {
 			assert(&(*(i->second)));
 			return (i->second);
-
-		} else {
+		}
+		{
 
 			if( gate_->delays().empty() ) {
 				std::string what = "no delay is set on gate \"";
