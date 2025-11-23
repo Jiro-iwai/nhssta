@@ -4,7 +4,7 @@
 #include <cmath>
 #include <ctime>
 #include <cctype>
-#include "util.hpp"
+#include "util_numerical.hpp"
 
 namespace RandomVariable {
 

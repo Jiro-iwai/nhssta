@@ -5,7 +5,7 @@
 #include <cmath>
 #include <memory>
 #include "statistics.hpp"
-#include "util.hpp"
+#include "util_numerical.hpp"
 #include "add.hpp"
 #include "sub.hpp"
 #include "max.hpp"

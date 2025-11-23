@@ -1,8 +1,8 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
 
-#ifndef NH_UTIL__H
-#define NH_UTIL__H
+#ifndef NH_UTIL_NUMERICAL__H
+#define NH_UTIL_NUMERICAL__H
 
 #include <string>
 
@@ -15,4 +15,4 @@ namespace RandomVariable {
 
 }
 
-#endif // NH_UTIL__H
+#endif // NH_UTIL_NUMERICAL__H

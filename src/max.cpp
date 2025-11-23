@@ -7,7 +7,7 @@
 #include "max.hpp"
 #include "sub.hpp"
 #include "covariance.hpp"
-#include "util.hpp"
+#include "util_numerical.hpp"
 #include "exception.hpp"
 
 namespace RandomVariable {
