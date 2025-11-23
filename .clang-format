@@ -3,7 +3,6 @@
 # Based on existing code style, with C++17 support
 
 Language: Cpp
-Standard: Cpp17
 
 # Base style: Google style with modifications to match existing code
 BasedOnStyle: Google

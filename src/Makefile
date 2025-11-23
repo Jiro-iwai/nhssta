@@ -41,7 +41,11 @@ $(TARGET) : $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS)
 
 %.o : %.C
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<
+	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) -c $<; \
+	else \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<; \
+	fi
 
 %.d : %.C
 	rm -f $@
@@ -88,12 +92,24 @@ coverage: coverage-clean
 	@cd .. && ./test/nhssta_test > /dev/null 2>&1 || true
 	@echo "Generating coverage report..."
 	@mkdir -p $(COVERAGE_DIR)
-	@gcov -b -c -l -p $(LIB_OBJS) 2>/dev/null || echo "Note: gcov may not be available"
+	@if command -v gcov >/dev/null 2>&1; then \
+		for src in $(CXXSRCS); do \
+			if [ -f "$$src.gcda" ]; then \
+				gcov -b -c -l -p $$src 2>/dev/null || true; \
+			fi; \
+		done; \
+	else \
+		echo "gcov not found. Install gcc to use gcov."; \
+	fi
 	@if command -v lcov >/dev/null 2>&1; then \
 		echo "Generating HTML coverage report with lcov..."; \
-		lcov --capture --directory . --output-file $(COVERAGE_DIR)/coverage.info --no-external --quiet || true; \
-		genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/html --quiet || true; \
-		echo "Coverage report generated in $(COVERAGE_DIR)/html/index.html"; \
+		lcov --capture --directory . --output-file $(COVERAGE_DIR)/coverage.info --no-external --quiet 2>/dev/null || true; \
+		if [ -f "$(COVERAGE_DIR)/coverage.info" ]; then \
+			genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/html --quiet 2>/dev/null || true; \
+			echo "Coverage report generated in $(COVERAGE_DIR)/html/index.html"; \
+		else \
+			echo "No coverage data found. Run tests first."; \
+		fi; \
 	else \
 		echo "lcov not found. Install with: brew install lcov (macOS) or apt-get install lcov (Ubuntu)"; \
 		echo "Coverage .gcov files generated in src/ directory"; \
@@ -109,11 +125,19 @@ coverage-clean:
 
 $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 	@mkdir -p ../test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS) $(COVERAGE_LIBS)
+	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS) $(COVERAGE_LIBS); \
+	else \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS); \
+	fi
 
 ../test/%.o: ../test/%.cpp
 	@mkdir -p ../test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@
+	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+	else \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+	fi
 
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
