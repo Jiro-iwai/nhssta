@@ -78,13 +78,13 @@ double Expression_::value() {
 				value_ = l * r;
 			} else if( op_ == DIV ) {
 				if( r == 0.0 ){
-					throw ExpressionException("");
+					throw Nh::RuntimeException("Expression: division by zero");
 				}
 				value_ = l / r;
 			} else if( op_ == POWER ) {
 				value_ = std::pow(l,r);
 			} else {
-				throw ExpressionException("");
+				throw Nh::RuntimeException("Expression: invalid operation");
 			}
 
 		} else if( left() != null ) {
@@ -95,13 +95,13 @@ double Expression_::value() {
 				value_ = std::exp(l);
 			} else if( op_ == LOG ) {
 				if(l < 0.0 ) {
-					throw ExpressionException("");
+					throw Nh::RuntimeException("Expression: logarithm of negative number");
 				}
 				value_ = std::log(l);
 			}
 
 		} else {
-			throw ExpressionException("");
+			throw Nh::RuntimeException("Expression: invalid operation");
 		}
 		is_set_value_ = true;
 	}
@@ -138,7 +138,7 @@ Expression Expression_::d(const Expression& y) {
 		} else if( op_ == POWER ) {
 			dx = x * ( dl/left()*right() + dr*log(left()) );
 		} else {
-			throw ExpressionException("");
+			throw Nh::RuntimeException("Expression: invalid operation in derivative calculation");
 		}
 
 	} else if( left() != null ) {
@@ -277,7 +277,7 @@ Expression Variable_::d(const Expression& y) {
 
 double Variable_::value() { 
 	if( !is_set_value() ) {
-		throw ExpressionException("");
+		throw Nh::RuntimeException("Expression: variable value not set");
 	}
 	return (value_); 
 }
@@ -370,7 +370,7 @@ Expression operator * (const Expression& a, double b){
 
 Expression operator / (const Expression& a, const Expression& b){
 	if( b == zero ) {
-		throw ExpressionException("");
+		throw Nh::RuntimeException("Expression: division by zero");
 	}
 	if( a == zero ) {
 		return zero;
@@ -400,7 +400,7 @@ Expression operator / (double a, const Expression& b){
 Expression operator ^ (const Expression& a, const Expression& b){
 	if( b == zero ) {
 		if( a == zero ) {
-			throw ExpressionException("");
+			throw Nh::RuntimeException("Expression: zero to the power of zero");
 		}
 		return one;
 	}

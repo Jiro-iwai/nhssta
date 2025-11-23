@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include "Normal.h"
+#include "Exception.h"
 
 namespace RandomVariable {
 
@@ -17,7 +18,7 @@ namespace RandomVariable {
 		) : _RandomVariable_(mean,variance)
     {
 		if( variance < 0.0 )
-			throw Exception("Normal: negative variance");
+			throw Nh::RuntimeException("Normal: negative variance");
     }
 
     _Normal_::~_Normal_() = default;

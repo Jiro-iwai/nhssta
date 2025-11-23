@@ -8,6 +8,7 @@
 #include <map>
 #include "SmartPtr.h"
 #include "Statistics.h"
+#include "Exception.h"
 
 namespace Nh {
 
@@ -64,13 +65,9 @@ namespace Nh {
 
     class Gate : public SmartPtr<_Gate_> {
     public:
-		class exception {
-		public:
-			exception(const std::string& what): what_(what) {}
-			const std::string& what() { return what_; }
-		private:
-			std::string what_ ;
-		};
+		// Backward compatibility: keep exception as alias to Nh::RuntimeException
+		// This will be removed in a later phase
+		using exception = Nh::RuntimeException;
 		Gate() : SmartPtr<_Gate_>( new _Gate_() ) {}
 		Gate(_Gate_* body) : SmartPtr<_Gate_>(body) {}
     };
