@@ -13,46 +13,39 @@
 
 namespace Nh {
 
-    std::string date() {
-        time_t t = time(0);
-        char* s = nullptr;
-        char* p = nullptr;
-        p = s = asctime(localtime(&t));
-        while(*s != '\0') {
-            if (*s == '\n') {
-                *s = '\0';
-                break;
-            }
-            s++;
-        }
-        return {p};
-    }
-
     Ssta::Ssta()
     {
-        std::cerr << "nhssta 0.0.8 (" << date() << ")" << std::endl;
+        // No I/O operations - pure logic initialization
+        // Version information should be handled by CLI layer
     }
 
     Ssta::~Ssta() {
-        std::cerr << "OK" << std::endl;
+        // No I/O operations - pure logic cleanup
+        // Success message should be handled by CLI layer
     }
 
     void Ssta::check() {
-
-        int error = 0;
-
+        // Validate configuration and throw exception if invalid
+        // Error messages should be handled by CLI layer
+        
+        std::string error_msg;
+        
         if( dlib_.empty() ) {
-            std::cerr << "error: please specify `-d' properly" << std::endl;
-            error++;
+            if (!error_msg.empty()) {
+                error_msg += "; ";
+            }
+            error_msg += "please specify `-d' properly";
         }
 
         if( bench_.empty() ) {
-            std::cerr << "error: please specify `-b' properly" << std::endl;
-            error++;
+            if (!error_msg.empty()) {
+                error_msg += "; ";
+            }
+            error_msg += "please specify `-b' properly";
         }
 
-        if( error != 0 ) {
-            exit(1);
+        if( !error_msg.empty() ) {
+            throw Nh::Exception("error: " + error_msg);
         }
     }
 
