@@ -54,7 +54,7 @@ print_warning() {
 
 # 1. Build
 print_section "1. Building nhssta"
-cd src
+cd "$PROJECT_ROOT/src"
 if make clean >/dev/null 2>&1 && make >/dev/null 2>&1; then
     print_success "Build successful"
 else
@@ -64,6 +64,7 @@ fi
 
 # 2. Run tests
 print_section "2. Running tests"
+cd "$PROJECT_ROOT/src"
 if make test >/dev/null 2>&1; then
     print_success "All tests passed"
     # Show test summary
@@ -79,6 +80,7 @@ fi
 
 # 3. Linting (clang-tidy)
 print_section "3. Running clang-tidy"
+cd "$PROJECT_ROOT/src"
 if command -v clang-tidy >/dev/null 2>&1; then
     if make tidy >/dev/null 2>&1; then
         print_success "clang-tidy check passed (no critical issues)"
@@ -93,6 +95,7 @@ fi
 
 # 4. Code coverage (optional)
 print_section "4. Generating code coverage report"
+cd "$PROJECT_ROOT/src"
 if command -v gcov >/dev/null 2>&1 && command -v lcov >/dev/null 2>&1; then
     if make coverage >/dev/null 2>&1; then
         print_success "Coverage report generated"
