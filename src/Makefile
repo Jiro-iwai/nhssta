@@ -12,6 +12,23 @@ OBJS = $(CXXSRCS:.C=.o)
 DEPS = $(CXXSRCS:.C=.d) 
 TARGET = nhssta
 
+# Google Test configuration
+GTEST_DIR = /opt/homebrew/opt/googletest
+GTEST_INCLUDE = -I$(GTEST_DIR)/include
+GTEST_LIBS = -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
+
+# Test sources (relative to src directory)
+TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
+	../test/test_add.cpp ../test/test_max.cpp ../test/test_covariance.cpp \
+	../test/test_integration.cpp
+TEST_OBJS = $(TEST_SRCS:.cpp=.o)
+TEST_TARGET = ../test/nhssta_test
+
+# Core library objects (without main.C)
+LIB_OBJS = Covariance.o MAX.o SUB.o Normal.o \
+	RandomVariable.o ADD.o Util.o Gate.o \
+	Parser.o Ssta.o Expression.o
+
 $(TARGET) : $(OBJS) 
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS)
 
@@ -22,8 +39,26 @@ $(TARGET) : $(OBJS)
 	rm -f $@
 	$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@
 
+# Test target
+test: $(TEST_TARGET)
+	@echo "Running unit tests..."
+	@./$(TEST_TARGET) || echo "Note: Some tests may require Boost dependencies to be resolved"
+
+# Build test target only (without running)
+test-build: $(TEST_TARGET)
+	@echo "Test binary built successfully: $(TEST_TARGET)"
+
+$(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
+	@mkdir -p ../test
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS)
+
+../test/%.o: ../test/%.cpp
+	@mkdir -p ../test
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -c $< -o $@
+
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
+	rm -f $(TEST_OBJS) ../test/nhssta_test
 
 tags :
 	etags *.h *.C

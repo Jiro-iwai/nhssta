@@ -1,0 +1,102 @@
+#include <gtest/gtest.h>
+#include "../src/MAX.h"
+#include "../src/Normal.h"
+#include <cmath>
+
+using namespace RandomVariable;
+
+class MaxTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup code if needed
+    }
+
+    void TearDown() override {
+        // Cleanup code if needed
+    }
+};
+
+// Test MAX of two independent Normal random variables
+TEST_F(MaxTest, MaxTwoNormals) {
+    Normal a(10.0, 4.0);
+    Normal b(5.0, 1.0);
+    
+    RandomVariable max = MAX(a, b);
+    
+    // Mean should be greater than max of individual means
+    double mean = max->mean();
+    EXPECT_GT(mean, 10.0); // Should be > max(10, 5)
+    
+    // Variance should be positive
+    double variance = max->variance();
+    EXPECT_GT(variance, 0.0);
+}
+
+// Test MAX when first variable is clearly larger
+TEST_F(MaxTest, MaxWhenFirstLarger) {
+    Normal a(20.0, 4.0);
+    Normal b(5.0, 1.0);
+    
+    RandomVariable max = MAX(a, b);
+    
+    // Mean should be close to 20.0 (since a is much larger)
+    double mean = max->mean();
+    EXPECT_GT(mean, 15.0);
+    EXPECT_LT(mean, 25.0);
+}
+
+// Test MAX when second variable is clearly larger
+TEST_F(MaxTest, MaxWhenSecondLarger) {
+    Normal a(5.0, 1.0);
+    Normal b(20.0, 4.0);
+    
+    RandomVariable max = MAX(a, b);
+    
+    // Mean should be close to 20.0 (since b is much larger)
+    double mean = max->mean();
+    EXPECT_GT(mean, 15.0);
+    EXPECT_LT(mean, 25.0);
+}
+
+// Test MAX with equal means
+TEST_F(MaxTest, MaxEqualMeans) {
+    Normal a(10.0, 4.0);
+    Normal b(10.0, 4.0);
+    
+    RandomVariable max = MAX(a, b);
+    
+    // Mean should be >= 10.0
+    double mean = max->mean();
+    EXPECT_GE(mean, 10.0);
+    
+    // Variance should be positive
+    double variance = max->variance();
+    EXPECT_GT(variance, 0.0);
+}
+
+// Test MAX0 (max with zero)
+TEST_F(MaxTest, Max0Test) {
+    Normal a(5.0, 4.0);
+    
+    RandomVariable max0 = MAX0(a);
+    
+    // Mean should be >= 5.0 (since we're taking max with 0)
+    double mean = max0->mean();
+    EXPECT_GE(mean, 5.0);
+    
+    // Variance should be positive
+    double variance = max0->variance();
+    EXPECT_GT(variance, 0.0);
+}
+
+// Test MAX0 with negative mean
+TEST_F(MaxTest, Max0NegativeMean) {
+    Normal a(-5.0, 4.0);
+    
+    RandomVariable max0 = MAX0(a);
+    
+    // Mean should be >= 0.0 (since we're taking max with 0)
+    double mean = max0->mean();
+    EXPECT_GE(mean, 0.0);
+}
+
