@@ -7,9 +7,9 @@
 #include <string>
 #include <map>
 #include <memory>
-#include "SmartPtr.h"
-#include "Statistics.h"
-#include "Exception.h"
+#include "smart_ptr.hpp"
+#include "statistics.hpp"
+#include "exception.hpp"
 
 namespace Nh {
 

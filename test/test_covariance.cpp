@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "../src/Covariance.h"
-#include "../src/Normal.h"
-#include "../src/ADD.h"
+#include "../src/covariance.hpp"
+#include "../src/normal.hpp"
+#include "../src/add.hpp"
 #include <cmath>
 
 using RandomVar = RandomVariable::RandomVariable;

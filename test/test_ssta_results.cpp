@@ -3,10 +3,10 @@
 // Phase 2: I/O and logic separation
 
 #include <gtest/gtest.h>
-#include "Ssta.h"
-#include "SstaResults.h"
-#include "RandomVariable.h"
-#include "Normal.h"
+#include "ssta.hpp"
+#include "ssta_results.hpp"
+#include "random_variable.hpp"
+#include "normal.hpp"
 #include <cmath>
 #include <algorithm>
 

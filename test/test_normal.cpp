@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/Normal.h"
+#include "../src/normal.hpp"
 #include <cmath>
 
 using namespace RandomVariable;

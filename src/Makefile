@@ -18,12 +18,12 @@ CXXFLAGS = -g -Wall -std=c++17
 # BOOST_DIR = /opt/homebrew/opt/boost
 # INCLUDE = -I$(BOOST_DIR)/include
 INCLUDE = 
-CXXSRCS = Covariance.C  MAX.C  SUB.C  Normal.C  \
-	RandomVariable.C  ADD.C  Util.C Gate.C \
-	Parser.C Ssta.C Expression.C main.C
-#CXXSRCS =  test.C Expression.C
-OBJS = $(CXXSRCS:.C=.o) 
-DEPS = $(CXXSRCS:.C=.d) 
+CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
+	random_variable.cpp add.cpp util.cpp gate.cpp \
+	parser.cpp ssta.cpp expression.cpp main.cpp
+#CXXSRCS =  test.cpp expression.cpp
+OBJS = $(CXXSRCS:.cpp=.o) 
+DEPS = $(CXXSRCS:.cpp=.d) 
 TARGET = nhssta
 
 # Google Test configuration
@@ -45,16 +45,16 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 
-# Core library objects (without main.C)
-LIB_OBJS = Covariance.o MAX.o SUB.o Normal.o \
-	RandomVariable.o ADD.o Util.o Gate.o \
-	Parser.o Ssta.o Expression.o
+# Core library objects (without main.cpp)
+LIB_OBJS = covariance.o max.o sub.o normal.o \
+	random_variable.o add.o util.o gate.o \
+	parser.o ssta.o expression.o
 
 $(TARGET) : $(OBJS) 
 	$(ECHO) "Linking $(TARGET) from $(words $(OBJS)) object files"
 	$(Q)$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS)
 
-%.o : %.C
+%.o : %.cpp
 	$(ECHO) "Compiling $< -> $@"
 	$(Q)if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
 		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) -c $<; \
@@ -62,7 +62,7 @@ $(TARGET) : $(OBJS)
 		$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<; \
 	fi
 
-%.d : %.C
+%.d : %.cpp
 	rm -f $@
 	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
 		$(CXX) -MM $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@; \
@@ -157,13 +157,13 @@ $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS); \
 	fi
 
-../test/%.o: ../test/%.cpp
+$(TEST_OBJS): ../test/%.o: ../test/%.cpp
 	$(Q)mkdir -p ../test
 	$(ECHO) "Compiling $< -> $@"
 	$(Q)if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
-		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) -I/opt/homebrew/opt/googletest/include -I. -I../test -c $< -o $@; \
 	else \
-		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) -I/opt/homebrew/opt/googletest/include -I. -I../test -c $< -o $@; \
 	fi
 
 clean :
@@ -171,9 +171,6 @@ clean :
 	rm -f $(TEST_OBJS) ../test/nhssta_test
 
 tags :
-	etags *.h *.C
+	etags *.hpp *.cpp
 
 -include $(DEPS)
-
-
-

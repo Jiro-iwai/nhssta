@@ -4,10 +4,10 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
-#include "MAX.h"
-#include "SUB.h"
-#include "Covariance.h"
-#include "Util.h"
+#include "max.hpp"
+#include "sub.hpp"
+#include "covariance.hpp"
+#include "util.hpp"
 
 namespace RandomVariable {
 

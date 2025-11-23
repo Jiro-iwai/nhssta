@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../src/MAX.h"
-#include "../src/Normal.h"
+#include "../src/max.hpp"
+#include "../src/normal.hpp"
 #include <cmath>
 
 using RandomVar = RandomVariable::RandomVariable;

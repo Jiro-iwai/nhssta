@@ -10,11 +10,11 @@
 #include <list>
 #include <vector>
 #include <string>
-#include "SmartPtr.h"
-#include "Gate.h"
-#include "Parser.h"
-#include "SstaResults.h"
-#include "Exception.h"
+#include "smart_ptr.hpp"
+#include "gate.hpp"
+#include "parser.hpp"
+#include "ssta_results.hpp"
+#include "exception.hpp"
 
 namespace Nh {
 

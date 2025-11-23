@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include "Expression.h"
+#include "expression.hpp"
 
 namespace Nh {
 

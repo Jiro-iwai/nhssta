@@ -2,8 +2,8 @@
 // Author: IWAI Jiro
 
 #include <cassert>
-#include "Normal.h"
-#include "Exception.h"
+#include "normal.hpp"
+#include "exception.hpp"
 
 namespace RandomVariable {
 

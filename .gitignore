@@ -8,3 +8,7 @@ example/result*_
 # clang-format/clang-tidy
 .clang-format.bak
 .clang-tidy.bak
+*.gcda
+*.gcno
+*.gcov
+coverage/

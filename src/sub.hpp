@@ -4,7 +4,7 @@
 #ifndef NH_SUB__H
 #define NH_SUB__H
 
-#include "RandomVariable.h"
+#include "random_variable.hpp"
 
 namespace RandomVariable {
 

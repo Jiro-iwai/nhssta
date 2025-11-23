@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "../src/Normal.h"
-#include "../src/RandomVariable.h"
-#include "../src/ADD.h"
-#include "../src/Gate.h"
+#include "../src/normal.hpp"
+#include "../src/random_variable.hpp"
+#include "../src/add.hpp"
+#include "../src/gate.hpp"
 #include <memory>
 
 using RandomVar = RandomVariable::RandomVariable;

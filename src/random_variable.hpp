@@ -8,8 +8,8 @@
 #include <string>
 #include <type_traits>
 
-#include "SmartPtr.h"
-#include "Exception.h"
+#include "smart_ptr.hpp"
+#include "exception.hpp"
 
 namespace RandomVariable {
 

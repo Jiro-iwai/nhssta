@@ -9,8 +9,8 @@
 #include <set>
 #include <memory>
 #include <type_traits>
-#include "SmartPtr.h"
-#include "Exception.h"
+#include "smart_ptr.hpp"
+#include "exception.hpp"
 
 ////////////////////
 

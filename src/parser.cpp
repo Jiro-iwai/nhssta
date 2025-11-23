@@ -1,7 +1,7 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro
 
-#include "Parser.h"
+#include "parser.hpp"
 
 Parser::Parser(
     const std::string& file,

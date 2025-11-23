@@ -5,7 +5,7 @@
 #define NORMAL__H
 
 #include <memory>
-#include "RandomVariable.h"
+#include "random_variable.hpp"
 
 namespace RandomVariable {
 

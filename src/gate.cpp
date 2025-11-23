@@ -6,9 +6,9 @@
 #include <cmath>
 #include <string>
 #include <memory>
-#include "Gate.h"
-#include "ADD.h"
-#include "Exception.h"
+#include "gate.hpp"
+#include "add.hpp"
+#include "exception.hpp"
 
 namespace Nh {
 
