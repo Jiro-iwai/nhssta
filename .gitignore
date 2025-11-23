@@ -2,3 +2,5 @@
 *.d
 *~
 src/nhssta
+test/nhssta_test
+example/result*_
