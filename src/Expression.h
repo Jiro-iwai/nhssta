@@ -4,6 +4,7 @@
 #ifndef EXPRESSION__H
 #define EXPRESSION__H
 
+#include <cassert>
 #include <map>
 #include <set>
 #include "SmartPtr.h"
