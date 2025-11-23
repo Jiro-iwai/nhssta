@@ -7,6 +7,7 @@
 #include "../src/SstaResults.h"
 #include <fstream>
 #include <sys/stat.h>
+#include <cmath>
 #include "test_path_helper.h"
 
 using namespace Nh;
