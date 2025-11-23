@@ -205,11 +205,13 @@ make dev-setup
 
 ```bash
 # Makefile経由で実行（推奨）
-make check
+make dev-check
 
 # または直接スクリプトを実行
 ./scripts/run-all-checks.sh
 ```
+
+**注意**: `make check`は統合テスト用の既存ターゲットです。開発チェックには`make dev-check`を使用してください。
 
 #### 個別のコマンド
 
