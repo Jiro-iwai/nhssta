@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cmath>
 #include <string>
-#include <boost/lexical_cast.hpp>
 #include "Gate.h"
 #include "ADD.h"
 
@@ -51,7 +50,7 @@ namespace Nh {
     Instance _Gate_::create_instance() {
 		Instance inst( new _Instance_( Gate(this) ) );
 		std::string inst_name = type_name_ + ":";
-		inst_name += boost::lexical_cast<std::string>(num_instances_++);
+		inst_name += std::to_string(num_instances_++);
 		inst->set_name(inst_name);
 		return inst;
     }

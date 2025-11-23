@@ -3,7 +3,7 @@ DIR = src
 
 CXX      = g++
 #CXXFLAGS = -g -Wall -mno-cygwin
-CXXFLAGS = -O
+CXXFLAGS = -O -std=c++17
 CXXLIBS  = 
 AR       = ar
 ARFLAGS  = cru

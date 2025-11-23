@@ -1,9 +1,10 @@
 SHELL = /bin/sh
 
 CXX = g++
-CXXFLAGS = -g -Wall 
+CXXFLAGS = -g -Wall -std=c++17 
 #INCLUDE = -I/usr/include/boost-1_33_1
-INCLUDE = 
+BOOST_DIR = /opt/homebrew/opt/boost
+INCLUDE = -I$(BOOST_DIR)/include 
 CXXSRCS = Covariance.C  MAX.C  SUB.C  Normal.C  \
 	RandomVariable.C  ADD.C  Util.C Gate.C \
 	Parser.C Ssta.C Expression.C main.C

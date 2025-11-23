@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <cmath>
+#include <algorithm>
+#include <functional>
 #include <boost/format.hpp>
 #include "Expression.h"
 
@@ -173,7 +175,7 @@ void Expression_::unset_value() {
 }
 
 void Expression_::unset_root_value() { 
-	for_each(roots_.begin(),roots_.end(),std::mem_fun(&Expression_::unset_value));
+        for_each(roots_.begin(),roots_.end(),std::mem_fn(&Expression_::unset_value));
 }
 
 void Expression_::add_root(Expression_* root){
@@ -249,7 +251,7 @@ void Expression_::print () {
 }
 
 void Expression_::print_all() {
-	for_each(eTbl_.begin(),eTbl_.end(),std::mem_fun(&Expression_::print));
+        for_each(eTbl_.begin(),eTbl_.end(),std::mem_fn(&Expression_::print));
 }
 
 void print_all(){
