@@ -4,9 +4,7 @@
 #include "../src/parser.hpp"
 #include "../src/gate.hpp"
 #include "../src/random_variable.hpp"
-// SmartPtrException is now an alias to Nh::RuntimeException
-// We use Nh::RuntimeException directly instead of SmartPtrException
-using SmartPtrException = Nh::RuntimeException;
+// SmartPtrException has been removed - use Nh::RuntimeException directly
 #include "../src/expression.hpp"
 #include <fstream>
 #include <sstream>
@@ -107,11 +105,12 @@ TEST_F(ExceptionUnificationTest, RandomVariableExceptionBehavior) {
 }
 
 // Test: SmartPtrException behavior (now Nh::RuntimeException)
+// SmartPtrException has been removed - use Nh::RuntimeException directly
 TEST_F(ExceptionUnificationTest, SmartPtrExceptionBehavior) {
     try {
         throw Nh::RuntimeException("Test SmartPtr exception");
-    } catch (SmartPtrException& e) {
-        // SmartPtrException is now an alias to Nh::RuntimeException
+    } catch (Nh::RuntimeException& e) {
+        // SmartPtrException has been removed - use Nh::RuntimeException directly
         EXPECT_NE(std::string(e.what()).find("Runtime error"), std::string::npos);
         EXPECT_NE(std::string(e.what()).find("Test SmartPtr exception"), std::string::npos);
     }
