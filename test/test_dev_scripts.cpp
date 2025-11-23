@@ -6,16 +6,50 @@
 #include <cstdlib>
 #include <string>
 #include <fstream>
+#include <vector>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
 
 class DevScriptsTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Verify that scripts directory exists
+        // Find scripts directory dynamically based on current working directory
+        // Tests may run from src/ or test/ directory
+        char cwd[PATH_MAX];
+        std::string current_dir;
+        if (getcwd(cwd, sizeof(cwd)) != nullptr) {
+            current_dir = cwd;
+        }
+        
+        // Try different possible paths relative to current directory
+        std::vector<std::string> possible_paths;
+        possible_paths.push_back("../scripts");  // From src/ directory
+        possible_paths.push_back("scripts");     // From project root
+        possible_paths.push_back("../../scripts"); // From test/ directory (if tests run from there)
+        
+        // Also try absolute paths if we have current directory
+        if (!current_dir.empty()) {
+            possible_paths.push_back(current_dir + "/../scripts");
+            // If we're in test/ directory, go up two levels
+            size_t test_pos = current_dir.find("/test");
+            if (test_pos != std::string::npos) {
+                std::string parent = current_dir.substr(0, test_pos);
+                possible_paths.push_back(parent + "/scripts");
+            }
+        }
+        
         struct stat info;
-        scripts_dir = "../scripts";
-        if (stat(scripts_dir.c_str(), &info) != 0) {
-            GTEST_SKIP() << "scripts directory not found";
+        scripts_dir = "";  // Initialize to empty
+        for (const auto& path : possible_paths) {
+            if (stat(path.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
+                scripts_dir = path;
+                break;
+            }
+        }
+        
+        if (scripts_dir.empty()) {
+            GTEST_SKIP() << "scripts directory not found (tried: ../scripts, scripts, ../../scripts)";
         }
     }
 
