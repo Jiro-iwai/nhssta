@@ -14,70 +14,74 @@ nhsstaは統計的PERT法を実装したプログラムです。nhsstaは以下�
 ### 1.2 ディレクトリ構成
 
 ```
- nhssta/README               本ドキュメント
-        ChangeLog            変更履歴
-        Makefile             メイクファイル
+ nhssta/
+        README.md            本ドキュメント
+        CONTRIBUTING.md      コントリビューションガイドライン
+        Makefile             ルートメイクファイル
+        .clang-format        コードフォーマット設定
+        .clang-tidy          静的解析設定
        /src/*.[Ch]           ソースファイル
+       /src/Makefile         ソースビルド設定
+       /test/*.cpp           ユニットテスト（Google Test）
+       /test/README.md       テストスイートの説明
        /example/*.bench      サンプル.benchデータ
                /*.dlib       サンプル.dlibデータ
-               /nhssta_test  テストスクリプト
+               /nhssta_test  統合テストスクリプト
                /result*      テストスクリプト実行結果
+       /docs/                 開発ドキュメント
+       /coverage/             コードカバレッジレポート（make coverage実行後）
 ```			   
 
 ## 2. 使用方法
 
 ### 2.1 コンパイル、テスト
 
-- nhssta は "boost C++ ライブラリ(以下 boost)" を使用しますので 予 boostをインストールして下さい(フルインストールは必要ありません。ヘッダのみのインストールで動作します。) boost のインストールについては以下の web が参考になります。
+- コンパイルには **C++17対応のコンパイラ**（g++ 7.0以上、clang++ 5.0以上）が必要です。
 
-  - http://www.boost.org/
-  - http://www.kmonos.net/alang/boost/
+- テスト実行には **Google Test** が必要です。インストール方法：
+  - macOS: `brew install googletest`
+  - Ubuntu: `sudo apt-get install libgtest-dev`
 
-- コンパイルには g++ ( 3.3.3 以上 ) が必要です。
+- プロジェクトルートからビルドを実行します：
 
-- Makefile を適当なエディタで開き 5行目
-
-```
-INCLUDE = -I/home/jiro/packages/boost
-```
-
-を
-
-```
-INCLUDE = -I"boostをインストールしたディレクトリ名"
-```
-
-のように自分の環境に合わせて書き換えます。
-
-- 一つ上のディレクトリ nhssta-0.0.8 に戻り make を実行します。
-
-```
-$ cd ..
+```bash
 $ make
 ```
 
-コンパイルが終了すると ディレクトリ src 以下に nhssta という実行ファイ
-ルが作成されます。
+コンパイルが終了すると、ディレクトリ `src/` 以下に `nhssta` という実行ファイルが作成されます。
+
+- ユニットテストを実行する場合：
+
+```bash
+$ make test
+```
+
+すべてのテストがパスすると、以下のように表示されます：
 
 ```
+[==========] Running 197 tests from 21 test suites.
+[  PASSED  ] 197 tests.
+```
+
+- 統合テスト（exampleディレクトリのテストスクリプト）を実行する場合：
+
+```bash
 $ make check
 ```
 
-とすると、テストスクリプトが実行されます。何も問題がなければ
+- コードカバレッジレポートを生成する場合：
 
-```
-cd example; make
-make[1]: Entering directory `/home/jiro/project/nhssta-0.0.6.2/example'
-./nhssta_test
-nhssta 0.0.8 (Fri May 26 00:32:27 2006)
-OK
-nhssta 0.0.8 (Fri May 26 00:32:27 2006)
-OK
-...
-...
+```bash
+$ make coverage
 ```
 
-のように表示され、数秒でテストが終了します。
+カバレッジレポートは `coverage/html/index.html` に生成されます。
+
+- コードスタイルチェック（clang-tidy）を実行する場合：
+
+```bash
+$ make tidy
+```
 
 ### 2.2 実行方法
 

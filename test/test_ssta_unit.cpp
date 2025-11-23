@@ -7,11 +7,13 @@
 #include "../src/SstaResults.h"
 #include <fstream>
 #include <sys/stat.h>
+#include <cmath>
 #include "test_path_helper.h"
 
 using namespace Nh;
 using RandomVar = ::RandomVariable::RandomVariable;
 using Normal = ::RandomVariable::Normal;
+using std::isnan;
 
 class SstaUnitTest : public ::testing::Test {
 protected:
@@ -247,8 +249,8 @@ TEST_F(SstaUnitTest, GetLatResultsAfterRead) {
     // Check that results have valid values
     for (const auto& result : results) {
         EXPECT_FALSE(result.node_name.empty());
-        EXPECT_FALSE(std::isnan(result.mean));
-        EXPECT_FALSE(std::isnan(result.std_dev));
+        EXPECT_FALSE(isnan(result.mean));
+        EXPECT_FALSE(isnan(result.std_dev));
         EXPECT_GE(result.std_dev, 0.0);
     }
 }

@@ -13,9 +13,11 @@ endif
 
 CXX ?= g++
 CXXFLAGS = -g -Wall -std=c++17 
-#INCLUDE = -I/usr/include/boost-1_33_1
-BOOST_DIR = /opt/homebrew/opt/boost
-INCLUDE = -I$(BOOST_DIR)/include 
+# Boost dependencies have been removed in Phase 1
+# If you need Boost for legacy code, uncomment and set BOOST_DIR:
+# BOOST_DIR = /opt/homebrew/opt/boost
+# INCLUDE = -I$(BOOST_DIR)/include
+INCLUDE = 
 CXXSRCS = Covariance.C  MAX.C  SUB.C  Normal.C  \
 	RandomVariable.C  ADD.C  Util.C Gate.C \
 	Parser.C Ssta.C Expression.C main.C

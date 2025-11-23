@@ -24,12 +24,12 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libboost-all-dev libgtest-dev build-essential lcov
+        sudo apt-get install -y libgtest-dev build-essential lcov
 
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        brew install boost googletest lcov
+        brew install googletest lcov
 
     - name: Build nhssta
       working-directory: src
@@ -44,7 +44,7 @@ jobs:
     - name: Build and run unit tests
       working-directory: src
       run: |
-        make test || echo "Unit tests require Boost dependencies to be resolved first"
+        make test
 
     - name: Generate coverage report
       if: matrix.compiler == 'g++'
@@ -70,7 +70,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang-tidy clang-format libboost-all-dev
+        sudo apt-get install -y clang-tidy clang-format
 
     - name: Run clang-format check
       run: |
