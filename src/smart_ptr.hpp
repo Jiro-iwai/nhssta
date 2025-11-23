@@ -85,28 +85,8 @@ private:
 
 #endif // NH_ENABLE_LEGACY_SMARTPTR
 
-class RCObject { // ���Ȳ����¬�� class
-public:
-
-    RCObject() = default;
-    virtual ~RCObject() = default;
-
-    void refer() { ++counter_; }
-
-    void release() {
-		if( --counter_ == 0 ) {
-			delete this;
-		}
-    }
-
-    [[nodiscard]] int refCount() const { return (counter_); }
-
-    RCObject( const RCObject& org ) = delete;
-    RCObject& operator = ( const RCObject& rhs ) = delete;
-
-private:
-
-    int counter_ = 0;
-};
+// RCObject class has been removed - all classes now use std::shared_ptr directly
+// This file now only contains SmartPtrException alias for backward compatibility
+// and the legacy SmartPtr template (disabled by default)
 
 #endif // SMART_PTR__H

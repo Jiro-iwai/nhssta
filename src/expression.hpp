@@ -9,7 +9,6 @@
 #include <set>
 #include <memory>
 #include <type_traits>
-#include "smart_ptr.hpp"
 #include <nhssta/exception.hpp>
 
 ////////////////////

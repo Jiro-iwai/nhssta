@@ -4,7 +4,9 @@
 #include "../src/parser.hpp"
 #include "../src/gate.hpp"
 #include "../src/random_variable.hpp"
-#include "../src/smart_ptr.hpp"
+// SmartPtrException is now an alias to Nh::RuntimeException
+// We can use Nh::RuntimeException directly instead of including smart_ptr.hpp
+using SmartPtrException = Nh::RuntimeException;
 #include "../src/expression.hpp"
 #include <fstream>
 #include <sstream>

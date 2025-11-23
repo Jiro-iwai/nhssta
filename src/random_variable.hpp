@@ -8,7 +8,6 @@
 #include <string>
 #include <type_traits>
 
-#include "smart_ptr.hpp"
 #include <nhssta/exception.hpp>
 
 namespace RandomVariable {

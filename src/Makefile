@@ -47,7 +47,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_gate.cpp ../test/test_ssta_unit.cpp \
 	../test/test_expression_assert_migration.cpp ../test/test_util.cpp \
 	../test/test_public_api_headers.cpp ../test/test_cli_exit_codes.cpp \
-	../test/test_handle_ownership.cpp ../test/test_rcobject_removal.cpp
+	../test/test_handle_ownership.cpp ../test/test_rcobject_removal.cpp \
+	../test/test_smartptr_removal.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 

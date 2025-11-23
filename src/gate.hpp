@@ -7,7 +7,6 @@
 #include <string>
 #include <map>
 #include <memory>
-#include "smart_ptr.hpp"
 #include "statistics.hpp"
 #include <nhssta/exception.hpp>
 
