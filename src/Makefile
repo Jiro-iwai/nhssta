@@ -27,9 +27,9 @@ DEPS = $(CXXSRCS:.cpp=.d)
 TARGET = nhssta
 
 # Google Test configuration
-GTEST_DIR = /opt/homebrew/opt/googletest
-GTEST_INCLUDE = -I$(GTEST_DIR)/include
-GTEST_LIBS = -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
+GTEST_DIR := /opt/homebrew/opt/googletest
+GTEST_INCLUDE := -I$(GTEST_DIR)/include
+GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
 
 # Test sources (relative to src directory)
 TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
@@ -161,9 +161,9 @@ $(TEST_OBJS): ../test/%.o: ../test/%.cpp
 	$(Q)mkdir -p ../test
 	$(ECHO) "Compiling $< -> $@"
 	$(Q)if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
-		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) -I/opt/homebrew/opt/googletest/include -I. -I../test -c $< -o $@; \
+		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
 	else \
-		$(CXX) $(CXXFLAGS) $(INCLUDE) -I/opt/homebrew/opt/googletest/include -I. -I../test -c $< -o $@; \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
 	fi
 
 clean :
