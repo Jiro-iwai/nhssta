@@ -52,7 +52,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_public_api_headers.cpp ../test/test_cli_exit_codes.cpp \
 	../test/test_handle_ownership.cpp ../test/test_rcobject_removal.cpp \
 	../test/test_smartptr_removal.cpp ../test/test_util_boundary.cpp \
-	../test/test_coverage_gaps.cpp ../test/test_makefile_portability.cpp
+	../test/test_coverage_gaps.cpp ../test/test_makefile_portability.cpp \
+	../test/test_dev_scripts.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 
