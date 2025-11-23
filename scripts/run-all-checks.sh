@@ -67,7 +67,11 @@ print_section "2. Running tests"
 if make test >/dev/null 2>&1; then
     print_success "All tests passed"
     # Show test summary
-    ./test/nhssta_test --gtest_brief=1 2>&1 | tail -3 || true
+    if [ -f "../test/nhssta_test" ]; then
+        ../test/nhssta_test --gtest_brief=1 2>&1 | tail -3 || true
+    elif [ -f "test/nhssta_test" ]; then
+        test/nhssta_test --gtest_brief=1 2>&1 | tail -3 || true
+    fi
 else
     print_failure "Tests failed"
     echo "Run 'make test' manually to see detailed test output"
