@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <ctime>
 #include "ssta.hpp"
 #include "exception.hpp"
 
@@ -82,9 +83,28 @@ void set_option(int argc, char *argv[], Nh::Ssta* ssta) {
     }
 }
 
+// Helper function to get version string (moved from Ssta constructor)
+std::string get_version_string() {
+    time_t t = time(0);
+    char* s = nullptr;
+    char* p = nullptr;
+    p = s = asctime(localtime(&t));
+    while(*s != '\0') {
+        if (*s == '\n') {
+            *s = '\0';
+            break;
+        }
+        s++;
+    }
+    return std::string("nhssta 0.0.8 (") + p + ")";
+}
+
 int main(int argc, char *argv[]) {
 
     try {
+        // CLI layer: Output version information
+        cerr << get_version_string() << endl;
+        
 		Nh::Ssta ssta;
 		set_option(argc, argv, &ssta);
 		ssta.check();
@@ -92,8 +112,11 @@ int main(int argc, char *argv[]) {
 		ssta.read_bench();
 		ssta.report();
 
+        // CLI layer: Output success message
+        cerr << "OK" << endl;
+
     } catch ( Nh::Exception& e ) {
-		cerr << "error: " << e.what() << endl;
+		cerr << e.what() << endl;
 		exit(1);
 
     } catch ( exception& e ) {
