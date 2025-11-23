@@ -4,6 +4,10 @@
 #include <cstring>
 #include <sstream>
 #include <iostream>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
+#include "test_path_helper.h"
 
 // Test command-line argument parsing
 // This test verifies the behavior of command-line argument parsing
@@ -39,7 +43,13 @@ protected:
 
     // Helper to run nhssta with given arguments and capture output
     std::string run_nhssta(const std::vector<std::string>& args) {
-        std::string cmd = "../src/nhssta";
+        // Find nhssta path dynamically
+        std::string nhssta_path = find_nhssta_path();
+        if (nhssta_path.empty()) {
+            nhssta_path = "../src/nhssta"; // Fallback
+        }
+        
+        std::string cmd = nhssta_path;
         for (const auto& arg : args) {
             cmd += " " + arg;
         }

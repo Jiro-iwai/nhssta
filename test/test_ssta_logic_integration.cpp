@@ -3,12 +3,13 @@
 // Phase 2: I/O and logic separation
 
 #include <gtest/gtest.h>
-#include "Ssta.h"
-#include "SstaResults.h"
-#include "Parser.h"
+#include "../src/Ssta.h"
+#include "../src/SstaResults.h"
+#include "../src/Parser.h"
 #include <fstream>
 #include <cmath>
 #include <algorithm>
+#include <sys/stat.h>
 
 using namespace Nh;
 using RandomVar = ::RandomVariable::RandomVariable;
@@ -18,7 +19,13 @@ class SstaLogicIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
         ssta_ = new Ssta();
-        example_dir = "../example";
+        // Use absolute path or path relative to test execution directory
+        example_dir = "example";
+        // Try ../example if example doesn't exist
+        struct stat info;
+        if (stat(example_dir.c_str(), &info) != 0) {
+            example_dir = "../example";
+        }
     }
 
     void TearDown() override {

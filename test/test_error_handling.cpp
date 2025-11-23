@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <string>
 #include <sys/stat.h>
+#include <unistd.h>
+#include "test_path_helper.h"
 
 // Test current error handling behavior before refactoring
 // This ensures we don't break existing error messages
@@ -10,7 +12,11 @@
 class ErrorHandlingTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        nhssta_path = "../src/nhssta";
+        // Use path helper to find nhssta executable
+        nhssta_path = find_nhssta_path();
+        if (nhssta_path.empty()) {
+            nhssta_path = "../src/nhssta"; // Fallback
+        }
     }
 
     std::string run_nhssta(const std::string& args) {

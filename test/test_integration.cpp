@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <sys/stat.h>
+#include <unistd.h>
+#include "test_path_helper.h"
 
 // Integration tests based on example/nhssta_test
 // These tests verify that nhssta produces expected output for known inputs
@@ -12,9 +14,17 @@
 class IntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Set up test environment
-        nhssta_path = "../src/nhssta";
-        example_dir = "../example";
+        // Set up test environment using path helper
+        nhssta_path = find_nhssta_path();
+        example_dir = find_example_dir();
+        
+        // Ensure paths are set
+        if (nhssta_path.empty()) {
+            nhssta_path = "../src/nhssta"; // Fallback
+        }
+        if (example_dir.empty()) {
+            example_dir = "../example"; // Fallback
+        }
     }
 
     void TearDown() override {
@@ -149,7 +159,12 @@ TEST_F(IntegrationTest, TestGaussDelayDlibS820Bench) {
 TEST_F(IntegrationTest, NhsstaExecutableExists) {
     struct stat buffer;
     int exists = (stat(nhssta_path.c_str(), &buffer) == 0);
-    EXPECT_EQ(exists, 1) << "nhssta executable not found at: " << nhssta_path;
+    if (!exists) {
+        // Try to find it again
+        nhssta_path = find_nhssta_path();
+        exists = (!nhssta_path.empty() && stat(nhssta_path.c_str(), &buffer) == 0);
+    }
+    EXPECT_EQ(exists, 1) << "nhssta executable not found. Tried: " << nhssta_path;
 }
 
 // Test error handling: missing -d option

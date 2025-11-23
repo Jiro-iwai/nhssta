@@ -8,13 +8,24 @@
 #include <cstdio>
 #include <sys/stat.h>
 #include <iomanip>
+#include <unistd.h>
+#include <limits.h>
+#include "test_path_helper.h"
 
 // Performance test fixture
 class PerformanceTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        example_dir = "../example";
-        nhssta_path = "../src/nhssta";
+        // Use path helper to find paths dynamically
+        nhssta_path = find_nhssta_path();
+        example_dir = find_example_dir();
+        
+        if (nhssta_path.empty()) {
+            nhssta_path = "../src/nhssta"; // Fallback
+        }
+        if (example_dir.empty()) {
+            example_dir = "../example"; // Fallback
+        }
     }
 
     // Measure execution time of nhssta command

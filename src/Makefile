@@ -26,7 +26,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_ssta_logic_integration.cpp ../test/test_parser.cpp \
 	../test/test_performance.cpp ../test/test_expression_print.cpp \
 	../test/test_main_cli.cpp ../test/test_parser_lexical_cast.cpp \
-	../test/test_parser_tokenizer.cpp ../test/test_exception_unification.cpp
+	../test/test_parser_tokenizer.cpp ../test/test_exception_unification.cpp \
+	../test/test_gate.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 
@@ -48,9 +49,9 @@ $(TARGET) : $(OBJS)
 .PHONY: test test-build tidy
 
 # Test target
-test: $(TEST_TARGET)
+test: $(TARGET) $(TEST_TARGET)
 	@echo "Running unit tests..."
-	@./$(TEST_TARGET) || echo "Note: Some tests may require Boost dependencies to be resolved"
+	@cd .. && ./test/nhssta_test || echo "Note: Some tests may require Boost dependencies to be resolved"
 
 # clang-tidy target
 tidy:
@@ -75,7 +76,7 @@ $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 
 ../test/%.o: ../test/%.cpp
 	@mkdir -p ../test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@
 
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
