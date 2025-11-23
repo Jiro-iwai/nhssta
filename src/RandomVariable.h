@@ -7,18 +7,15 @@
 #include <string>
 
 #include "SmartPtr.h"
+#include "Exception.h"
 
 namespace RandomVariable {
 
 	const double minimum_variance = 1.0e-6;
 
-	class Exception {
-	public:
-		Exception(const std::string& what): what_(what) {}
-		const std::string& what() { return what_; }
-	private:
-		std::string what_ ;
-	};
+	// Backward compatibility: keep Exception as alias to Nh::RuntimeException
+	// This will be removed in a later phase
+	using Exception = Nh::RuntimeException;
 
 	class _RandomVariable_;
 	typedef SmartPtr<_RandomVariable_> RandomVariable;

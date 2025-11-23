@@ -61,7 +61,7 @@ namespace Nh {
         what += "\" is multiply defined in file \"";
         what += bench_;
         what += "\"";
-        throw exception(what);
+        throw Nh::RuntimeException(what);
     }
 
     // dlib //
@@ -78,9 +78,9 @@ namespace Nh {
             }
 
         } catch( Nh::FileException& e ){
-            throw exception(e.what());
+            throw Nh::Exception(e.what());
         } catch( Nh::ParseException& e ){
-            throw exception(e.what());
+            throw Nh::Exception(e.what());
         }
     }
 
@@ -162,20 +162,14 @@ namespace Nh {
 
             connect_instances();
 
-        } catch ( SmartPtrException& e ) {
-            throw exception(e.what());
-
-        } catch ( ::RandomVariable::Exception& e ) {
-            throw exception(e.what());
-
-        } catch ( Gate::exception& e ) {
-            throw exception(e.what());
+        } catch ( Nh::RuntimeException& e ) {
+            throw Nh::Exception(e.what());
 
         } catch ( Nh::FileException& e ) {
-            throw exception(e.what());
+            throw Nh::Exception(e.what());
 
         } catch ( Nh::ParseException& e ) {
-            throw exception(e.what());
+            throw Nh::Exception(e.what());
 
         }
 
@@ -303,7 +297,7 @@ namespace Nh {
                     what += line->out();
                     what += "\n";
                 }
-                throw exception(what);
+                throw Nh::RuntimeException(what);
             }
         }
     }
@@ -346,7 +340,7 @@ namespace Nh {
             what += " of file \"";
             what += parser.getFileName();
             what += "\"";
-            throw exception(what);
+            throw Nh::ParseException(parser.getFileName(), parser.getNumLine(), "unknown gate \"" + gate_name + "\"");
         }
 
         l->set_gate(gate_name);
@@ -397,11 +391,8 @@ namespace Nh {
                 report_correlation();
             }
 
-        } catch ( SmartPtrException& e ) {
-            throw exception(e.what());
-
-        } catch ( ::RandomVariable::Exception& e ) {
-            throw exception(e.what());
+        } catch ( Nh::RuntimeException& e ) {
+            throw Nh::Exception(e.what());
         }
     }
 

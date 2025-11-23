@@ -13,19 +13,16 @@
 #include "Gate.h"
 #include "Parser.h"
 #include "SstaResults.h"
+#include "Exception.h"
 
 namespace Nh {
 
     class Ssta {
     public:
 
-		class exception {
-		public:
-			exception(const std::string& what): what_(what) {}
-			const std::string& what() { return what_; }
-		private:
-			std::string what_ ;
-		};
+		// Backward compatibility: keep exception as alias to Nh::Exception
+		// This will be removed in a later phase
+		using exception = Nh::Exception;
 
 		Ssta();
 		~Ssta();

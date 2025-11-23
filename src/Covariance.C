@@ -3,9 +3,11 @@
 
 #include <cassert>
 #include <cmath>
-#include <typeinfo>
 #include "Statistics.h"
 #include "Util.h"
+#include "ADD.h"
+#include "SUB.h"
+#include "MAX.h"
 
 namespace RandomVariable {
 
@@ -35,8 +37,9 @@ namespace RandomVariable {
             return true;
         }
 
-        if( typeid(*a) == typeid(_Normal_) &&
-            typeid(*b) == typeid(_Normal_) ){
+        const _Normal_* a_normal = dynamic_cast<const _Normal_*>(a.get());
+        const _Normal_* b_normal = dynamic_cast<const _Normal_*>(b.get());
+        if( a_normal && b_normal ){
             if( a == b ){
                 cov = a->variance();
             } else {
@@ -52,7 +55,8 @@ namespace RandomVariable {
         const RandomVariable& x, const RandomVariable& y
         )
     {
-        assert( typeid(*y) == typeid(OpMAX0) );
+        const OpMAX0* y_max0 = dynamic_cast<const OpMAX0*>(y.get());
+        assert( y_max0 != nullptr );
         const RandomVariable& z = y->left();
         double c = covariance(x,z);
         double mu = z->mean();
@@ -104,27 +108,27 @@ namespace RandomVariable {
             if( a == b ){
                 cov = a->variance();
 
-            } else if( typeid(*a) == typeid(OpADD)  ){
+            } else if( dynamic_cast<const OpADD*>(a.get()) != nullptr ){
                 double cov0 = covariance(a->left(),b);
                 double cov1 = covariance(a->right(),b);
                 cov = cov0 + cov1;
 
-            } else if( typeid(*b) == typeid(OpADD)  ){
+            } else if( dynamic_cast<const OpADD*>(b.get()) != nullptr ){
                 double cov0 = covariance(a,b->left());
                 double cov1 = covariance(a,b->right());
                 cov = cov0 + cov1;
 
-            } else if( typeid(*a) == typeid(OpSUB)  ){
+            } else if( dynamic_cast<const OpSUB*>(a.get()) != nullptr ){
                 double cov0 = covariance(a->left(),b);
                 double cov1 = covariance(a->right(),b);
                 cov = cov0 - cov1;
 
-            } else if( typeid(*b) == typeid(OpSUB)  ){
+            } else if( dynamic_cast<const OpSUB*>(b.get()) != nullptr ){
                 double cov0 = covariance(a,b->left());
                 double cov1 = covariance(a,b->right());
                 cov = cov0 - cov1;
 
-            } else if( typeid(*a) == typeid(OpMAX) ){
+            } else if( dynamic_cast<const OpMAX*>(a.get()) != nullptr ){
                 const RandomVariable& x = a->left();
                 const SmartPtr<OpMAX>& m(a);
                 const RandomVariable& z = m->max0();
@@ -132,7 +136,7 @@ namespace RandomVariable {
                 double cov1 = covariance(x,b);
                 cov = cov0 + cov1;
 
-            } else if( typeid(*b) == typeid(OpMAX) ){
+            } else if( dynamic_cast<const OpMAX*>(b.get()) != nullptr ){
                 const RandomVariable& x = b->left();
                 const SmartPtr<OpMAX>& m(b);
                 const RandomVariable& z = m->max0();
@@ -140,16 +144,16 @@ namespace RandomVariable {
                 double cov1 = covariance(x,a);
                 cov = cov0 + cov1;
 
-            } else if( typeid(*a) == typeid(OpMAX0) &&
-                       typeid(*(a->left())) == typeid(OpMAX0) ){
+            } else if( dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
+                       dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr ){
                 cov = covariance(a->left(),b);
 
-            } else if( typeid(*b) == typeid(OpMAX0) &&
-                       typeid(*(b->left())) == typeid(OpMAX0) ){
+            } else if( dynamic_cast<const OpMAX0*>(b.get()) != nullptr &&
+                       dynamic_cast<const OpMAX0*>(b->left().get()) != nullptr ){
                 cov = covariance(a,b->left());
 
-            } else if( typeid(*a) == typeid(OpMAX0) &&
-                       typeid(*b) == typeid(OpMAX0) ){
+            } else if( dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
+                       dynamic_cast<const OpMAX0*>(b.get()) != nullptr ){
                 if( a->left() == b->left() ){
                     cov = a->variance(); // maybe here is not reachable
 
@@ -165,14 +169,14 @@ namespace RandomVariable {
                     cov = ( cov0 + cov1 ) * 0.5;
                 }
 
-            } else if( typeid(*a) == typeid(OpMAX0) ){
+            } else if( dynamic_cast<const OpMAX0*>(a.get()) != nullptr ){
                 cov = covariance_x_max0_y(b,a);
 
-            } else if( typeid(*b) == typeid(OpMAX0) ){
+            } else if( dynamic_cast<const OpMAX0*>(b.get()) != nullptr ){
                 cov = covariance_x_max0_y(a,b);
 
-            } else if( typeid(*a) == typeid(_Normal_) &&
-                       typeid(*b) == typeid(_Normal_) ){
+            } else if( dynamic_cast<const _Normal_*>(a.get()) != nullptr &&
+                       dynamic_cast<const _Normal_*>(b.get()) != nullptr ){
                 cov = 0.0;
 
             } else {

@@ -7,6 +7,7 @@
 #include <string>
 #include "Gate.h"
 #include "ADD.h"
+#include "Exception.h"
 
 namespace Nh {
 
@@ -40,7 +41,7 @@ namespace Nh {
 			what += "\" is not set on gate \"";
 			what += type_name();
 			what += "\"";
-			throw Gate::exception(what);
+			throw Nh::RuntimeException(what);
 		}
 
 		assert(&(*(i->second)));
@@ -81,7 +82,7 @@ namespace Nh {
 				std::string what = "no delay is set on gate \"";
 				what += gate_->type_name();
 				what += "\"";
-				throw Gate::exception(what);
+				throw Nh::RuntimeException(what);
 			}
 
 			_Gate_::Delays::const_iterator i = gate_->delays().begin();

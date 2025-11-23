@@ -118,7 +118,7 @@ namespace RandomVariable {
         if( fabs(v) < minimum_variance )
             v = minimum_variance;
         if( v < 0.0 )
-            throw Exception("RandomVariable: negative variance");
+            throw Nh::RuntimeException("RandomVariable: negative variance");
     }
 
 }

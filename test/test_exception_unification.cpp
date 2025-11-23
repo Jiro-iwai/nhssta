@@ -47,12 +47,13 @@ protected:
     std::string test_dir;
 };
 
-// Test: Ssta::exception behavior
+// Test: Ssta::exception behavior (now Nh::Exception)
 TEST_F(ExceptionUnificationTest, SstaExceptionBehavior) {
     try {
-        throw Nh::Ssta::exception("Test Ssta exception");
+        throw Nh::Exception("Test Ssta exception");
     } catch (Nh::Ssta::exception& e) {
-        EXPECT_EQ(e.what(), std::string("Test Ssta exception"));
+        // Ssta::exception is now an alias to Nh::Exception
+        EXPECT_STREQ(e.what(), "Test Ssta exception");
     }
 }
 
@@ -81,30 +82,36 @@ TEST_F(ExceptionUnificationTest, ParserExceptionOnFileError) {
     }
 }
 
-// Test: Gate::exception behavior
+// Test: Gate::exception behavior (now Nh::RuntimeException)
 TEST_F(ExceptionUnificationTest, GateExceptionBehavior) {
     try {
-        throw Nh::Gate::exception("Test Gate exception");
+        throw Nh::RuntimeException("Test Gate exception");
     } catch (Nh::Gate::exception& e) {
-        EXPECT_EQ(e.what(), std::string("Test Gate exception"));
+        // Gate::exception is now an alias to Nh::RuntimeException
+        EXPECT_NE(std::string(e.what()).find("Runtime error"), std::string::npos);
+        EXPECT_NE(std::string(e.what()).find("Test Gate exception"), std::string::npos);
     }
 }
 
-// Test: RandomVariable::Exception behavior
+// Test: RandomVariable::Exception behavior (now Nh::RuntimeException)
 TEST_F(ExceptionUnificationTest, RandomVariableExceptionBehavior) {
     try {
-        throw RandomVariable::Exception("Test RandomVariable exception");
+        throw Nh::RuntimeException("Test RandomVariable exception");
     } catch (RandomVariable::Exception& e) {
-        EXPECT_EQ(e.what(), std::string("Test RandomVariable exception"));
+        // RandomVariable::Exception is now an alias to Nh::RuntimeException
+        EXPECT_NE(std::string(e.what()).find("Runtime error"), std::string::npos);
+        EXPECT_NE(std::string(e.what()).find("Test RandomVariable exception"), std::string::npos);
     }
 }
 
-// Test: SmartPtrException behavior
+// Test: SmartPtrException behavior (now Nh::RuntimeException)
 TEST_F(ExceptionUnificationTest, SmartPtrExceptionBehavior) {
     try {
-        throw SmartPtrException("Test SmartPtr exception");
+        throw Nh::RuntimeException("Test SmartPtr exception");
     } catch (SmartPtrException& e) {
-        EXPECT_EQ(e.what(), std::string("Test SmartPtr exception"));
+        // SmartPtrException is now an alias to Nh::RuntimeException
+        EXPECT_NE(std::string(e.what()).find("Runtime error"), std::string::npos);
+        EXPECT_NE(std::string(e.what()).find("Test SmartPtr exception"), std::string::npos);
     }
 }
 
@@ -150,18 +157,18 @@ TEST_F(ExceptionUnificationTest, NhParseExceptionBehavior) {
 // Test: Exception message format consistency
 TEST_F(ExceptionUnificationTest, ExceptionMessageFormat) {
     // Test that all exceptions provide what() method
-    Nh::Ssta::exception ssta_e("Ssta error");
+    Nh::Exception ssta_e("Ssta error");
     Nh::ParseException parser_e("test.txt", 1, "Parser error");
-    Nh::Gate::exception gate_e("Gate error");
-    RandomVariable::Exception rv_e("RandomVariable error");
-    SmartPtrException smartptr_e("SmartPtr error");
+    Nh::RuntimeException gate_e("Gate error");
+    Nh::RuntimeException rv_e("RandomVariable error");
+    Nh::RuntimeException smartptr_e("SmartPtr error");
     Nh::Exception unified_e("Unified error");
     
-    EXPECT_FALSE(ssta_e.what().empty());
+    EXPECT_NE(ssta_e.what(), nullptr); // Nh::Exception::what() returns const char*
     EXPECT_NE(parser_e.what(), nullptr); // Nh::ParseException::what() returns const char*
-    EXPECT_FALSE(gate_e.what().empty());
-    EXPECT_FALSE(rv_e.what().empty());
-    EXPECT_FALSE(smartptr_e.what().empty());
+    EXPECT_NE(gate_e.what(), nullptr); // Nh::RuntimeException::what() returns const char*
+    EXPECT_NE(rv_e.what(), nullptr); // Nh::RuntimeException::what() returns const char*
+    EXPECT_NE(smartptr_e.what(), nullptr); // Nh::RuntimeException::what() returns const char*
     EXPECT_NE(unified_e.what(), nullptr);
 }
 
@@ -177,17 +184,17 @@ TEST_F(ExceptionUnificationTest, ExceptionInheritance) {
 TEST_F(ExceptionUnificationTest, ExceptionPropagationThroughSsta) {
     Nh::Ssta ssta;
     
-    // Test that Parser exceptions (now Nh::FileException) are caught and rethrown as Ssta exceptions
+    // Test that Parser exceptions (now Nh::FileException) are caught and rethrown as Nh::Exception
     std::string invalid_file = test_dir + "/nonexistent.dlib";
     ssta.set_dlib(invalid_file);
     ssta.set_bench("../example/my.bench");
     
-    EXPECT_THROW(ssta.read_dlib(), Nh::Ssta::exception);
+    EXPECT_THROW(ssta.read_dlib(), Nh::Exception);
     
     try {
         ssta.read_dlib();
         FAIL() << "Expected exception was not thrown";
-    } catch (Nh::Ssta::exception& e) {
+    } catch (Nh::Exception& e) {
         // Should contain error message from Parser (now Nh::FileException)
         // The message format is: "File error: <filename>: failed to open file"
         std::string msg = e.what();

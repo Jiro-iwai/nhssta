@@ -5,6 +5,7 @@
 #include <string>
 #include <cstring>
 #include "Ssta.h"
+#include "Exception.h"
 
 using namespace std;
 
@@ -90,7 +91,7 @@ int main(int argc, char *argv[]) {
 		ssta.read_bench();
 		ssta.report();
 
-    } catch ( Nh::Ssta::exception& e ) {
+    } catch ( Nh::Exception& e ) {
 		cerr << "error: " << e.what() << endl;
 		exit(1);
 

@@ -4,16 +4,14 @@
 #ifndef SMART_PTR__H
 #define SMART_PTR__H
 
-class SmartPtrException {
-public:
-    SmartPtrException(const std::string& what): what_(what) {}
-    const std::string& what() { return what_; }
-private:
-    std::string what_ ;
-};
+#include "Exception.h"
+
+// Backward compatibility: keep SmartPtrException as alias to Nh::RuntimeException
+// This will be removed in a later phase
+using SmartPtrException = Nh::RuntimeException;
 
 template < class T >
-class SmartPtr { // ÈÆÍÑ smart pointer
+class SmartPtr { // ï¿½ï¿½ï¿½ï¿½ smart pointer
 public:
 
     SmartPtr( T* pointee = 0 )
@@ -53,11 +51,13 @@ public:
 
     T& operator * () const { return (*pointee_); }
 
+    T* get() const { return pointee_; }
+
     template < class U >
-    operator SmartPtr<U>() const { // ·¿ÊÑ´¹
+    operator SmartPtr<U>() const { // ï¿½ï¿½ï¿½Ñ´ï¿½
 		U* u = dynamic_cast<U*>(pointee_); ////
 		if( u == 0 )
-			throw SmartPtrException("SmartPtr: failed to dynamic cast");
+			throw Nh::RuntimeException("SmartPtr: failed to dynamic cast");
 		return SmartPtr<U>(u);
     }
 
@@ -73,10 +73,10 @@ private:
 			pointee_->release();
     }
 
-    T* pointee_; // ¼ÂÂÎ
+    T* pointee_; // ï¿½ï¿½ï¿½ï¿½
 };
 
-class RCObject { // »²¾È²ó¿ô·×Â¬ÍÑ class
+class RCObject { // ï¿½ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½Â¬ï¿½ï¿½ class
 public:
 
     RCObject() : counter_(0){}
