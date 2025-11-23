@@ -56,25 +56,28 @@ TEST_F(ExceptionUnificationTest, SstaExceptionBehavior) {
     }
 }
 
-// Test: Parser::exception behavior
+// Test: Parser::exception behavior (now Nh::ParseException)
 TEST_F(ExceptionUnificationTest, ParserExceptionBehavior) {
     try {
-        throw Parser::exception("Test Parser exception");
+        throw Nh::ParseException("test.txt", 1, "Test Parser exception");
     } catch (Parser::exception& e) {
-        EXPECT_EQ(e.what(), std::string("Test Parser exception"));
+        // Parser::exception is now an alias to Nh::ParseException
+        EXPECT_NE(std::string(e.what()).find("Parse error"), std::string::npos);
+        EXPECT_NE(std::string(e.what()).find("test.txt"), std::string::npos);
     }
 }
 
-// Test: Parser::exception thrown on file error
+// Test: Parser::exception thrown on file error (now Nh::FileException)
 TEST_F(ExceptionUnificationTest, ParserExceptionOnFileError) {
     Parser parser("nonexistent_file.txt", '#', "(),", " \t\r");
     
-    EXPECT_THROW(parser.checkFile(), Parser::exception);
+    EXPECT_THROW(parser.checkFile(), Nh::FileException);
     
     try {
         parser.checkFile();
-    } catch (Parser::exception& e) {
-        EXPECT_NE(std::string(e.what()).find("failed to open file"), std::string::npos);
+    } catch (Nh::FileException& e) {
+        EXPECT_NE(std::string(e.what()).find("File error"), std::string::npos);
+        EXPECT_NE(std::string(e.what()).find("nonexistent_file.txt"), std::string::npos);
     }
 }
 
@@ -148,14 +151,14 @@ TEST_F(ExceptionUnificationTest, NhParseExceptionBehavior) {
 TEST_F(ExceptionUnificationTest, ExceptionMessageFormat) {
     // Test that all exceptions provide what() method
     Nh::Ssta::exception ssta_e("Ssta error");
-    Parser::exception parser_e("Parser error");
+    Nh::ParseException parser_e("test.txt", 1, "Parser error");
     Nh::Gate::exception gate_e("Gate error");
     RandomVariable::Exception rv_e("RandomVariable error");
     SmartPtrException smartptr_e("SmartPtr error");
     Nh::Exception unified_e("Unified error");
     
     EXPECT_FALSE(ssta_e.what().empty());
-    EXPECT_FALSE(parser_e.what().empty());
+    EXPECT_NE(parser_e.what(), nullptr); // Nh::ParseException::what() returns const char*
     EXPECT_FALSE(gate_e.what().empty());
     EXPECT_FALSE(rv_e.what().empty());
     EXPECT_FALSE(smartptr_e.what().empty());
@@ -174,7 +177,7 @@ TEST_F(ExceptionUnificationTest, ExceptionInheritance) {
 TEST_F(ExceptionUnificationTest, ExceptionPropagationThroughSsta) {
     Nh::Ssta ssta;
     
-    // Test that Parser exceptions are caught and rethrown as Ssta exceptions
+    // Test that Parser exceptions (now Nh::FileException) are caught and rethrown as Ssta exceptions
     std::string invalid_file = test_dir + "/nonexistent.dlib";
     ssta.set_dlib(invalid_file);
     ssta.set_bench("../example/my.bench");
@@ -183,10 +186,15 @@ TEST_F(ExceptionUnificationTest, ExceptionPropagationThroughSsta) {
     
     try {
         ssta.read_dlib();
+        FAIL() << "Expected exception was not thrown";
     } catch (Nh::Ssta::exception& e) {
-        // Should contain error message from Parser
+        // Should contain error message from Parser (now Nh::FileException)
+        // The message format is: "File error: <filename>: failed to open file"
         std::string msg = e.what();
-        EXPECT_NE(msg.find("failed to open file"), std::string::npos);
+        EXPECT_NE(msg.find("File error"), std::string::npos) << "Message: " << msg;
+        EXPECT_NE(msg.find("failed to open file"), std::string::npos) << "Message: " << msg;
+    } catch (...) {
+        FAIL() << "Unexpected exception type";
     }
 }
 
