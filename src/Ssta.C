@@ -8,6 +8,7 @@
 #include <string>
 #include "Util.h"
 #include "Ssta.h"
+#include "SstaResults.h"
 #include "ADD.h"
 
 namespace Nh {
@@ -400,6 +401,7 @@ namespace Nh {
     }
 
     void Ssta::report_lat() const {
+        LatResults results = getLatResults();
 
         std::cout << "#" << std::endl;
         std::cout << "# LAT" << std::endl;
@@ -407,13 +409,10 @@ namespace Nh {
         std::cout << "#node		     mu	     std" << std::endl;
         std::cout << "#---------------------------------" << std::endl;
 
-        Signals::const_iterator si = signals_.begin();
-        for( ; si != signals_.end(); si++ ) {
-            const RandomVariable& sigi = si->second;
-            double sigma = sqrt(si->second->variance());
-            std::cout << std::left << std::setw(15) << sigi->name();
-            std::cout << std::right << std::setw(10) << std::fixed << std::setprecision(3) << si->second->mean();
-            std::cout << std::right << std::setw(9) << std::fixed << std::setprecision(3) << sigma << std::endl;
+        for (const auto& result : results) {
+            std::cout << std::left << std::setw(15) << result.node_name;
+            std::cout << std::right << std::setw(10) << std::fixed << std::setprecision(3) << result.mean;
+            std::cout << std::right << std::setw(9) << std::fixed << std::setprecision(3) << result.std_dev << std::endl;
         }
 
         std::cout << "#---------------------------------" << std::endl;
@@ -434,35 +433,26 @@ namespace Nh {
     }
 
     void Ssta::report_correlation() const {
+        CorrelationMatrix matrix = getCorrelationMatrix();
 
         std::cout << "#" << std::endl;
         std::cout << "# correlation matrix" << std::endl;
         std::cout << "#" << std::endl;
 
-        //print_line(); //
-
         std::cout << "#\t";
-        Signals::const_iterator si = signals_.begin();
-        for( ; si != signals_.end(); si++ ) {
-            const RandomVariable& sigi = si->second;
-            std::cout << sigi->name() << "\t";
+        for (const auto& node_name : matrix.node_names) {
+            std::cout << node_name << "\t";
         }
         std::cout << std::endl;
 
         print_line(); //
 
-        si = signals_.begin();
-        for( ; si != signals_.end(); si++ ) {
-            const RandomVariable& sigi = si->second;
-            double vi = sigi->variance();
-            std::cout << sigi->name() << "\t";
+        for (const auto& node_name : matrix.node_names) {
+            std::cout << node_name << "\t";
 
-            Signals::const_iterator sj = signals_.begin();
-            for( ; sj != signals_.end(); sj++ ) {
-                const RandomVariable& sigj = sj->second;
-                double vj = sigj->variance();
-                double cov = covariance(sigi,sigj);
-                std::cout << std::fixed << std::setprecision(3) << std::setw(4) << (cov/sqrt(vi*vj)) << "\t";
+            for (const auto& other_name : matrix.node_names) {
+                double corr = matrix.getCorrelation(node_name, other_name);
+                std::cout << std::fixed << std::setprecision(3) << std::setw(4) << corr << "\t";
                 std::cout.flush();
             }
 
@@ -470,6 +460,54 @@ namespace Nh {
         }
 
         print_line(); //
+    }
+
+    // Pure logic functions (Phase 2: I/O separation)
+
+    LatResults Ssta::getLatResults() const {
+        LatResults results;
+        
+        Signals::const_iterator si = signals_.begin();
+        for( ; si != signals_.end(); si++ ) {
+            const RandomVariable& sigi = si->second;
+            double mean = si->second->mean();
+            double variance = si->second->variance();
+            double sigma = sqrt(variance);
+            
+            results.push_back(LatResult(sigi->name(), mean, sigma));
+        }
+        
+        return results;
+    }
+
+    CorrelationMatrix Ssta::getCorrelationMatrix() const {
+        CorrelationMatrix matrix;
+        
+        // Collect node names
+        Signals::const_iterator si = signals_.begin();
+        for( ; si != signals_.end(); si++ ) {
+            const RandomVariable& sigi = si->second;
+            matrix.node_names.push_back(sigi->name());
+        }
+        
+        // Calculate correlations
+        si = signals_.begin();
+        for( ; si != signals_.end(); si++ ) {
+            const RandomVariable& sigi = si->second;
+            double vi = sigi->variance();
+            
+            Signals::const_iterator sj = signals_.begin();
+            for( ; sj != signals_.end(); sj++ ) {
+                const RandomVariable& sigj = sj->second;
+                double vj = sigj->variance();
+                double cov = covariance(sigi, sigj);
+                double corr = (vi > 0.0 && vj > 0.0) ? (cov / sqrt(vi * vj)) : 0.0;
+                
+                matrix.correlations[std::make_pair(sigi->name(), sigj->name())] = corr;
+            }
+        }
+        
+        return matrix;
     }
 
 }

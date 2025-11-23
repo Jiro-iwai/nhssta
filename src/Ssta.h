@@ -12,6 +12,7 @@
 #include "SmartPtr.h"
 #include "Gate.h"
 #include "Parser.h"
+#include "SstaResults.h"
 
 namespace Nh {
 
@@ -105,6 +106,10 @@ namespace Nh {
 
 		void set_dlib(std::string dlib) { dlib_ = dlib; }
 		void set_bench(std::string bench) { bench_ = bench; }
+
+		// Pure logic functions (Phase 2: I/O separation)
+		LatResults getLatResults() const;
+		CorrelationMatrix getCorrelationMatrix() const;
 
     };
 }
