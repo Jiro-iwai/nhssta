@@ -28,12 +28,12 @@ namespace Nh {
 		friend class _Instance_;
 
 		_Gate_() : num_instances_(0) {}
-		_Gate_(const std::string type_name) :
-			type_name_(type_name) {
+		explicit _Gate_(const std::string& type_name) :
+			type_name_(type_name), num_instances_(0) {
 		}
-		virtual ~_Gate_() = default;
+		~_Gate_() override = default;
 
-		void set_type_name(const std::string type_name) {
+		void set_type_name(const std::string& type_name) {
 			type_name_ = type_name;
 		}
 		[[nodiscard]] const std::string& type_name() const { return type_name_; }
@@ -94,10 +94,10 @@ namespace Nh {
     public:
 
 		_Instance_(const Gate& gate) : gate_(gate) {}
-		~_Instance_() = default;
+		~_Instance_() override = default;
 
-		void set_name(const std::string name) { name_ = name; }
-		const std::string& name() const { return name_;	}
+		void set_name(const std::string& name) { name_ = name; }
+		[[nodiscard]] const std::string& name() const { return name_;	}
 
 		void set_input(const std::string& in_name,
 					   const RandomVariable& signal);
@@ -119,7 +119,7 @@ namespace Nh {
 
 		_Instance_* operator->() const { return body_.get(); }
 		_Instance_& operator*() const { return *body_; }
-		std::shared_ptr<_Instance_> get() const { return body_; }
+		[[nodiscard]] std::shared_ptr<_Instance_> get() const { return body_; }
 
 		bool operator==(const Instance& rhs) const { return body_.get() == rhs.body_.get(); }
 		bool operator!=(const Instance& rhs) const { return !(*this == rhs); }

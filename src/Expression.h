@@ -128,7 +128,7 @@ public:
 		const Expression& right
 		);
 
-    ~Expression_();
+    ~Expression_() override;
 
     [[nodiscard]] int id() const { return id_; }
 

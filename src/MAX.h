@@ -19,7 +19,7 @@ namespace RandomVariable {
 		OpMAX( const RandomVariable& left, const RandomVariable& right );
 		~OpMAX() override;
 
-		const RandomVariable& max0() const { return max0_; }
+		[[nodiscard]] const RandomVariable& max0() const { return max0_; }
 
     private:
 
@@ -43,7 +43,7 @@ namespace RandomVariable {
 
 		[[nodiscard]] double calc_mean() const override;
 		[[nodiscard]] double calc_variance() const override;
-		const RandomVariable& right() const;
+		[[nodiscard]] const RandomVariable& right() const;
     };
 
     RandomVariable MAX0(const RandomVariable& a);

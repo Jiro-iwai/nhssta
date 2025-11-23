@@ -59,7 +59,7 @@ double OpMAX0::calc_mean() const {
     double sg = sqrt(va);
     double ms = -mu / sg;
     double mm = MeanMax(ms);
-    double r = mu + sg * mm;
+    double r = mu + (sg * mm);
     return (r);
 }
 

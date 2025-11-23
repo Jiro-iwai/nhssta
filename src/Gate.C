@@ -99,7 +99,9 @@ namespace Nh {
 			for( ; i != gate_->delays().end(); i++ ) {
 
 				const std::string& ith_out_name = i->first.second;
-				if( ith_out_name != out_name ) continue;
+				if( ith_out_name != out_name ) {
+					continue;
+				}
 
 				const std::string& ith_in_name = i->first.first;
 				Normal gate_delay = gate_->delay(ith_in_name, out_name);
