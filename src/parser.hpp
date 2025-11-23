@@ -8,8 +8,8 @@
 #include <fstream>
 #include <stdexcept>
 #include <type_traits>
-#include "Tokenizer.h"
-#include "Exception.h"
+#include "tokenizer.hpp"
+#include "exception.hpp"
 
 class Parser {
 

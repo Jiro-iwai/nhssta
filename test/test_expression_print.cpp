@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <functional>
-#include "Expression.h"
+#include "expression.hpp"
 
 // Test fixture for Expression print tests
 class ExpressionPrintTest : public ::testing::Test {

@@ -6,8 +6,8 @@
 
 #include <map>
 #include <memory>
-#include "RandomVariable.h"
-#include "Normal.h"
+#include "random_variable.hpp"
+#include "normal.hpp"
 
 namespace RandomVariable {
 

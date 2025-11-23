@@ -4,8 +4,8 @@
 #include <iostream>
 #include <string>
 #include <cstring>
-#include "Ssta.h"
-#include "Exception.h"
+#include "ssta.hpp"
+#include "exception.hpp"
 
 using namespace std;
 

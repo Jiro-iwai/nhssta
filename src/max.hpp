@@ -4,7 +4,7 @@
 #ifndef MAX__H
 #define MAX__H
 
-#include "RandomVariable.h"
+#include "random_variable.hpp"
 
 namespace RandomVariable {
 

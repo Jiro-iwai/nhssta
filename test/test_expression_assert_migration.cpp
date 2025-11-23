@@ -3,7 +3,7 @@
 // Issue #10: 既存assertテストの移行
 
 #include <gtest/gtest.h>
-#include "../src/Expression.h"
+#include "../src/expression.hpp"
 #include <cmath>
 
 using namespace Nh;

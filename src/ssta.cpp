@@ -6,10 +6,10 @@
 #include <cmath>
 #include <iomanip>
 #include <string>
-#include "Util.h"
-#include "Ssta.h"
-#include "SstaResults.h"
-#include "ADD.h"
+#include "util.hpp"
+#include "ssta.hpp"
+#include "ssta_results.hpp"
+#include "add.hpp"
 
 namespace Nh {
 

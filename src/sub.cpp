@@ -2,8 +2,8 @@
 // Author: IWAI Jiro
 
 #include <memory>
-#include "SUB.h"
-#include "Covariance.h"
+#include "sub.hpp"
+#include "covariance.hpp"
 
 namespace RandomVariable {
 

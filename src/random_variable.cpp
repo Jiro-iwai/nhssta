@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
-#include "RandomVariable.h"
+#include "random_variable.hpp"
 
 namespace RandomVariable {
 

@@ -3,8 +3,8 @@
 // Phase 2: Comprehensive unit test coverage for Ssta class
 
 #include <gtest/gtest.h>
-#include "../src/Ssta.h"
-#include "../src/SstaResults.h"
+#include "../src/ssta.hpp"
+#include "../src/ssta_results.hpp"
 #include <fstream>
 #include <sys/stat.h>
 #include <cmath>
