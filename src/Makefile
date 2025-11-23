@@ -21,7 +21,6 @@ INCLUDE =
 CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
 	random_variable.cpp add.cpp util.cpp gate.cpp \
 	parser.cpp ssta.cpp expression.cpp main.cpp
-#CXXSRCS =  test.cpp expression.cpp
 OBJS = $(CXXSRCS:.cpp=.o) 
 DEPS = $(CXXSRCS:.cpp=.d) 
 TARGET = nhssta
