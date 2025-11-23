@@ -6,8 +6,9 @@
 
 #include <string>
 #include <fstream>
+#include <stdexcept>
+#include <type_traits>
 #include <boost/tokenizer.hpp>
-#include <boost/lexical_cast.hpp>
 
 class Parser {
 
@@ -46,13 +47,39 @@ public:
 		{
 			checkTermination();
 			try {
-				u = boost::lexical_cast<U>(*token_);
-			} catch ( boost::bad_lexical_cast& e ){
+				u = convertToken<U>(*token_);
+			} catch ( std::exception& e ){
 				unexpectedToken_(*token_);
 			}
 			pre_ = *token_;
 			token_++;
 		}
+
+private:
+    // Helper template for converting tokens to different types
+    template <typename T>
+    T convertToken(const std::string& token) {
+        if constexpr (std::is_same_v<T, std::string>) {
+            return token;
+        } else if constexpr (std::is_same_v<T, int>) {
+            return std::stoi(token);
+        } else if constexpr (std::is_same_v<T, double>) {
+            return std::stod(token);
+        } else if constexpr (std::is_same_v<T, char>) {
+            if (token.length() != 1) {
+                throw std::invalid_argument("char token must be single character");
+            }
+            return token[0];
+        } else {
+            // For other types, try to use string conversion
+            // This maintains compatibility with boost::lexical_cast behavior
+            static_assert(std::is_convertible_v<std::string, T>,
+                        "Type must be convertible from string");
+            return static_cast<T>(token);
+        }
+    }
+
+public:
 
     void checkSepalator( char sepalator );
     void checkEnd();
