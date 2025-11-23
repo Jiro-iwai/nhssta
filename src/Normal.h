@@ -28,8 +28,8 @@ namespace RandomVariable {
 
     private:
 
-		const RandomVariable& left() const override;
-		const RandomVariable& right() const override;
+		const RandomVariable& left() const;
+		const RandomVariable& right() const;
 
     };
 

@@ -11,7 +11,7 @@
 int Expression_::current_id_ = 0;
 Expression_::Expressions Expression_::eTbl_;
 
-static const Expression null(nullptr);
+static Expression null(0);
 static const Const zero(0.0);
 static const Const one(1.0);
 static const Const minus_one(-1.0);
