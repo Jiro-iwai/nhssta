@@ -92,7 +92,7 @@ TEST_F(GateTest, ExceptionWhenDelayNotSet) {
     Gate gate;
     gate->set_type_name("test_gate");
     
-    EXPECT_THROW(gate->delay("a", "y"), Nh::RuntimeException);
+    EXPECT_THROW((void)gate->delay("a", "y"), Nh::RuntimeException);
 }
 
 // Test: Create instance
@@ -276,8 +276,8 @@ TEST_F(GateTest, GateAssignmentKeepsDelayInformation) {
 
     second = first;
     EXPECT_EQ(second->type_name(), "first");
-    EXPECT_NO_THROW(second->delay("a", "y"));
-    EXPECT_THROW(second->delay("b", "y"), Nh::RuntimeException);
+    EXPECT_NO_THROW((void)second->delay("a", "y"));
+    EXPECT_THROW((void)second->delay("b", "y"), Nh::RuntimeException);
 }
 
 TEST_F(GateTest, InstanceRemainsValidAfterGateGoesOutOfScope) {
