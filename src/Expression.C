@@ -120,8 +120,8 @@ Expression Expression_::d(const Expression& y) {
 	if( x == y ) {
 		dx = one;
 		return dx;
-
-	} else if( left() != null && right() != null ) {
+	}
+	if( left() != null && right() != null ) {
 
 		Expression dl = left()->d(y);
 		Expression dr = right()->d(y);
@@ -166,8 +166,9 @@ void Expression_::_set_value(double value) {
 }
 
 void Expression_::unset_value() { 
-	if( !is_set_value() )
+	if( !is_set_value() ) {
 		return;
+	}
 
 	unset_root_value();
 	value_ = 0.0;
@@ -217,19 +218,21 @@ void Expression_::print () {
 	}
 
 	if( left() != null  ){
-		if( left()->is_set_value() )
+		if( left()->is_set_value() ) {
 			std::cout << boost::format("%10.4f") % left()->value();
-		else 
+		} else {
 			std::cout << boost::format("%10s") % "--";
+		}
 	} else {
 		std::cout << boost::format("%10s") % "--";
 	}
 
 	if( right() != null	) {
-		if( right()->is_set_value() )
+		if( right()->is_set_value() ) {
 			std::cout << boost::format("%10.4f") % right()->value();
-		else 
+		} else {
 			std::cout << boost::format("%10s") % "--";
+		}
 	} else {
 		std::cout << boost::format("%10s") % "--";
 	}
@@ -269,9 +272,8 @@ Expression Const_::d(const Expression& y) { return zero; }
 Expression Variable_::d(const Expression& y) {
 	if( Expression(this) == y ){
 		return one;
-	} else {
-		return zero;
 	}
+	return zero;
 }
 
 double Variable_::value() { 
@@ -283,17 +285,18 @@ double Variable_::value() {
 
 Variable::Variable() : SmartPtr<Variable_>(new Variable_()) {}
 
-void Variable::operator = (double value) { (*this)->set_value(value); } 
+Variable& Variable::operator = (double value) { (*this)->set_value(value); return *this; } 
 
 //////////////////////////
 
 Expression operator + (const Expression& a, const Expression& b){
 	if( a == zero ) {
 		return b;
-	} else if( b == zero ) {
+	}
+	if( b == zero ) {
 		return a;
 	}
-	return Expression( new Expression_(Expression_::PLUS, a, b) );
+	return Expression{ new Expression_(Expression_::PLUS, a, b) };
 }
 
 Expression operator + (double a, const Expression& b){
@@ -316,10 +319,11 @@ Expression operator + (const Expression& a){
 Expression operator - (const Expression& a, const Expression& b){
 	if( a == zero ) {
 		return (-b);
-	} else if( b == zero ) {
+	}
+	if( b == zero ) {
 		return a;
 	} 
-	return Expression( new Expression_(Expression_::MINUS, a, b) );
+	return Expression{ new Expression_(Expression_::MINUS, a, b) };
 }
 
 Expression operator - (double a, const Expression& b){
@@ -333,10 +337,11 @@ Expression operator - (const Expression& a, double b){
 Expression operator - (const Expression& a){
 	if( a == zero ){
 		return zero;
-	} else if( a == minus_one ) {
+	}
+	if( a == minus_one ) {
 		return one;
 	} 
-	return Expression( new Expression_(Expression_::MUL, minus_one, a) );
+	return Expression{ new Expression_(Expression_::MUL, minus_one, a) };
 }
 
 //////////////////////////
@@ -344,12 +349,14 @@ Expression operator - (const Expression& a){
 Expression operator * (const Expression& a, const Expression& b){
 	if( a == zero || b == zero ) {
 		return zero;
-	} else if( a == one ) {
+	}
+	if( a == one ) {
 		return b;
-	} else if( b == one ) {
+	}
+	if( b == one ) {
 		return a;
 	} 
-	return Expression( new Expression_(Expression_::MUL, a, b) );
+	return Expression{ new Expression_(Expression_::MUL, a, b) };
 }
 
 Expression operator * (double a, const Expression& b){
@@ -365,16 +372,20 @@ Expression operator * (const Expression& a, double b){
 Expression operator / (const Expression& a, const Expression& b){
 	if( b == zero ) {
 		throw ExpressionException("");
-	} else if( a == zero ) {
+	}
+	if( a == zero ) {
 		return zero;
-	} else if( b == one ) {
+	}
+	if( b == one ) {
 		return a;
-	} else if( b == minus_one ) {
+	}
+	if( b == minus_one ) {
 		return (-a);
-	} else if( a == b ) {
+	}
+	if( a == b ) {
 		return one;
 	}
-	return Expression( new Expression_(Expression_::DIV, a, b) );
+	return Expression{ new Expression_(Expression_::DIV, a, b) };
 }
 
 Expression operator / (const Expression& a, double b){
@@ -389,16 +400,18 @@ Expression operator / (double a, const Expression& b){
 
 Expression operator ^ (const Expression& a, const Expression& b){
 	if( b == zero ) {
-		if( a == zero )
+		if( a == zero ) {
 			throw ExpressionException("");
-		else 
-			return one;
-	} else if( b == one ) {
+		}
+		return one;
+	}
+	if( b == one ) {
 		return a;
-	} else if( a == zero ) {
+	}
+	if( a == zero ) {
 		return zero;
 	}
-	return Expression( new Expression_(Expression_::POWER, a, b) );
+	return Expression{ new Expression_(Expression_::POWER, a, b) };
 }
 
 Expression operator ^ (const Expression& a, double b){
@@ -413,11 +426,11 @@ Expression operator ^ (double a, const Expression& b){
 //////////////////////////
 
 Expression exp (const Expression& a){
-	return Expression( new Expression_(Expression_::EXP, a, null) );
+	return Expression{ new Expression_(Expression_::EXP, a, null) };
 }
 
 Expression log (const Expression& a){
-	return Expression( new Expression_(Expression_::LOG, a, null) );
+	return Expression{ new Expression_(Expression_::LOG, a, null) };
 }
 
 //////////////////////////

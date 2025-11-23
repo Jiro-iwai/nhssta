@@ -164,7 +164,7 @@ public:
     virtual ~Variable() {}
 
     ////// substitution from (double)
-    void operator = (double value);
+    Variable& operator = (double value);
 };
 
 ////////////////
