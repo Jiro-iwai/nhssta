@@ -4,13 +4,15 @@
 #include "../src/ADD.h"
 #include <cmath>
 
-using namespace RandomVariable;
+using RandomVar = RandomVariable::RandomVariable;
+using Normal = RandomVariable::Normal;
 
 class CovarianceTest : public ::testing::Test {
 protected:
     void SetUp() override {
         // Clear covariance matrix before each test
-        get_covariance_matrix()->clear();
+        // Note: CovarianceMatrix doesn't have clear() method, 
+        // so we rely on test isolation
     }
 
     void TearDown() override {
@@ -54,7 +56,7 @@ TEST_F(CovarianceTest, CovarianceWithAddition) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
     
-    RandomVariable sum = a + b;
+    RandomVar sum = a + b;
     
     // Covariance of a with (a+b) should be variance of a
     double cov_a_sum = covariance(a, sum);
@@ -70,7 +72,7 @@ TEST_F(CovarianceTest, CovarianceMatrixCaching) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
     
-    RandomVariable sum = a + b;
+    RandomVar sum = a + b;
     
     // First call
     double cov1 = covariance(a, sum);
@@ -86,7 +88,7 @@ TEST_F(CovarianceTest, CovarianceSymmetry) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
     
-    RandomVariable sum = a + b;
+    RandomVar sum = a + b;
     
     double cov_ab = covariance(a, sum);
     double cov_ba = covariance(sum, a);

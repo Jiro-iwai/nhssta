@@ -5,7 +5,8 @@
 #include "../src/Gate.h"
 #include <memory>
 
-using namespace RandomVariable;
+using RandomVar = RandomVariable::RandomVariable;
+using Normal = RandomVariable::Normal;
 using namespace Nh;
 
 class SmartPtrTest : public ::testing::Test {
@@ -48,7 +49,7 @@ TEST_F(SmartPtrTest, AdditionSmartPtrLifecycle) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
     
-    RandomVariable sum = a + b;
+    RandomVar sum = a + b;
     
     // Sum should be valid
     EXPECT_DOUBLE_EQ(sum->mean(), 15.0);
@@ -105,8 +106,8 @@ TEST_F(SmartPtrTest, ChainedOperationsLifecycle) {
     Normal b(2.0, 1.0);
     Normal c(3.0, 1.0);
     
-    RandomVariable sum1 = a + b;
-    RandomVariable sum2 = sum1 + c;
+    RandomVar sum1 = a + b;
+    RandomVar sum2 = sum1 + c;
     
     // All should be valid
     EXPECT_DOUBLE_EQ(sum2->mean(), 6.0);
@@ -120,7 +121,7 @@ TEST_F(SmartPtrTest, ChainedOperationsLifecycle) {
 TEST_F(SmartPtrTest, MemoryManagement) {
     for (int i = 0; i < 100; ++i) {
         Normal n(static_cast<double>(i), 1.0);
-        RandomVariable sum = n + n;
+        RandomVar sum = n + n;
         EXPECT_DOUBLE_EQ(sum->mean(), static_cast<double>(i * 2));
     }
     // If we get here without crashing, basic memory management works

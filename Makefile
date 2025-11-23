@@ -29,6 +29,8 @@ clean:
 check:
 	cd example; make
 
+.PHONY: test
+
 test:
 	@for i in $(DIR) ; \
 	     do (test -d $$i && cd $$i && $(MAKE) test) || exit 1; done

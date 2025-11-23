@@ -40,6 +40,8 @@ $(TARGET) : $(OBJS)
 	rm -f $@
 	$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@
 
+.PHONY: test test-build
+
 # Test target
 test: $(TEST_TARGET)
 	@echo "Running unit tests..."

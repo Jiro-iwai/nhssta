@@ -3,7 +3,8 @@
 #include "../src/Normal.h"
 #include <cmath>
 
-using namespace RandomVariable;
+using RandomVar = RandomVariable::RandomVariable;
+using Normal = RandomVariable::Normal;
 
 class MaxTest : public ::testing::Test {
 protected:
@@ -21,7 +22,7 @@ TEST_F(MaxTest, MaxTwoNormals) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
     
-    RandomVariable max = MAX(a, b);
+    RandomVar max = MAX(a, b);
     
     // Mean should be greater than max of individual means
     double mean = max->mean();
@@ -37,7 +38,7 @@ TEST_F(MaxTest, MaxWhenFirstLarger) {
     Normal a(20.0, 4.0);
     Normal b(5.0, 1.0);
     
-    RandomVariable max = MAX(a, b);
+    RandomVar max = MAX(a, b);
     
     // Mean should be close to 20.0 (since a is much larger)
     double mean = max->mean();
@@ -50,7 +51,7 @@ TEST_F(MaxTest, MaxWhenSecondLarger) {
     Normal a(5.0, 1.0);
     Normal b(20.0, 4.0);
     
-    RandomVariable max = MAX(a, b);
+    RandomVar max = MAX(a, b);
     
     // Mean should be close to 20.0 (since b is much larger)
     double mean = max->mean();
@@ -63,7 +64,7 @@ TEST_F(MaxTest, MaxEqualMeans) {
     Normal a(10.0, 4.0);
     Normal b(10.0, 4.0);
     
-    RandomVariable max = MAX(a, b);
+    RandomVar max = MAX(a, b);
     
     // Mean should be >= 10.0
     double mean = max->mean();
@@ -78,7 +79,7 @@ TEST_F(MaxTest, MaxEqualMeans) {
 TEST_F(MaxTest, Max0Test) {
     Normal a(5.0, 4.0);
     
-    RandomVariable max0 = MAX0(a);
+    RandomVar max0 = MAX0(a);
     
     // Mean should be >= 5.0 (since we're taking max with 0)
     double mean = max0->mean();
@@ -93,7 +94,7 @@ TEST_F(MaxTest, Max0Test) {
 TEST_F(MaxTest, Max0NegativeMean) {
     Normal a(-5.0, 4.0);
     
-    RandomVariable max0 = MAX0(a);
+    RandomVar max0 = MAX0(a);
     
     // Mean should be >= 0.0 (since we're taking max with 0)
     double mean = max0->mean();
