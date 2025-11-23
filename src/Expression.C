@@ -5,7 +5,8 @@
 #include <cmath>
 #include <algorithm>
 #include <functional>
-#include <boost/format.hpp>
+#include <iomanip>
+#include <sstream>
 #include "Expression.h"
 
 int Expression_::current_id_ = 0;
@@ -188,66 +189,64 @@ void Expression_::remove_root(Expression_* root){
 }
 
 void Expression_::print () {
-
-	std::cout << boost::format("%5d") % id_;
+	std::cout << std::setw(5) << id_;
 
 	if( is_set_value() ) {
-		std::cout << boost::format("%10.4f") % value();
+		std::cout << std::fixed << std::setprecision(4) << std::setw(10) << value();
 	} else {
-		std::cout << boost::format("%10s") % "--";
+		std::cout << std::setw(10) << "--";
 	}
 
 	if( op_ == CONST ) {
-		std::cout << boost::format("%10s") % "CONST";
+		std::cout << std::setw(10) << "CONST";
 	} else if( op_ == PARAM ) {
-		std::cout << boost::format("%10s") % "PARAM";
+		std::cout << std::setw(10) << "PARAM";
 	} else if( op_ == PLUS ) {
-		std::cout << boost::format("%10s") % "+";
+		std::cout << std::setw(10) << "+";
 	} else if( op_ == MINUS) {
-		std::cout << boost::format("%10s") % "-";
+		std::cout << std::setw(10) << "-";
 	} else if( op_ == MUL ) {
-		std::cout << boost::format("%10s") % "x";
+		std::cout << std::setw(10) << "x";
 	} else if( op_ == DIV ) {
-		std::cout << boost::format("%10s") % "/";
+		std::cout << std::setw(10) << "/";
 	} else if( op_ == EXP ) {
-		std::cout << boost::format("%10s") % "exp";
+		std::cout << std::setw(10) << "exp";
 	} else if( op_ == LOG ) {
-		std::cout << boost::format("%10s") % "log";
+		std::cout << std::setw(10) << "log";
 	} else if( op_ == POWER ) {
-		std::cout << boost::format("%10s") % "^";
+		std::cout << std::setw(10) << "^";
 	}
 
 	if( left() != null  ){
 		if( left()->is_set_value() ) {
-			std::cout << boost::format("%10.4f") % left()->value();
+			std::cout << std::fixed << std::setprecision(4) << std::setw(10) << left()->value();
 		} else {
-			std::cout << boost::format("%10s") % "--";
+			std::cout << std::setw(10) << "--";
 		}
 	} else {
-		std::cout << boost::format("%10s") % "--";
+		std::cout << std::setw(10) << "--";
 	}
 
 	if( right() != null	) {
 		if( right()->is_set_value() ) {
-			std::cout << boost::format("%10.4f") % right()->value();
+			std::cout << std::fixed << std::setprecision(4) << std::setw(10) << right()->value();
 		} else {
-			std::cout << boost::format("%10s") % "--";
+			std::cout << std::setw(10) << "--";
 		}
 	} else {
-		std::cout << boost::format("%10s") % "--";
+		std::cout << std::setw(10) << "--";
 	}
 
-
 	if( left() != null  ){
-		std::cout << boost::format("%10d") % left()->id();
+		std::cout << std::setw(10) << left()->id();
 	} else {
-		std::cout << boost::format("%10s") % "--";
+		std::cout << std::setw(10) << "--";
 	}
 
 	if( right() != null	) {
-		std::cout << boost::format("%10d") % right()->id();
+		std::cout << std::setw(10) << right()->id();
 	} else {
-		std::cout << boost::format("%10s") % "--";
+		std::cout << std::setw(10) << "--";
 	}
 
 	std::cout << std::endl;
