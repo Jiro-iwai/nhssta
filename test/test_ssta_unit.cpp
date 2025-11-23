@@ -248,8 +248,8 @@ TEST_F(SstaUnitTest, GetLatResultsAfterRead) {
     // Check that results have valid values
     for (const auto& result : results) {
         EXPECT_FALSE(result.node_name.empty());
-        EXPECT_FALSE(std::isnan(result.mean));
-        EXPECT_FALSE(std::isnan(result.std_dev));
+        EXPECT_FALSE(isnan(result.mean));
+        EXPECT_FALSE(isnan(result.std_dev));
         EXPECT_GE(result.std_dev, 0.0);
     }
 }
