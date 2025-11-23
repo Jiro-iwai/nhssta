@@ -53,11 +53,14 @@ test: $(TEST_TARGET)
 # clang-tidy target
 tidy:
 	@echo "Running clang-tidy..."
-	@if ! which clang-tidy > /dev/null 2>&1; then \
+	@CLANG_TIDY=$$(which clang-tidy 2>/dev/null || echo "/opt/homebrew/opt/llvm/bin/clang-tidy"); \
+	if [ ! -f "$$CLANG_TIDY" ]; then \
 		echo "clang-tidy not found. Install with: brew install llvm"; \
+		echo "If installed, ensure /opt/homebrew/opt/llvm/bin is in your PATH"; \
 		echo "Skipping clang-tidy check."; \
 	else \
-		clang-tidy $(CXXSRCS) -- $(CXXFLAGS) $(INCLUDE) 2>&1 | head -100 || true; \
+		echo "Using clang-tidy: $$CLANG_TIDY"; \
+		$$CLANG_TIDY $(CXXSRCS) -- $(CXXFLAGS) $(INCLUDE) 2>&1 | head -100 || true; \
 	fi
 
 # Build test target only (without running)
