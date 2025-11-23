@@ -1,5 +1,14 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro
+//
+// Legacy SmartPtr support (deprecated)
+// This file is kept for backward compatibility only.
+// All new code should use std::shared_ptr directly.
+//
+// Issue #45: SmartPtr/RCObjectの完全フェードアウト
+// - RCObject class has been removed
+// - SmartPtr template is disabled by default (NH_ENABLE_LEGACY_SMARTPTR=0)
+// - Only SmartPtrException alias remains for backward compatibility
 
 #ifndef SMART_PTR__H
 #define SMART_PTR__H
@@ -12,13 +21,13 @@
 #endif
 
 // Backward compatibility: keep SmartPtrException as alias to Nh::RuntimeException
-// This will be removed in a later phase
+// This will be removed in a later phase when all code is migrated
 using SmartPtrException = Nh::RuntimeException;
 
 #if NH_ENABLE_LEGACY_SMARTPTR
 
 template < class T >
-class SmartPtr { // ���� smart pointer
+class SmartPtr { // Legacy smart pointer (deprecated)
 public:
 
     SmartPtr( T* pointee = 0 )
@@ -61,8 +70,8 @@ public:
     T* get() const { return pointee_; }
 
     template < class U >
-    operator SmartPtr<U>() const { // ���Ѵ�
-		U* u = dynamic_cast<U*>(pointee_); ////
+    operator SmartPtr<U>() const { // Dynamic cast
+		U* u = dynamic_cast<U*>(pointee_);
 		if( u == 0 )
 			throw Nh::RuntimeException("SmartPtr: failed to dynamic cast");
 		return SmartPtr<U>(u);
@@ -80,7 +89,7 @@ private:
 			pointee_->release();
     }
 
-    T* pointee_; // ����
+    T* pointee_; // Pointer
 };
 
 #endif // NH_ENABLE_LEGACY_SMARTPTR
