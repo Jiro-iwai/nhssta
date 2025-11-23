@@ -5,8 +5,8 @@
 #include <string>
 #include <cstring>
 #include <ctime>
-#include "ssta.hpp"
-#include "exception.hpp"
+#include <nhssta/ssta.hpp>
+#include <nhssta/exception.hpp>
 
 using namespace std;
 

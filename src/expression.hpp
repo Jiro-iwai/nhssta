@@ -10,7 +10,7 @@
 #include <memory>
 #include <type_traits>
 #include "smart_ptr.hpp"
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 ////////////////////
 

@@ -7,8 +7,8 @@
 #include <iomanip>
 #include <string>
 #include "util_numerical.hpp"
-#include "ssta.hpp"
-#include "ssta_results.hpp"
+#include <nhssta/ssta.hpp>
+#include <nhssta/ssta_results.hpp>
 #include "add.hpp"
 
 namespace Nh {

@@ -8,7 +8,7 @@
 #include <memory>
 #include "gate.hpp"
 #include "add.hpp"
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 namespace Nh {
 

@@ -4,7 +4,7 @@
 #ifndef SMART_PTR__H
 #define SMART_PTR__H
 
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 #ifndef NH_ENABLE_LEGACY_SMARTPTR
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)

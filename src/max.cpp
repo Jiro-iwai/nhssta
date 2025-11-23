@@ -8,7 +8,7 @@
 #include "sub.hpp"
 #include "covariance.hpp"
 #include "util_numerical.hpp"
-#include "exception.hpp"
+#include <nhssta/exception.hpp>
 
 namespace RandomVariable {
 

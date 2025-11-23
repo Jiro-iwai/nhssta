@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../src/exception.hpp"
-#include "../src/ssta.hpp"
+#include <nhssta/exception.hpp>
+#include <nhssta/ssta.hpp>
 #include "../src/parser.hpp"
 #include "../src/gate.hpp"
 #include "../src/random_variable.hpp"
