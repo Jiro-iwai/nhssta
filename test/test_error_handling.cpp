@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <string>
 #include <sys/stat.h>
+#include <unistd.h>
 
 // Test current error handling behavior before refactoring
 // This ensures we don't break existing error messages
@@ -10,7 +11,15 @@
 class ErrorHandlingTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        nhssta_path = "../src/nhssta";
+        // Try different paths depending on execution directory
+        struct stat info;
+        if (stat("src/nhssta", &info) == 0) {
+            nhssta_path = "src/nhssta";
+        } else if (stat("../src/nhssta", &info) == 0) {
+            nhssta_path = "../src/nhssta";
+        } else {
+            nhssta_path = "../src/nhssta";
+        }
     }
 
     std::string run_nhssta(const std::string& args) {

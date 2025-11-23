@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <sys/stat.h>
+#include <unistd.h>
 
 // Integration tests based on example/nhssta_test
 // These tests verify that nhssta produces expected output for known inputs
@@ -13,8 +14,18 @@ class IntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
         // Set up test environment
-        nhssta_path = "../src/nhssta";
-        example_dir = "../example";
+        // Try different paths depending on execution directory
+        struct stat info;
+        if (stat("src/nhssta", &info) == 0) {
+            nhssta_path = "src/nhssta";
+            example_dir = "example";
+        } else if (stat("../src/nhssta", &info) == 0) {
+            nhssta_path = "../src/nhssta";
+            example_dir = "../example";
+        } else {
+            nhssta_path = "../src/nhssta";
+            example_dir = "../example";
+        }
     }
 
     void TearDown() override {
@@ -149,7 +160,18 @@ TEST_F(IntegrationTest, TestGaussDelayDlibS820Bench) {
 TEST_F(IntegrationTest, NhsstaExecutableExists) {
     struct stat buffer;
     int exists = (stat(nhssta_path.c_str(), &buffer) == 0);
-    EXPECT_EQ(exists, 1) << "nhssta executable not found at: " << nhssta_path;
+    if (!exists) {
+        // Try alternative paths
+        std::string alt_paths[] = {"src/nhssta", "../src/nhssta", "./src/nhssta"};
+        for (const auto& alt : alt_paths) {
+            if (stat(alt.c_str(), &buffer) == 0) {
+                nhssta_path = alt;
+                exists = 1;
+                break;
+            }
+        }
+    }
+    EXPECT_EQ(exists, 1) << "nhssta executable not found. Tried: " << nhssta_path;
 }
 
 // Test error handling: missing -d option
