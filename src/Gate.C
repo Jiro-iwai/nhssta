@@ -73,7 +73,7 @@ namespace Nh {
 		const std::string& in_name,
 		const RandomVariable& signal
 		) {
-		gate_->delay(in_name); // error check
+		(void)gate_->delay(in_name); // error check
 		inputs_[in_name] = signal;
 		assert(&(*inputs_[in_name]));
     }

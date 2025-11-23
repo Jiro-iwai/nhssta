@@ -29,7 +29,7 @@ namespace Nh {
 
 		_Gate_() : num_instances_(0) {}
 		explicit _Gate_(const std::string& type_name) :
-			type_name_(type_name), num_instances_(0) {
+			num_instances_(0), type_name_(type_name) {
 		}
 		~_Gate_() override = default;
 
