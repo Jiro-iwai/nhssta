@@ -28,19 +28,19 @@ namespace RandomVariable {
 		RandomVariableHandle() = default;
 		RandomVariableHandle(std::nullptr_t) : body_(nullptr) {}
 		explicit RandomVariableHandle(_RandomVariable_* body)
-			: body_(body ? std::shared_ptr<_RandomVariable_>(body) : nullptr) {}
+			: body_(body != nullptr ? std::shared_ptr<_RandomVariable_>(body) : nullptr) {}
 		explicit RandomVariableHandle(std::shared_ptr<_RandomVariable_> body)
 			: body_(std::move(body)) {}
 
 		template <class Derived,
-		          class = std::enable_if_t<std::is_base_of<_RandomVariable_, Derived>::value>>
+		          class = std::enable_if_t<std::is_base_of_v<_RandomVariable_, Derived>>>
 		explicit RandomVariableHandle(const std::shared_ptr<Derived>& body)
 			: body_(std::static_pointer_cast<_RandomVariable_>(body)) {}
 
 		_RandomVariable_* operator->() const { return body_.get(); }
 		_RandomVariable_& operator*() const { return *body_; }
-		_RandomVariable_* get() const { return body_.get(); }
-		std::shared_ptr<_RandomVariable_> shared() const { return body_; }
+		[[nodiscard]] _RandomVariable_* get() const { return body_.get(); }
+		[[nodiscard]] std::shared_ptr<_RandomVariable_> shared() const { return body_; }
 		explicit operator bool() const { return static_cast<bool>(body_); }
 
 		bool operator==(const RandomVariableHandle& rhs) const {
@@ -57,7 +57,7 @@ namespace RandomVariable {
 		}
 
 		template <class U>
-		std::shared_ptr<U> dynamic_pointer_cast() const {
+		[[nodiscard]] std::shared_ptr<U> dynamic_pointer_cast() const {
 			auto ptr = std::dynamic_pointer_cast<U>(body_);
 			if (!ptr) {
 				throw Nh::RuntimeException("RandomVariable: failed to dynamic cast");
@@ -75,18 +75,18 @@ namespace RandomVariable {
 	public:
 
 		_RandomVariable_();
-		virtual ~_RandomVariable_();
+		~_RandomVariable_() override;
 
-		const std::string& name() const;
+		[[nodiscard]] const std::string& name() const;
 		void set_name(const std::string& name);
 
-		const RandomVariable& left() const;
-		const RandomVariable& right() const;
+		[[nodiscard]] const RandomVariable& left() const;
+		[[nodiscard]] const RandomVariable& right() const;
 
 		double mean();
 		double variance();
 
-		int level() const { return level_; }
+		[[nodiscard]] int level() const { return level_; }
 
 	protected:
 
@@ -106,10 +106,10 @@ namespace RandomVariable {
 
 	protected:
 
-		virtual double calc_mean() const;
-		virtual double calc_variance() const;
+		[[nodiscard]] virtual double calc_mean() const;
+		[[nodiscard]] virtual double calc_variance() const;
 
-		void check_variance(double& v) const;
+		static void check_variance(double& v);
 
 		std::string name_;
 		RandomVariable left_;

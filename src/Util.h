@@ -8,9 +8,9 @@
 
 namespace RandomVariable {
 
-    double MeanMax(double mu);
-    double MeanMax2(double mu);
-    double MeanPhiMax(double mu);
+    double MeanMax(double a);
+    double MeanMax2(double a);
+    double MeanPhiMax(double a);
 
 
 }

@@ -28,19 +28,19 @@ public:
     ExpressionHandle() = default;
     ExpressionHandle(std::nullptr_t) : body_(nullptr) {}
     explicit ExpressionHandle(Expression_* body)
-        : body_(body ? std::shared_ptr<Expression_>(body) : nullptr) {}
+        : body_(body != nullptr ? std::shared_ptr<Expression_>(body) : nullptr) {}
     explicit ExpressionHandle(std::shared_ptr<Expression_> body)
         : body_(std::move(body)) {}
 
     template <class Derived,
-              class = std::enable_if_t<std::is_base_of<Expression_, Derived>::value>>
+              class = std::enable_if_t<std::is_base_of_v<Expression_, Derived>>>
     explicit ExpressionHandle(const std::shared_ptr<Derived>& body)
         : body_(std::static_pointer_cast<Expression_>(body)) {}
 
     Expression_* operator->() const { return body_.get(); }
     Expression_& operator*() const { return *body_; }
-    Expression_* get() const { return body_.get(); }
-    std::shared_ptr<Expression_> shared() const { return body_; }
+    [[nodiscard]] Expression_* get() const { return body_.get(); }
+    [[nodiscard]] std::shared_ptr<Expression_> shared() const { return body_; }
     explicit operator bool() const { return static_cast<bool>(body_); }
 
     bool operator==(const ExpressionHandle& rhs) const { return body_.get() == rhs.body_.get(); }
@@ -128,7 +128,7 @@ public:
 		const Expression& right
 		);
 
-    virtual ~Expression_();
+    ~Expression_() override;
 
     [[nodiscard]] int id() const { return id_; }
 
@@ -175,10 +175,10 @@ void print_all();
 class Const_ : public Expression_ {
 public:
     Const_(double value) : Expression_(value) {}
-    virtual ~Const_() {}
+    ~Const_() override = default;
 private:
     // differential
-    virtual Expression d(const Expression& y);
+    Expression d(const Expression& y) override;
 };
 
 class Const : public Expression {

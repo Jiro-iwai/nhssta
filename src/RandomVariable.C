@@ -9,7 +9,6 @@
 namespace RandomVariable {
 
     _RandomVariable_::_RandomVariable_():
-        name_(""),
         left_(nullptr),
         right_(nullptr),
         mean_(0),
@@ -54,8 +53,11 @@ namespace RandomVariable {
         name_(name),
         left_(left),
         right_(right),
+        mean_(0),
+        variance_(0),
         is_set_mean_(false),
-        is_set_variance_(false)
+        is_set_variance_(false),
+        level_(0)
     {
 #ifdef DEBUG
         std::cerr << "_RandomVariable_(" << this << ":";
@@ -98,8 +100,9 @@ namespace RandomVariable {
     double _RandomVariable_::variance() {
         if( !is_set_variance_ ){
             variance_ = calc_variance();
-            if( std::isnan(variance_) )
+            if( std::isnan(variance_) ) {
                 assert(0);
+            }
             is_set_variance_ = true;
         }
 
@@ -114,11 +117,13 @@ namespace RandomVariable {
         return variance_;
     }
 
-    void _RandomVariable_::check_variance(double& v) const {
-        if( fabs(v) < minimum_variance )
+    void _RandomVariable_::check_variance(double& v) {
+        if( fabs(v) < minimum_variance ) {
             v = minimum_variance;
-        if( v < 0.0 )
+        }
+        if( v < 0.0 ) {
             throw Nh::RuntimeException("RandomVariable: negative variance");
+        }
     }
 
 }

@@ -19,13 +19,13 @@ namespace Nh {
         Exception(const std::string& context, const std::string& message) 
             : message_(context + ": " + message) {}
         
-        virtual ~Exception() noexcept {}
+        ~Exception() noexcept override = default;
         
-        virtual const char* what() const noexcept override {
+        [[nodiscard]] const char* what() const noexcept override {
             return message_.c_str();
         }
         
-        const std::string& message() const { return message_; }
+        [[nodiscard]] const std::string& message() const { return message_; }
 
     protected:
         std::string message_;

@@ -7,9 +7,7 @@
 
 namespace RandomVariable {
 
-    _Normal_::_Normal_():
-		_RandomVariable_(){
-    }
+    _Normal_::_Normal_() = default;
 
     _Normal_::_Normal_
     (
@@ -17,8 +15,9 @@ namespace RandomVariable {
 		double variance
 		) : _RandomVariable_(mean,variance)
     {
-		if( variance < 0.0 )
+		if( variance < 0.0 ) {
 			throw Nh::RuntimeException("Normal: negative variance");
+		}
     }
 
     _Normal_::~_Normal_() = default;

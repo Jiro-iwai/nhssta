@@ -29,8 +29,8 @@ namespace RandomVariable {
 
     private:
 
-		const RandomVariable& left() const;
-		const RandomVariable& right() const;
+		[[nodiscard]] const RandomVariable& left() const;
+		[[nodiscard]] const RandomVariable& right() const;
 
     };
 
@@ -40,7 +40,7 @@ namespace RandomVariable {
 		Normal( double mean, double variance ) :
 			RandomVariable(std::make_shared<_Normal_>(mean,variance)) {}
 
-		Normal clone() const;
+		[[nodiscard]] Normal clone() const;
     };
 }
 

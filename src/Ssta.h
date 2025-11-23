@@ -38,16 +38,16 @@ namespace Nh {
 
 		class NetLineBody : public RCObject {
 		public:
-			NetLineBody(){}
-			~NetLineBody(){}
+			NetLineBody() = default;
+			~NetLineBody() override = default;
 
 			void set_out(const std::string& out) { out_ = out; }
-			const std::string& out() const { return out_; }
+			[[nodiscard]] const std::string& out() const { return out_; }
 
 			void set_gate(const std::string& gate) { gate_ = gate; }
-			const std::string& gate() const { return gate_; }
+			[[nodiscard]] const std::string& gate() const { return gate_; }
 
-			const Ins& ins() const{ return ins_; }
+			[[nodiscard]] const Ins& ins() const{ return ins_; }
 			Ins& ins() { return ins_; }
 
 		private:
@@ -80,7 +80,7 @@ namespace Nh {
 			bool operator<(const NetLine& rhs) const { return body_.get() < rhs.body_.get(); }
 			bool operator>(const NetLine& rhs) const { return body_.get() > rhs.body_.get(); }
 
-			std::shared_ptr<NetLineBody> get() const { return body_; }
+			[[nodiscard]] std::shared_ptr<NetLineBody> get() const { return body_; }
 
 		private:
 			std::shared_ptr<NetLineBody> body_;
@@ -92,7 +92,7 @@ namespace Nh {
 		void read_bench_net(Parser& parser,const std::string& out_signal_name);
 		void set_dff_out(const std::string& out_signal_name);
 		void connect_instances();
-		bool is_line_ready(const NetLine& line) const;
+		[[nodiscard]] bool is_line_ready(const NetLine& line) const;
 		void set_instance_input(const Instance& inst, const Ins& ins);
 		void check_signal(const std::string& signal_name) const;
 
@@ -114,8 +114,8 @@ namespace Nh {
 
 		std::string dlib_;
 		std::string bench_;
-		bool is_lat_;
-		bool is_correlation_;
+		bool is_lat_ = false;
+		bool is_correlation_ = false;
 		Gates gates_;
 		Signals signals_;
 		Net net_;
@@ -127,12 +127,12 @@ namespace Nh {
 		void set_lat() { is_lat_ = true; }
 		void set_correlation() { is_correlation_ = true; }
 
-		void set_dlib(std::string dlib) { dlib_ = dlib; }
-		void set_bench(std::string bench) { bench_ = bench; }
+		void set_dlib(const std::string& dlib) { dlib_ = dlib; }
+		void set_bench(const std::string& bench) { bench_ = bench; }
 
 		// Pure logic functions (Phase 2: I/O separation)
-		LatResults getLatResults() const;
-		CorrelationMatrix getCorrelationMatrix() const;
+		[[nodiscard]] LatResults getLatResults() const;
+		[[nodiscard]] CorrelationMatrix getCorrelationMatrix() const;
 
     };
 }

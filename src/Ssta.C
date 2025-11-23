@@ -15,13 +15,20 @@ namespace Nh {
 
     std::string date() {
         time_t t = time(0);
-        char *s,*p;
+        char* s = nullptr;
+        char* p = nullptr;
         p = s = asctime(localtime(&t));
-        while(*s != '\0') { if (*s == '\n') {*s = '\0'; break;} else {s++;}}
-        return std::string(p);
+        while(*s != '\0') {
+            if (*s == '\n') {
+                *s = '\0';
+                break;
+            }
+            s++;
+        }
+        return {p};
     }
 
-    Ssta::Ssta() : is_lat_(false), is_correlation_(false)
+    Ssta::Ssta()
     {
         std::cerr << "nhssta 0.0.8 (" << date() << ")" << std::endl;
     }
@@ -44,7 +51,9 @@ namespace Nh {
             error++;
         }
 
-        if( error ) exit(1);
+        if( error != 0 ) {
+            exit(1);
+        }
     }
 
     //// read ////
@@ -90,7 +99,7 @@ namespace Nh {
 
         std::string gate_name;;
         parser.getToken(gate_name);
-        Gates::const_iterator i = gates_.find(gate_name);
+        auto i = gates_.find(gate_name);
         if( i != gates_.end() ){
             g = i->second;
         } else {
@@ -106,24 +115,27 @@ namespace Nh {
 
         std::string type; // distribution type
         parser.getToken(type);
-        if( !(type == "gauss" || type == "const") )
+        if( !(type == "gauss" || type == "const") ) {
             parser.unexpectedToken();
+        }
 
         parser.checkSepalator('(');
 
-        double mean;
+        double mean = 0.0;
         parser.getToken(mean);
-        if( mean < 0.0 )
+        if( mean < 0.0 ) {
             parser.unexpectedToken();
+        }
 
-        double variance;
+        double variance = 0.0;
         if( type == "gauss" ) { // gaussian
             parser.checkSepalator(',');
 
-            double sigma;
+            double sigma = 0.0;
             parser.getToken(sigma);
-            if( sigma < 0.0 )
+            if( sigma < 0.0 ) {
                 parser.unexpectedToken();
+            }
 
             variance = sigma*sigma;
 
@@ -182,7 +194,7 @@ namespace Nh {
 
         std::string signal_name;
         parser.getToken(signal_name);
-        Signals::const_iterator si = signals_.find(signal_name);
+        auto si = signals_.find(signal_name);
         if( si != signals_.end() ) {
             node_error("input",signal_name);
         }
@@ -202,7 +214,7 @@ namespace Nh {
 
         std::string signal_name;
         parser.getToken(signal_name);
-        Pins::const_iterator si = outputs_.find(signal_name);
+        auto si = outputs_.find(signal_name);
         if( si != outputs_.end() ) {
             node_error("output",signal_name);
         }
@@ -213,17 +225,17 @@ namespace Nh {
     }
 
     static void tolower_string(std::string& token){
-        unsigned int i;
-        for( i = 0; i < token.size(); i++ )
-            token[i] = tolower(token[i]);
+        for( char& c : token ) {
+            c = static_cast<char>(tolower(c));
+        }
     }
 
     bool Ssta::is_line_ready(const NetLine& line) const {
         Ins ins = line->ins();
-        Ins::const_iterator j = ins.begin();
+        auto j = ins.begin();
         for( ; j != ins.end(); j++ ){
             const std::string& signal_name = *j;
-            Signals::const_iterator si = signals_.find(signal_name);
+            auto si = signals_.find(signal_name);
             if( si == signals_.end() ){
                 return false;
             }
@@ -234,7 +246,7 @@ namespace Nh {
     // don't use for dff
     void Ssta::set_instance_input(const Instance& inst, const Ins& ins) {
         int ith = 0;
-        Ins::const_iterator j = ins.begin();
+        auto j = ins.begin();
         for( ; j != ins.end(); j++ ){
 
             const std::string& signal_name = *j;
@@ -247,7 +259,7 @@ namespace Nh {
     }
 
     void Ssta::check_signal(const std::string& signal_name) const {
-        Signals::const_iterator si = signals_.find(signal_name);
+        auto si = signals_.find(signal_name);
         if( si != signals_.end() ) {
             node_error("node",signal_name);
         }
@@ -259,7 +271,7 @@ namespace Nh {
 
             unsigned int size = net_.size();
 
-            Net::iterator ni = net_.begin();
+            auto ni = net_.begin();
             while( ni != net_.end() ){
 
                 const NetLine& line = *ni;
@@ -269,7 +281,7 @@ namespace Nh {
                 if( is_line_ready(line) ) {
 
                     const std::string& gate_name = line->gate();
-                    Gates::const_iterator gi = gates_.find(gate_name);
+                    auto gi = gates_.find(gate_name);
 
                     Gate gate = gi->second;
                     Instance inst = gate.create_instance();
@@ -284,8 +296,9 @@ namespace Nh {
                     out->set_name(out_signal_name);
 
                     net_.erase(ni++);
-                } else
+                } else {
                     ni++;
+                }
             }
 
             // floating circuit
@@ -306,7 +319,7 @@ namespace Nh {
     void Ssta::set_dff_out(const std::string& out_signal_name) {
 
         Normal in(0.0,::RandomVariable::minimum_variance); //////
-        Gates::const_iterator gi = gates_.find("dff");
+        auto gi = gates_.find("dff");
         Gate dff = gi->second;
 
         Normal delay = dff->delay("ck","q");
@@ -329,7 +342,7 @@ namespace Nh {
         std::string gate_name;
         parser.getToken(gate_name);
         tolower_string(gate_name);
-        Gates::const_iterator gi = gates_.find(gate_name);
+        auto gi = gates_.find(gate_name);
         if( gi == gates_.end() ){
             std::string what = "unknown gate \"";
             what += gate_name;
@@ -348,21 +361,21 @@ namespace Nh {
         parser.checkSepalator('(');
 
         Ins& ins = l->ins();
-        while(1) {
+        while(true) {
 
             std::string in_signal_name;
             parser.getToken(in_signal_name);
             ins.push_back(in_signal_name);
 
-            char sep;
+            char sep = '\0';
             parser.getToken(sep);
             if( sep == ')' ) {
                 break;
-            } else if( sep == ',' ) {
-                continue;
-            } else {
-                parser.unexpectedToken();
             }
+            if( sep == ',' ) {
+                continue;
+            }
+            parser.unexpectedToken();
         }
 
         parser.checkEnd();
@@ -416,7 +429,7 @@ namespace Nh {
 
     void Ssta::print_line() const {
         bool isfirst = true;
-        Signals::const_iterator si = signals_.begin();
+        auto si = signals_.begin();
         for( ; si != signals_.end(); si++ ) {
             if( isfirst ){
                 std::cout << "#-------";
@@ -463,14 +476,14 @@ namespace Nh {
     LatResults Ssta::getLatResults() const {
         LatResults results;
         
-        Signals::const_iterator si = signals_.begin();
+        auto si = signals_.begin();
         for( ; si != signals_.end(); si++ ) {
             const RandomVariable& sigi = si->second;
             double mean = si->second->mean();
             double variance = si->second->variance();
             double sigma = sqrt(variance);
             
-            results.push_back(LatResult(sigi->name(), mean, sigma));
+            results.emplace_back(sigi->name(), mean, sigma);
         }
         
         return results;
@@ -480,7 +493,7 @@ namespace Nh {
         CorrelationMatrix matrix;
         
         // Collect node names
-        Signals::const_iterator si = signals_.begin();
+        auto si = signals_.begin();
         for( ; si != signals_.end(); si++ ) {
             const RandomVariable& sigi = si->second;
             matrix.node_names.push_back(sigi->name());
@@ -492,7 +505,7 @@ namespace Nh {
             const RandomVariable& sigi = si->second;
             double vi = sigi->variance();
             
-            Signals::const_iterator sj = signals_.begin();
+            auto sj = signals_.begin();
             for( ; sj != signals_.end(); sj++ ) {
                 const RandomVariable& sigj = sj->second;
                 double vj = sigj->variance();
