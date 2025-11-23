@@ -8,6 +8,7 @@
 #include "sub.hpp"
 #include "covariance.hpp"
 #include "util.hpp"
+#include "exception.hpp"
 
 namespace RandomVariable {
 
@@ -55,7 +56,9 @@ OpMAX0::~OpMAX0() = default;
 double OpMAX0::calc_mean() const {
     double mu = left()->mean();
     double va = left()->variance();
-    assert(0.0 < va);
+    if (va <= 0.0) {
+        throw Nh::RuntimeException("OpMAX0::calc_mean: variance must be positive, got " + std::to_string(va));
+    }
     double sg = sqrt(va);
     double ms = -mu / sg;
     double mm = MeanMax(ms);
@@ -66,7 +69,9 @@ double OpMAX0::calc_mean() const {
 double OpMAX0::calc_variance() const {
     double mu = left()->mean();
     double va = left()->variance();
-    assert(0.0 < va);
+    if (va <= 0.0) {
+        throw Nh::RuntimeException("OpMAX0::calc_variance: variance must be positive, got " + std::to_string(va));
+    }
     double sg = sqrt(va);
     double ms = -mu / sg;
     double mm = MeanMax(ms);

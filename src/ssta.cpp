@@ -269,7 +269,7 @@ namespace Nh {
 
                 const NetLine& line = *ni;
                 const Ins& ins = line->ins();
-                assert( line->gate() != "dff" );
+                // Note: dff gate check is now done in read_bench_net()
 
                 if( is_line_ready(line) ) {
 
