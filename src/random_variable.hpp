@@ -8,7 +8,6 @@
 #include <string>
 #include <type_traits>
 
-#include "smart_ptr.hpp"
 #include <nhssta/exception.hpp>
 
 namespace RandomVariable {
@@ -98,11 +97,11 @@ namespace RandomVariable {
 	// - Store as member variable to create ownership: RandomVariable left_;
 	using RandomVariable = RandomVariableHandle;
 
-	class _RandomVariable_ : public RCObject {
+	class _RandomVariable_ {
 	public:
 
 		_RandomVariable_();
-		~_RandomVariable_() override;
+		virtual ~_RandomVariable_();
 
 		[[nodiscard]] const std::string& name() const;
 		void set_name(const std::string& name);

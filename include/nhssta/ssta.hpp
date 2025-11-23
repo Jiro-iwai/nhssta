@@ -10,7 +10,7 @@
 #include <list>
 #include <vector>
 #include <string>
-#include "../src/smart_ptr.hpp"
+// smart_ptr.hpp no longer needed - NetLineBody uses std::shared_ptr directly
 #include "../src/gate.hpp"
 #include "../src/parser.hpp"
 #include <nhssta/ssta_results.hpp>
@@ -36,10 +36,10 @@ namespace Nh {
 
 		typedef std::vector<std::string> Ins;
 
-		class NetLineBody : public RCObject {
+		class NetLineBody {
 		public:
 			NetLineBody() = default;
-			~NetLineBody() override = default;
+			virtual ~NetLineBody() = default;
 
 			void set_out(const std::string& out) { out_ = out; }
 			[[nodiscard]] const std::string& out() const { return out_; }
