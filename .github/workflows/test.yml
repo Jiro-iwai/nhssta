@@ -46,3 +46,24 @@ jobs:
       run: |
         make test || echo "Unit tests require Boost dependencies to be resolved first"
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy clang-format libboost-all-dev
+
+    - name: Run clang-format check
+      run: |
+        echo "Checking code formatting..."
+        find src -name "*.C" -o -name "*.h" | xargs clang-format --dry-run --Werror || echo "Formatting issues found (non-blocking)"
+
+    - name: Run clang-tidy
+      working-directory: src
+      run: |
+        echo "Running clang-tidy..."
+        make tidy || echo "clang-tidy found issues (non-blocking)"
+
