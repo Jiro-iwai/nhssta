@@ -76,7 +76,7 @@ $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 
 ../test/%.o: ../test/%.cpp
 	@mkdir -p ../test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@
 
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
