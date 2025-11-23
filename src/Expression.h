@@ -64,7 +64,7 @@ public:
     // differential
     virtual Expression d(const Expression& y);
 
-    int id() const { return id_; }
+    [[nodiscard]] int id() const { return id_; }
 
 protected:
 
@@ -95,15 +95,15 @@ protected:
 
     virtual ~Expression_();
 
-    const Expression& left() const { return left_; }
-    const Expression& right() const { return right_; }
+    [[nodiscard]] const Expression& left() const { return left_; }
+    [[nodiscard]] const Expression& right() const { return right_; }
 
     virtual double value();
     void set_value(double value);
     void _set_value(double value);
     void unset_value();
     void unset_root_value();
-    bool is_set_value() const { return is_set_value_; }
+    [[nodiscard]] bool is_set_value() const { return is_set_value_; }
 
     void add_root(Expression_* root);
     void remove_root(Expression_* root);
@@ -152,10 +152,10 @@ public:
 
 class Variable_ : public Expression_ {
 public:
-    Variable_() : Expression_() {}
-    virtual ~Variable_() {}
-    virtual double value();
-    virtual Expression d(const Expression& y);
+    Variable_() = default;
+    ~Variable_() override = default;
+    double value() override;
+    Expression d(const Expression& y) override;
 };
 
 class Variable : public SmartPtr<Variable_> {
