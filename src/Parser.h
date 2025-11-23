@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include "Tokenizer.h"
+#include "Exception.h"
 
 class Parser {
 
@@ -18,13 +19,9 @@ private:
 
 public:
 
-    class exception {
-    public:
-		exception(const std::string& what): what_(what) {}
-		const std::string& what() { return what_; }
-    private:
-		std::string what_ ;
-    };
+    // Backward compatibility: keep exception as alias to Nh::ParseException
+    // This will be removed in a later phase
+    using exception = Nh::ParseException;
 
     Parser
     (

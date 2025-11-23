@@ -60,10 +60,12 @@ TEST_F(ParserTest, CheckFileNotFound) {
     std::string filepath = test_dir + "/nonexistent.txt";
     Parser parser(filepath, '#', "(),", " \t\r");
     
-    EXPECT_THROW(parser.checkFile(), Parser::exception);
+    // checkFile() now throws Nh::FileException
+    EXPECT_THROW(parser.checkFile(), Nh::FileException);
     try {
         parser.checkFile();
-    } catch (Parser::exception& e) {
+    } catch (Nh::FileException& e) {
+        EXPECT_NE(std::string(e.what()).find("File error"), std::string::npos);
         EXPECT_NE(std::string(e.what()).find("failed to open file"), std::string::npos);
     }
 }

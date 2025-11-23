@@ -77,7 +77,9 @@ namespace Nh {
                 read_dlib_line(parser);
             }
 
-        } catch( Parser::exception& e ){
+        } catch( Nh::FileException& e ){
+            throw exception(e.what());
+        } catch( Nh::ParseException& e ){
             throw exception(e.what());
         }
     }
@@ -169,7 +171,10 @@ namespace Nh {
         } catch ( Gate::exception& e ) {
             throw exception(e.what());
 
-        } catch ( Parser::exception& e ) {
+        } catch ( Nh::FileException& e ) {
+            throw exception(e.what());
+
+        } catch ( Nh::ParseException& e ) {
             throw exception(e.what());
 
         }
