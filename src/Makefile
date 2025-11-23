@@ -49,7 +49,11 @@ $(TARGET) : $(OBJS)
 
 %.d : %.C
 	rm -f $@
-	$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@
+	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+		$(CXX) -MM $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@; \
+	else \
+		$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@; \
+	fi
 
 .PHONY: test test-build tidy coverage coverage-clean
 
