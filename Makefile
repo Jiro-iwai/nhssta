@@ -29,7 +29,7 @@ clean:
 check:
 	cd example; make
 
-.PHONY: test tidy
+.PHONY: test tidy coverage coverage-clean
 
 test:
 	@for i in $(DIR) ; \
@@ -38,4 +38,12 @@ test:
 tidy:
 	@for i in $(DIR) ; \
 	     do (test -d $$i && cd $$i && $(MAKE) tidy) || exit 1; done
+
+coverage:
+	@for i in $(DIR) ; \
+	     do (test -d $$i && cd $$i && $(MAKE) coverage) || exit 1; done
+
+coverage-clean:
+	@for i in $(DIR) ; \
+	     do (test -d $$i && cd $$i && $(MAKE) coverage-clean) || exit 1; done
 

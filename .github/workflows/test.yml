@@ -24,12 +24,12 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libboost-all-dev libgtest-dev build-essential
+        sudo apt-get install -y libboost-all-dev libgtest-dev build-essential lcov
 
     - name: Install dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        brew install boost googletest
+        brew install boost googletest lcov
 
     - name: Build nhssta
       working-directory: src
@@ -45,6 +45,22 @@ jobs:
       working-directory: src
       run: |
         make test || echo "Unit tests require Boost dependencies to be resolved first"
+
+    - name: Generate coverage report
+      if: matrix.compiler == 'g++'
+      working-directory: src
+      run: |
+        make coverage || echo "Coverage generation failed (this is non-critical)"
+
+    - name: Upload coverage report
+      if: matrix.compiler == 'g++' && matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.os }}-${{ matrix.compiler }}
+        path: |
+          src/coverage/
+          src/*.gcov
+        if-no-files-found: ignore
 
   lint:
     runs-on: ubuntu-latest

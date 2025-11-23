@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-CXX = g++
+CXX ?= g++
 CXXFLAGS = -g -Wall -std=c++17 
 #INCLUDE = -I/usr/include/boost-1_33_1
 BOOST_DIR = /opt/homebrew/opt/boost
@@ -41,13 +41,21 @@ $(TARGET) : $(OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS)
 
 %.o : %.C
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<
+	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) -c $<; \
+	else \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<; \
+	fi
 
 %.d : %.C
 	rm -f $@
-	$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@
+	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+		$(CXX) -MM $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@; \
+	else \
+		$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@; \
+	fi
 
-.PHONY: test test-build tidy
+.PHONY: test test-build tidy coverage coverage-clean
 
 # Test target
 test: $(TARGET) $(TEST_TARGET)
@@ -71,13 +79,75 @@ tidy:
 test-build: $(TEST_TARGET)
 	@echo "Test binary built successfully: $(TEST_TARGET)"
 
+# Coverage configuration
+COVERAGE_FLAGS = -fprofile-arcs -ftest-coverage
+COVERAGE_LIBS = -lgcov
+COVERAGE_DIR = ../coverage
+
+# Coverage build flags (separate from regular build)
+COVERAGE_CXXFLAGS = $(CXXFLAGS) $(COVERAGE_FLAGS)
+
+# Coverage test target
+coverage: coverage-clean
+	@echo "Building with coverage instrumentation..."
+	@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" CXX="$(CXX)" clean
+	@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" CXX="$(CXX)" test-build
+	@echo "Running tests with coverage..."
+	@cd .. && ./test/nhssta_test > /dev/null 2>&1 || true
+	@echo "Generating coverage report..."
+	@mkdir -p $(COVERAGE_DIR)
+	@if command -v gcov >/dev/null 2>&1; then \
+		for src in $(CXXSRCS); do \
+			if [ -f "$$src.gcda" ]; then \
+				gcov -b -c -l -p $$src 2>/dev/null || true; \
+			fi; \
+		done; \
+	else \
+		echo "gcov not found. Install gcc to use gcov."; \
+	fi
+	@if command -v lcov >/dev/null 2>&1; then \
+		echo "Generating HTML coverage report with lcov..."; \
+		lcov --capture --directory . --directory ../test --output-file $(COVERAGE_DIR)/coverage.info --no-external --ignore-errors inconsistent,unsupported,format,source 2>&1 | grep -E "(Found|Scanning|Writing)" | head -3 || true; \
+		if [ -f "$(COVERAGE_DIR)/coverage.info" ] && [ -s "$(COVERAGE_DIR)/coverage.info" ]; then \
+			genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/html --ignore-errors inconsistent,unsupported,format,source,category --synthesize-missing 2>&1 | tail -2 || true; \
+			echo "Coverage report generated in $(COVERAGE_DIR)/html/index.html"; \
+		else \
+			echo "No coverage data found. Run tests first."; \
+			echo "Debug: Checking for .gcda files..."; \
+			find . ../test -name "*.gcda" 2>/dev/null | head -3 || echo "No .gcda files found"; \
+		fi; \
+	else \
+		echo "lcov not found. Install with: brew install lcov (macOS) or apt-get install lcov (Ubuntu)"; \
+		echo "Coverage .gcov files generated in src/ directory"; \
+	fi
+
+# Clean coverage files
+coverage-clean:
+	@echo "Cleaning coverage files..."
+	@rm -rf $(COVERAGE_DIR)
+	@find . -name "*.gcda" -delete
+	@find . -name "*.gcno" -delete
+	@find . -name "*.gcov" -delete
+
 $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 	@mkdir -p ../test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS)
+	@if echo "$(CXXFLAGS)" | grep -qE "(coverage|profile-arcs)"; then \
+		if [ "$(CXX)" = "g++" ] || echo "$(CXX)" | grep -q "/g++"; then \
+			$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS) $(COVERAGE_LIBS); \
+		else \
+			$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS); \
+		fi; \
+	else \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -o $(TEST_TARGET) $(TEST_OBJS) $(LIB_OBJS) $(GTEST_LIBS); \
+	fi
 
 ../test/%.o: ../test/%.cpp
 	@mkdir -p ../test
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@
+	@if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+	else \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+	fi
 
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
