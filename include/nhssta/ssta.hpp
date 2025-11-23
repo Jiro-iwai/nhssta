@@ -93,7 +93,7 @@ namespace Nh {
 		void set_dff_out(const std::string& out_signal_name);
 		void connect_instances();
 		[[nodiscard]] bool is_line_ready(const NetLine& line) const;
-		void set_instance_input(const Instance& inst, const Ins& ins);
+		void set_instance_input(const Instance& inst, const Ins& ins, const std::string& gate_name);
 		void check_signal(const std::string& signal_name) const;
 
 		void node_error

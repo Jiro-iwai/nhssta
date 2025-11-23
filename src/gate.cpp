@@ -73,7 +73,23 @@ namespace Nh {
 		const std::string& in_name,
 		const RandomVariable& signal
 		) {
-		(void)gate_->delay(in_name); // error check
+		// Error check: verify that the input pin name is valid
+		// Check if there is any delay defined from this input pin to any output pin
+		bool found = false;
+		for (const auto& delay_entry : gate_->delays()) {
+			if (delay_entry.first.first == in_name) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			std::string what = "input pin \"";
+			what += in_name;
+			what += "\" is not defined on gate \"";
+			what += gate_->type_name();
+			what += "\"";
+			throw Nh::RuntimeException(what);
+		}
 		inputs_[in_name] = signal;
 		assert(&(*inputs_[in_name]));
     }

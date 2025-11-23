@@ -224,6 +224,26 @@ namespace Nh {
     }
 
     bool Ssta::is_line_ready(const NetLine& line) const {
+        const std::string& gate_name = line->gate();
+        
+        // Special handling for dff gates:
+        // DFF gates can be processed even if data input is not ready yet.
+        // This is necessary to handle sequential circuits with feedback loops
+        // (e.g., G5 = DFF(G10) → G10 = NOR(G14, G11) → G11 = NOR(G5, G9) → G5).
+        // 
+        // When data input is not available, set_instance_input() will use a default
+        // value (mean 0.0, minimum variance) for the data input, allowing the DFF
+        // to be processed based on clock input only. This breaks the circular dependency
+        // and allows the circuit to be processed in topological order.
+        //
+        // Note: This is different from the old set_dff_out() implementation which
+        // ignored data input entirely. The current implementation uses data input
+        // when available, but falls back to default when not ready.
+        if( gate_name == "dff" ) {
+            return true;
+        }
+        
+        // For other gates, all inputs must be ready before processing
         Ins ins = line->ins();
         auto j = ins.begin();
         for( ; j != ins.end(); j++ ){
@@ -236,18 +256,68 @@ namespace Nh {
         return true;
     }
 
-    // don't use for dff
-    void Ssta::set_instance_input(const Instance& inst, const Ins& ins) {
-        int ith = 0;
-        auto j = ins.begin();
-        for( ; j != ins.end(); j++ ){
-
-            const std::string& signal_name = *j;
-            const RandomVariable& signal = signals_[signal_name];
-            std::string pin = std::to_string(ith);
-            inst->set_input(pin, signal);
-
-            ith++;
+    void Ssta::set_instance_input(const Instance& inst, const Ins& ins, const std::string& gate_name) {
+        // Special handling for dff gates: map inputs to pin names "d" and "ck"
+        // This handles sequential circuits with feedback loops where data input
+        // may not be ready when the DFF is first processed (see is_line_ready()).
+        if( gate_name == "dff" ) {
+            auto j = ins.begin();
+            
+            // First input is data input (d)
+            // If data input is not ready (not in signals_), use default (mean 0, min variance).
+            // This allows DFF to be processed even in feedback loops, breaking circular dependencies.
+            // The data input will be used when available, improving accuracy over clock-only processing.
+            if( j != ins.end() ) {
+                const std::string& signal_name = *j;
+                auto si = signals_.find(signal_name);
+                if( si != signals_.end() ) {
+                    const RandomVariable& signal = si->second;
+                    inst->set_input("d", signal);
+                } else {
+                    // Data input not ready yet - use default to allow processing
+                    // This is a fallback for sequential circuits with feedback loops
+                    Normal default_d(0.0, ::RandomVariable::minimum_variance);
+                    RandomVariable d_signal = default_d.clone();
+                    inst->set_input("d", d_signal);
+                }
+                j++;
+            } else {
+                // No data input specified - use default
+                Normal default_d(0.0, ::RandomVariable::minimum_variance);
+                RandomVariable d_signal = default_d.clone();
+                inst->set_input("d", d_signal);
+            }
+            
+            // Second input is clock input (ck), if specified
+            if( j != ins.end() ) {
+                const std::string& signal_name = *j;
+                auto si = signals_.find(signal_name);
+                if( si != signals_.end() ) {
+                    const RandomVariable& signal = si->second;
+                    inst->set_input("ck", signal);
+                } else {
+                    // Clock input not ready - use default
+                    Normal default_ck(0.0, ::RandomVariable::minimum_variance);
+                    RandomVariable ck_signal = default_ck.clone();
+                    inst->set_input("ck", ck_signal);
+                }
+            } else {
+                // If clock input is not specified, use default clock (mean 0, min variance)
+                Normal default_ck(0.0, ::RandomVariable::minimum_variance);
+                RandomVariable ck_signal = default_ck.clone();
+                inst->set_input("ck", ck_signal);
+            }
+        } else {
+            // For other gates, use positional pin names (0, 1, 2, ...)
+            int ith = 0;
+            auto j = ins.begin();
+            for( ; j != ins.end(); j++ ){
+                const std::string& signal_name = *j;
+                const RandomVariable& signal = signals_[signal_name];
+                std::string pin = std::to_string(ith);
+                inst->set_input(pin, signal);
+                ith++;
+            }
         }
     }
 
@@ -279,9 +349,17 @@ namespace Nh {
                     Gate gate = gi->second;
                     Instance inst = gate.create_instance();
 
-                    set_instance_input(inst, ins);
+                    set_instance_input(inst, ins, gate_name);
 
-                    const RandomVariable& out = inst->output();
+                    // Get output pin name from gate's delay definitions dynamically
+                    // Don't assume specific pin names - use what's actually defined in dlib
+                    std::string out_pin_name = "y"; // default fallback
+                    const auto& delays = gate->delays();
+                    if (!delays.empty()) {
+                        // Use the output pin name from the first delay definition
+                        out_pin_name = delays.begin()->first.second;
+                    }
+                    const RandomVariable& out = inst->output(out_pin_name);
                     const std::string& out_signal_name = line->out();
 
                     check_signal(out_signal_name);
@@ -373,11 +451,9 @@ namespace Nh {
 
         parser.checkEnd();
 
-        if( gate_name == "dff" ) {
-            set_dff_out(out_signal_name);
-        } else {
-            net_.push_back(l);
-        }
+        // DFF gates are now processed through normal flow in connect_instances()
+        // This allows proper handling of data input (d) in addition to clock input (ck)
+        net_.push_back(l);
     }
 
 
