@@ -13,6 +13,7 @@
 using namespace Nh;
 using RandomVar = ::RandomVariable::RandomVariable;
 using Normal = ::RandomVariable::Normal;
+using std::isnan;
 
 class SstaUnitTest : public ::testing::Test {
 protected:
