@@ -43,12 +43,18 @@ $(TARGET) : $(OBJS)
 	rm -f $@
 	$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s/\($*\)\.o[ :]*/\1.o $@ : /g" > $@
 
-.PHONY: test test-build
+.PHONY: test test-build tidy
 
 # Test target
 test: $(TEST_TARGET)
 	@echo "Running unit tests..."
 	@./$(TEST_TARGET) || echo "Note: Some tests may require Boost dependencies to be resolved"
+
+# clang-tidy target
+tidy:
+	@echo "Running clang-tidy..."
+	@which clang-tidy > /dev/null 2>&1 || (echo "clang-tidy not found. Install with: brew install llvm" && exit 1)
+	@clang-tidy $(CXXSRCS) -- $(CXXFLAGS) $(INCLUDE) 2>&1 | head -100 || true
 
 # Build test target only (without running)
 test-build: $(TEST_TARGET)
