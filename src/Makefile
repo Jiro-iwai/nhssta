@@ -26,11 +26,14 @@ DEPS = $(CXXSRCS:.cpp=.d)
 TARGET = nhssta
 
 # Google Test configuration
-# GTEST_DIR can be overridden via environment variable
+# GTEST_DIR can be overridden via:
+#   1. Environment variable: export GTEST_DIR=/path/to/googletest
+#   2. Make command line: make GTEST_DIR=/path/to/googletest test
 # Default paths for common installations:
 #   macOS (Homebrew): /opt/homebrew/opt/googletest or /usr/local/opt/googletest
 #   Ubuntu/Debian: /usr
-#   Custom: Set GTEST_DIR environment variable
+#   Custom: Set GTEST_DIR environment variable or pass as make argument
+# Use ?= to allow override via environment variable or command line
 GTEST_DIR ?= /opt/homebrew/opt/googletest
 GTEST_INCLUDE := -I$(GTEST_DIR)/include -I../include
 GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
@@ -49,7 +52,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_public_api_headers.cpp ../test/test_cli_exit_codes.cpp \
 	../test/test_handle_ownership.cpp ../test/test_rcobject_removal.cpp \
 	../test/test_smartptr_removal.cpp ../test/test_util_boundary.cpp \
-	../test/test_coverage_gaps.cpp
+	../test/test_coverage_gaps.cpp ../test/test_makefile_portability.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 

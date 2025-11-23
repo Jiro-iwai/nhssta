@@ -208,9 +208,10 @@ cd src
 make
 ```
 
-**注意**: テストをビルドする場合、Google Testのパスを環境変数で指定できます：
+**注意**: テストをビルドする場合、Google Testのパスを環境変数またはmake引数で指定できます：
 
 ```bash
+# 方法1: 環境変数を使用（推奨）
 # macOS (Homebrew以外の場所にインストールした場合)
 export GTEST_DIR=/usr/local/opt/googletest
 cd src
@@ -220,6 +221,12 @@ make test
 export GTEST_DIR=/usr
 cd src
 make test
+
+# 方法2: make引数で直接指定
+cd src
+make GTEST_DIR=/usr/local/opt/googletest test
+
+# 環境変数とmake引数の両方が指定された場合、make引数が優先されます
 ```
 
 ### 4.3 コントリビューション
