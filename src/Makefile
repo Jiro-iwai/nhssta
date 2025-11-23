@@ -26,7 +26,12 @@ DEPS = $(CXXSRCS:.cpp=.d)
 TARGET = nhssta
 
 # Google Test configuration
-GTEST_DIR := /opt/homebrew/opt/googletest
+# GTEST_DIR can be overridden via environment variable
+# Default paths for common installations:
+#   macOS (Homebrew): /opt/homebrew/opt/googletest or /usr/local/opt/googletest
+#   Ubuntu/Debian: /usr
+#   Custom: Set GTEST_DIR environment variable
+GTEST_DIR ?= /opt/homebrew/opt/googletest
 GTEST_INCLUDE := -I$(GTEST_DIR)/include -I../include
 GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
 
@@ -41,7 +46,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_parser_tokenizer.cpp ../test/test_exception_unification.cpp \
 	../test/test_gate.cpp ../test/test_ssta_unit.cpp \
 	../test/test_expression_assert_migration.cpp ../test/test_util.cpp \
-	../test/test_public_api_headers.cpp ../test/test_cli_exit_codes.cpp
+	../test/test_public_api_headers.cpp ../test/test_cli_exit_codes.cpp \
+	../test/test_handle_ownership.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 

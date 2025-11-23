@@ -20,8 +20,10 @@ nhsstaは統計的PERT法を実装したプログラムです。nhsstaは以下�
         Makefile             ルートメイクファイル
         .clang-format        コードフォーマット設定
         .clang-tidy          静的解析設定
-       /src/*.[Ch]           ソースファイル
+       /src/*.cpp            ソースファイル
+       /src/*.hpp            内部ヘッダーファイル
        /src/Makefile         ソースビルド設定
+       /include/nhssta/      公開APIヘッダーファイル
        /test/*.cpp           ユニットテスト（Google Test）
        /test/README.md       テストスイートの説明
        /example/*.bench      サンプル.benchデータ
@@ -59,8 +61,8 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 197 tests from 21 test suites.
-[  PASSED  ] 197 tests.
+[==========] Running 239 tests from 24 test suites.
+[  PASSED  ] 239 tests.
 ```
 
 - 統合テスト（exampleディレクトリのテストスクリプト）を実行する場合：
@@ -94,7 +96,7 @@ $ nhssta -d [.dlibファイル] -b [.benchファイル] [-l] [-c]
 - -l ( --lat ) を指定すると各ノードでのLATの平均、標準偏差を標準出力に
   出力します。
 
-- -c ( -correlation ) ノード間でのLATの相関係数をを標準出力に出力します。
+- -c ( --correlation ) ノード間でのLATの相関係数を標準出力に出力します。
 
 ### 2.3 Exit Codes
 
@@ -196,7 +198,7 @@ make test
 make tidy
 
 # clang-formatでコードを整形（必要に応じて）
-clang-format -i src/YourFile.C
+clang-format -i src/your_file.cpp
 ```
 
 #### ビルド
@@ -204,6 +206,20 @@ clang-format -i src/YourFile.C
 ```bash
 cd src
 make
+```
+
+**注意**: テストをビルドする場合、Google Testのパスを環境変数で指定できます：
+
+```bash
+# macOS (Homebrew以外の場所にインストールした場合)
+export GTEST_DIR=/usr/local/opt/googletest
+cd src
+make test
+
+# Ubuntu/Debianの場合
+export GTEST_DIR=/usr
+cd src
+make test
 ```
 
 ### 4.3 コントリビューション

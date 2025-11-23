@@ -69,6 +69,13 @@ namespace Nh {
 		Delays delays_;
     };
 
+    // Handle pattern for Gate: thin wrapper around std::shared_ptr
+    //
+    // Ownership semantics:
+    // - Copying a Gate is lightweight: it shares ownership via std::shared_ptr
+    // - Passing by value (Gate) transfers/shares ownership
+    // - Passing by const reference (const Gate&) is a non-owning reference
+    // - Storing as member variable creates ownership relationship
     class Gate {
     public:
 		// Backward compatibility: keep exception as alias to Nh::RuntimeException
@@ -77,13 +84,18 @@ namespace Nh {
 		Gate();
 		explicit Gate(std::shared_ptr<_Gate_> body);
 
+		// Non-owning access: returns raw pointer (no ownership transfer)
 		_Gate_* operator->() const { return body_.get(); }
 		_Gate_& operator*() const { return *body_; }
+		
+		// Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
 		[[nodiscard]] std::shared_ptr<_Gate_> get() const { return body_; }
 
 		[[nodiscard]] Instance create_instance() const;
 
     private:
+		// Owned shared_ptr: this Gate owns the underlying object
+		// Copying the Gate shares this ownership (lightweight copy)
 		std::shared_ptr<_Gate_> body_;
     };
 
@@ -111,20 +123,31 @@ namespace Nh {
 		Signals outputs_;
     };
 
+    // Handle pattern for Instance: thin wrapper around std::shared_ptr
+    //
+    // Ownership semantics:
+    // - Copying an Instance is lightweight: it shares ownership via std::shared_ptr
+    // - Passing by value (Instance) transfers/shares ownership
+    // - Passing by const reference (const Instance&) is a non-owning reference
     class Instance {
     public:
 		Instance() = default;
 		explicit Instance(std::shared_ptr<_Instance_> body)
 			: body_(std::move(body)) {}
 
+		// Non-owning access: returns raw pointer (no ownership transfer)
 		_Instance_* operator->() const { return body_.get(); }
 		_Instance_& operator*() const { return *body_; }
+		
+		// Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
 		[[nodiscard]] std::shared_ptr<_Instance_> get() const { return body_; }
 
 		bool operator==(const Instance& rhs) const { return body_.get() == rhs.body_.get(); }
 		bool operator!=(const Instance& rhs) const { return !(*this == rhs); }
 
     private:
+		// Owned shared_ptr: this Instance owns the underlying object
+		// Copying the Instance shares this ownership (lightweight copy)
 		std::shared_ptr<_Instance_> body_;
     };
 }
