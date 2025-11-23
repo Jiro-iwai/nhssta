@@ -90,14 +90,14 @@ namespace RandomVariable {
 
     double covariance(const Normal& a, const Normal& b)
     {
-        double cov;
+        double cov = 0.0;
         covariance_matrix->lookup(a,b,cov);
         return cov;
     }
 
     double covariance(const RandomVariable& a, const RandomVariable& b)
     {
-        double cov;
+        double cov = 0.0;
 
         if( !covariance_matrix->lookup(a,b,cov) ) {
 

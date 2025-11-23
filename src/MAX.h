@@ -16,15 +16,15 @@ namespace RandomVariable {
 
     public:
 
-		OpMAX( const RandomVariable& left, const RandomVariable& righ );
-		virtual ~OpMAX();
+		OpMAX( const RandomVariable& left, const RandomVariable& right );
+		~OpMAX() override;
 
 		const RandomVariable& max0() const { return max0_; }
 
     private:
 
-		virtual double calc_mean() const ;
-		virtual double calc_variance() const;
+		[[nodiscard]] double calc_mean() const override;
+		[[nodiscard]] double calc_variance() const override;
 
 		RandomVariable max0_;
     };
@@ -37,13 +37,13 @@ namespace RandomVariable {
     public:
 
 		OpMAX0( const RandomVariable& left );
-		virtual ~OpMAX0();
+		~OpMAX0() override;
 
     private:
 
-		virtual double calc_mean() const ;
-		virtual double calc_variance() const;
-		virtual const RandomVariable& right() const;
+		[[nodiscard]] double calc_mean() const override;
+		[[nodiscard]] double calc_variance() const override;
+		const RandomVariable& right() const;
     };
 
     RandomVariable MAX0(const RandomVariable& a);

@@ -12,7 +12,7 @@ namespace RandomVariable {
         level_ = std::max(left->level(),right->level());
     }
 
-    OpSUB::~OpSUB(){}
+    OpSUB::~OpSUB() = default;
 
     double OpSUB::calc_mean() const {
         double lm = left()->mean();
@@ -24,7 +24,7 @@ namespace RandomVariable {
         double lv = left()->variance();
         double rv = right()->variance();
         double cov = covariance(left(),right());
-        double r = lv - 2.0*cov + rv;
+        double r = lv - (2.0 * cov) + rv;
         check_variance(r);
         return (r);
     }

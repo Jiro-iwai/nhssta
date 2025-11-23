@@ -20,7 +20,7 @@ namespace RandomVariable {
 			throw Exception("Normal: negative variance");
     }
 
-    _Normal_::~_Normal_(){}
+    _Normal_::~_Normal_() = default;
 
     const RandomVariable& _Normal_::left() const {
 		return left_;

@@ -12,9 +12,9 @@ int Expression_::current_id_ = 0;
 Expression_::Expressions Expression_::eTbl_;
 
 static Expression null(0);
-static Const zero(0.0);
-static Const one(1.0);
-static Const minus_one(-1.0);
+static const Const zero(0.0);
+static const Const one(1.0);
+static const Const minus_one(-1.0);
 
 Expression_::Expression_() :
 	id_(current_id_++),
@@ -112,12 +112,12 @@ Expression Expression_::d(const Expression& y) {
 	Expression x(this);
 	Expression dx;
 
-	Dfrntls::iterator i = dfrntls_.find(y);
+	auto i = dfrntls_.find(y);
 	if( i != dfrntls_.end() ) {
 		dx = i->second;
 		return dx;
-
-	} else if( x == y ) {
+	}
+	if( x == y ) {
 		dx = one;
 		return dx;
 
