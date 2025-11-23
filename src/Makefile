@@ -90,8 +90,8 @@ COVERAGE_CXXFLAGS = $(CXXFLAGS) $(COVERAGE_FLAGS)
 # Coverage test target
 coverage: coverage-clean
 	@echo "Building with coverage instrumentation..."
-@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" CXX="$(CXX)" clean
-@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" CXX="$(CXX)" test-build
+	@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" CXX="$(CXX)" clean
+	@$(MAKE) CXXFLAGS="$(COVERAGE_CXXFLAGS)" CXX="$(CXX)" test-build
 	@echo "Running tests with coverage..."
 	@cd .. && ./test/nhssta_test > /dev/null 2>&1 || true
 	@echo "Generating coverage report..."
