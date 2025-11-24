@@ -181,7 +181,7 @@ protected:
     bool is_set_value_;
     double value_;
 
-    const Op op_;
+    const Op op_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members) - Op is a handle type, const is intentional
     Expression left_;
     Expression right_;
     Dfrntls dfrntls_;
