@@ -87,8 +87,19 @@ $(TARGET) : $(OBJS)
 
 .PHONY: test test-build tidy coverage coverage-clean
 
-# Test target
+# Test target (includes unit tests and clang-tidy)
 test: $(TARGET) $(TEST_TARGET)
+	@echo "Running clang-tidy..."
+	@CLANG_TIDY=$$(which clang-tidy 2>/dev/null || echo "/opt/homebrew/opt/llvm/bin/clang-tidy"); \
+	if [ ! -f "$$CLANG_TIDY" ]; then \
+		echo "clang-tidy not found. Install with: brew install llvm"; \
+		echo "If installed, ensure /opt/homebrew/opt/llvm/bin is in your PATH"; \
+		echo "Skipping clang-tidy check."; \
+	else \
+		echo "Using clang-tidy: $$CLANG_TIDY"; \
+		$$CLANG_TIDY $(CXXSRCS) -- $(CXXFLAGS) $(INCLUDE) 2>&1 | head -100 || true; \
+	fi
+	@echo ""
 	@echo "Running unit tests..."
 	@cd .. && ./test/nhssta_test || echo "Note: Some tests may require Boost dependencies to be resolved"
 

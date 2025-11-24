@@ -26,10 +26,10 @@ clean:
 	     do (test -d $$i && cd $$i && $(MAKE) $@); done
 	cd example; make $@
 
-# Run all tests: unit tests + integration tests
+# Run all tests: clang-tidy + unit tests + integration tests
 test:
 	@echo "=========================================="
-	@echo "Running unit tests..."
+	@echo "Running tests (clang-tidy + unit tests + integration tests)..."
 	@echo "=========================================="
 	@for i in $(DIR) ; \
 	     do (test -d $$i && cd $$i && $(MAKE) test) || exit 1; done
