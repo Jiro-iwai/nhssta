@@ -13,11 +13,6 @@
 
 ////////////////////
 
-// Backward compatibility: keep ExpressionException as alias to Nh::RuntimeException
-// This will be removed in a later phase
-// Note: ExpressionException originally had assert(0), but we remove it for unified exception
-// handling
-using ExpressionException = Nh::RuntimeException;
 
 class Expression_;
 
