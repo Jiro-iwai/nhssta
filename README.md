@@ -61,8 +61,8 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 239 tests from 24 test suites.
-[  PASSED  ] 239 tests.
+[==========] Running 325 tests from 34 test suites.
+[  PASSED  ] 325 tests.
 ```
 
 - 統合テスト（exampleディレクトリのテストスクリプト）を実行する場合：
