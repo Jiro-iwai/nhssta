@@ -142,7 +142,7 @@ nhsstaは以下のexit codeを返します：
 # exampleディレクトリから実行する場合
 $ cd example
 $ ../src/nhssta -l -c -d ex4_gauss.dlib -b ex4.bench
-nhssta 0.0.8
+nhssta 0.1.0
 
 #
 # LAT

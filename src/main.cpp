@@ -96,7 +96,7 @@ std::string get_version_string() {
         }
         s++;
     }
-    return std::string("nhssta 0.0.8 (") + p + ")";
+    return std::string("nhssta 0.1.0 (") + p + ")";
 }
 
 int main(int argc, char *argv[]) {
