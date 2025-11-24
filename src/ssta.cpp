@@ -187,7 +187,7 @@ static void tolower_string(std::string& token) {
 }
 
 bool Ssta::is_line_ready(const NetLine& line) const {
-    Ins ins = line->ins();
+    NetLineIns ins = line->ins();
     auto j = ins.begin();
     for (; j != ins.end(); j++) {
         const std::string& signal_name = *j;
@@ -200,7 +200,7 @@ bool Ssta::is_line_ready(const NetLine& line) const {
 }
 
 // don't use for dff
-void Ssta::set_instance_input(const Instance& inst, const Ins& ins) {
+void Ssta::set_instance_input(const Instance& inst, const NetLineIns& ins) {
     int ith = 0;
     auto j = ins.begin();
     for (; j != ins.end(); j++) {
@@ -227,7 +227,7 @@ void Ssta::connect_instances() {
         auto ni = net_.begin();
         while (ni != net_.end()) {
             const NetLine& line = *ni;
-            const Ins& ins = line->ins();
+            const NetLineIns& ins = line->ins();
             // Note: dff gate check is now done in read_bench_net()
 
             if (is_line_ready(line)) {
@@ -315,7 +315,7 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
 
     parser.checkSepalator('(');
 
-    Ins& ins = l->ins();
+    NetLineIns& ins = l->ins();
     // Reserve space for input signals (typical gates have 2-4 inputs)
     // This reduces memory reallocation overhead during parsing
     ins.reserve(4);
