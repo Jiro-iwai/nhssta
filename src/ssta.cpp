@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "add.hpp"
+#include "parser.hpp"
 #include "util_numerical.hpp"
 
 namespace Nh {

@@ -16,7 +16,10 @@
 #include <nhssta/ssta_results.hpp>
 
 #include "../src/gate.hpp"
-#include "../src/parser.hpp"
+
+// Forward declaration for Parser (internal implementation detail)
+// Parser is defined in global namespace in src/parser.hpp
+class Parser;
 
 namespace Nh {
 
