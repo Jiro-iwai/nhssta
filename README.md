@@ -185,13 +185,43 @@ nhsstaプロジェクトでは、一貫したコーディングスタイルを�
 
 ### 4.2 ローカルでの開発
 
-#### テストの実行
+#### 開発環境のセットアップ
+
+新しい開発者は、まず開発環境のセットアップスクリプトを実行してください：
+
+```bash
+# Makefile経由で実行（推奨）
+make dev-setup
+
+# または直接スクリプトを実行
+./scripts/dev-setup.sh
+```
+
+このスクリプトは、必要なツール（コンパイラ、Google Test、clang-format、clang-tidyなど）がインストールされているかを確認し、ビルドが成功するかテストします。
+
+#### すべてのチェックを実行
+
+開発中は、以下のコマンドでビルド、テスト、lint、カバレッジのすべてのチェックを一度に実行できます：
+
+```bash
+# Makefile経由で実行（推奨）
+make dev-check
+
+# または直接スクリプトを実行
+./scripts/run-all-checks.sh
+```
+
+**注意**: `make check`は統合テスト用の既存ターゲットです。開発チェックには`make dev-check`を使用してください。
+
+#### 個別のコマンド
+
+##### テストの実行
 
 ```bash
 make test
 ```
 
-#### スタイルチェック
+##### スタイルチェック
 
 ```bash
 # clang-tidyを実行（警告を表示）
@@ -201,11 +231,17 @@ make tidy
 clang-format -i src/your_file.cpp
 ```
 
-#### ビルド
+##### ビルド
 
 ```bash
 cd src
 make
+```
+
+##### コードカバレッジ
+
+```bash
+./scripts/generate_coverage.sh
 ```
 
 **注意**: テストをビルドする場合、Google Testのパスを環境変数またはmake引数で指定できます：

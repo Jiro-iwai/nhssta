@@ -26,10 +26,19 @@ clean:
 	     do (test -d $$i && cd $$i && $(MAKE) $@); done
 	cd example; make $@
 
+# Integration tests (original check target)
 check:
 	cd example; make
 
-.PHONY: test tidy coverage coverage-clean
+# Development setup check
+dev-setup:
+	@./scripts/dev-setup.sh
+
+# Run all development checks (build, test, lint, coverage)
+dev-check:
+	@./scripts/run-all-checks.sh
+
+.PHONY: test tidy coverage coverage-clean dev-setup dev-check check
 
 test:
 	@for i in $(DIR) ; \

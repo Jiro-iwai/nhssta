@@ -72,7 +72,9 @@ TEST_F(HandleOwnershipTest, RandomVariableHandleConstRefIsNonOwning) {
     
     // Get reference count before (shared() creates a copy, so count includes that)
     auto shared1_before = n1.shared();
-    size_t count_before = shared1_before.use_count();
+    // Note: count_before is not used because shared() creates a copy,
+    // making exact comparison unreliable. We verify ownership stability differently.
+    (void)shared1_before;  // Suppress unused variable warning
     
     double mean = check_mean(n1);
     EXPECT_EQ(mean, 10.0);
@@ -133,7 +135,9 @@ TEST_F(HandleOwnershipTest, ExpressionHandleConstRefIsNonOwning) {
     
     // Get reference count before (shared() creates a copy, so count includes that)
     auto shared1_before = e1.shared();
-    size_t count_before = shared1_before.use_count();
+    // Note: count_before is not used because shared() creates a copy,
+    // making exact comparison unreliable. We verify ownership stability differently.
+    (void)shared1_before;  // Suppress unused variable warning
     
     bool valid = check_value(e1);
     EXPECT_TRUE(valid);
