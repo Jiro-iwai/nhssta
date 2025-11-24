@@ -117,6 +117,25 @@ namespace RandomVariable {
         return variance_;
     }
 
+    double _RandomVariable_::standard_deviation() {
+        double v = variance();
+        return std::sqrt(v);
+    }
+
+    double _RandomVariable_::coefficient_of_variation() {
+        double m = mean();
+        if (std::abs(m) < 1.0e-10) {
+            // For very small means, return a large value to indicate high relative error
+            return std::numeric_limits<double>::infinity();
+        }
+        double sd = standard_deviation();
+        return sd / std::abs(m);
+    }
+
+    double _RandomVariable_::relative_error() {
+        return coefficient_of_variation();
+    }
+
     void _RandomVariable_::check_variance(double& v) {
         if( fabs(v) < minimum_variance ) {
             v = minimum_variance;

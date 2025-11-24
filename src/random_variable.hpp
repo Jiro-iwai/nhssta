@@ -112,6 +112,11 @@ namespace RandomVariable {
 		double mean();
 		double variance();
 
+		// Numerical error metrics
+		[[nodiscard]] double standard_deviation();
+		[[nodiscard]] double coefficient_of_variation();
+		[[nodiscard]] double relative_error();  // Alias for coefficient_of_variation
+
 		[[nodiscard]] int level() const { return level_; }
 
 	protected:
