@@ -5,6 +5,7 @@
 #define PARSER__H
 
 #include <fstream>
+#include <memory>
 #include <nhssta/exception.hpp>
 #include <stdexcept>
 #include <string>
@@ -24,9 +25,7 @@ class Parser {
     Parser(const std::string& file, char begin_comment, const char* keep_separator,
            const char* drop_separator = " \t");
 
-    ~Parser() {
-        delete tokenizer_;
-    }
+    ~Parser() = default;
 
     void checkFile();
 
@@ -100,7 +99,7 @@ class Parser {
     std::string drop_separator_;
     std::string keep_separator_;
     const char begin_comment_;
-    Tokenizer* tokenizer_ = nullptr;
+    std::unique_ptr<Tokenizer> tokenizer_;
     std::string pre_;
     Token token_;
 };

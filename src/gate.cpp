@@ -3,7 +3,6 @@
 
 #include "gate.hpp"
 
-#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -35,7 +34,6 @@ Instance Gate::create_instance() const {
 
 void _Gate_::set_delay(const std::string& in, const std::string& out, const Normal& delay) {
     IO io(in, out);
-    assert(&(*delay));
     delays_[io] = delay;
 }
 
@@ -54,7 +52,6 @@ const Normal& _Gate_::delay(const std::string& in, const std::string& out) const
         throw Nh::RuntimeException(what);
     }
 
-    assert(&(*(i->second)));
     return i->second;
 }
 
@@ -63,14 +60,12 @@ const Normal& _Gate_::delay(const std::string& in, const std::string& out) const
 void _Instance_::set_input(const std::string& in_name, const RandomVariable& signal) {
     (void)gate_->delay(in_name);  // error check
     inputs_[in_name] = signal;
-    assert(&(*inputs_[in_name]));
 }
 
 RandomVariable _Instance_::output(const std::string& out_name) {
     auto i = outputs_.find(out_name);
 
     if (i != outputs_.end()) {
-        assert(&(*(i->second)));
         return (i->second);
     }
     {
@@ -98,17 +93,14 @@ RandomVariable _Instance_::output(const std::string& out_name) {
 
                 auto j = outputs_.find(out_name);
                 if (j != outputs_.end()) {
-                    assert(&(*(i->second)));
                     RandomVariable orv = j->second;
                     RandomVariable d = irv + delay;  /////
                     RandomVariable m = MAX(orv, d);
                     outputs_[out_name] = m;
-                    assert(&(*outputs_[out_name]));
 
                 } else {
                     RandomVariable d = irv + delay;  /////
                     outputs_[out_name] = d;
-                    assert(&(*outputs_[out_name]));
                 }
             }
         }

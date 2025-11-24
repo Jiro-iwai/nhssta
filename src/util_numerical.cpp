@@ -145,11 +145,22 @@ double mean_max2_tab[] = {
 
 static double cut = 5.0;
 static double div = cut / 100.0;
+static constexpr int TAB_SIZE = 201;  // Array size: -5 to 5 with 0.05 step
 
 static void set_range(double a, int& lower, int& upper) {
     double len = (a + cut) / div;
     lower = int(floor(len));
     upper = int(ceil(len));
+    // Clamp to valid array bounds
+    if (lower < 0) {
+        lower = 0;
+    }
+    if (upper >= TAB_SIZE) {
+        upper = TAB_SIZE - 1;
+    }
+    if (lower >= TAB_SIZE) {
+        lower = TAB_SIZE - 1;
+    }
 }
 
 double MeanMax(double a) {

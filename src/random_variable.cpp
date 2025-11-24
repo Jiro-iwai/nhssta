@@ -34,7 +34,6 @@ _RandomVariable_::_RandomVariable_(double mean, double variance, const std::stri
     , level_(0) {
 #ifdef DEBUG
     std::cerr << "_RandomVariable_(" << this << ":";
-    ;
     std::cerr << name_ << ") is creating" << std::endl;
 #endif  // DEBUG
 }
@@ -91,7 +90,7 @@ double _RandomVariable_::variance() {
     if (!is_set_variance_) {
         variance_ = calc_variance();
         if (std::isnan(variance_)) {
-            assert(0);
+            throw Nh::RuntimeException("RandomVariable: variance calculation resulted in NaN");
         }
         is_set_variance_ = true;
     }

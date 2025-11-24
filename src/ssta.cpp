@@ -79,7 +79,6 @@ void Ssta::read_dlib_line(Parser& parser) {
     Gate g;
 
     std::string gate_name;
-    ;
     parser.getToken(gate_name);
     auto i = gates_.find(gate_name);
     if (i != gates_.end()) {
@@ -253,6 +252,12 @@ void Ssta::connect_instances() {
             if (is_line_ready(line)) {
                 const std::string& gate_name = line->gate();
                 auto gi = gates_.find(gate_name);
+                if (gi == gates_.end()) {
+                    std::string what = "gate \"";
+                    what += gate_name;
+                    what += "\" not found in gate library";
+                    throw Nh::RuntimeException(what);
+                }
 
                 Gate gate = gi->second;
                 Instance inst = gate.create_instance();
