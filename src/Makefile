@@ -195,6 +195,7 @@ $(TEST_OBJS): ../test/%.o: ../test/%.cpp
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
 	rm -f $(TEST_OBJS) ../test/nhssta_test
+	@find . -name "*.gcno" -delete 2>/dev/null || true
 
 tags :
 	etags *.hpp *.cpp
