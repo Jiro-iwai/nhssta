@@ -1,21 +1,25 @@
 #include <gtest/gtest.h>
+
 #include <nhssta/exception.hpp>
 #include <nhssta/ssta.hpp>
-#include "../src/parser.hpp"
+
 #include "../src/gate.hpp"
+#include "../src/parser.hpp"
 #include "../src/random_variable.hpp"
 // SmartPtrException has been removed - use Nh::RuntimeException directly
-#include "../src/expression.hpp"
+#include <sys/stat.h>
+
+#include <cstdio>
 #include <fstream>
 #include <sstream>
-#include <cstdio>
-#include <sys/stat.h>
+
+#include "../src/expression.hpp"
 
 // Test current exception handling behavior before unification
 // This ensures we capture the current behavior before refactoring
 
 class ExceptionUnificationTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         test_dir = "../test/test_data";
         struct stat info;
@@ -71,9 +75,9 @@ TEST_F(ExceptionUnificationTest, ParserExceptionBehavior) {
 // Test: Parser::exception thrown on file error (now Nh::FileException)
 TEST_F(ExceptionUnificationTest, ParserExceptionOnFileError) {
     Parser parser("nonexistent_file.txt", '#', "(),", " \t\r");
-    
+
     EXPECT_THROW(parser.checkFile(), Nh::FileException);
-    
+
     try {
         parser.checkFile();
     } catch (Nh::FileException& e) {
@@ -120,7 +124,7 @@ TEST_F(ExceptionUnificationTest, SmartPtrExceptionBehavior) {
 TEST_F(ExceptionUnificationTest, ExpressionExceptionBehavior) {
     // ExpressionException has assert(0) in constructor, so we can't test it normally
     // This test documents the current behavior
-    EXPECT_TRUE(true); // Placeholder
+    EXPECT_TRUE(true);  // Placeholder
 }
 
 // Test: Nh::Exception (unified) behavior
@@ -164,12 +168,12 @@ TEST_F(ExceptionUnificationTest, ExceptionMessageFormat) {
     Nh::RuntimeException rv_e("RandomVariable error");
     Nh::RuntimeException smartptr_e("SmartPtr error");
     Nh::Exception unified_e("Unified error");
-    
-    EXPECT_NE(ssta_e.what(), nullptr); // Nh::Exception::what() returns const char*
-    EXPECT_NE(parser_e.what(), nullptr); // Nh::ParseException::what() returns const char*
-    EXPECT_NE(gate_e.what(), nullptr); // Nh::RuntimeException::what() returns const char*
-    EXPECT_NE(rv_e.what(), nullptr); // Nh::RuntimeException::what() returns const char*
-    EXPECT_NE(smartptr_e.what(), nullptr); // Nh::RuntimeException::what() returns const char*
+
+    EXPECT_NE(ssta_e.what(), nullptr);      // Nh::Exception::what() returns const char*
+    EXPECT_NE(parser_e.what(), nullptr);    // Nh::ParseException::what() returns const char*
+    EXPECT_NE(gate_e.what(), nullptr);      // Nh::RuntimeException::what() returns const char*
+    EXPECT_NE(rv_e.what(), nullptr);        // Nh::RuntimeException::what() returns const char*
+    EXPECT_NE(smartptr_e.what(), nullptr);  // Nh::RuntimeException::what() returns const char*
     EXPECT_NE(unified_e.what(), nullptr);
 }
 
@@ -184,14 +188,14 @@ TEST_F(ExceptionUnificationTest, ExceptionInheritance) {
 // Test: Exception propagation through Ssta
 TEST_F(ExceptionUnificationTest, ExceptionPropagationThroughSsta) {
     Nh::Ssta ssta;
-    
+
     // Test that Parser exceptions (now Nh::FileException) are caught and rethrown as Nh::Exception
     std::string invalid_file = test_dir + "/nonexistent.dlib";
     ssta.set_dlib(invalid_file);
     ssta.set_bench("../example/my.bench");
-    
+
     EXPECT_THROW(ssta.read_dlib(), Nh::Exception);
-    
+
     try {
         ssta.read_dlib();
         FAIL() << "Expected exception was not thrown";
@@ -205,4 +209,3 @@ TEST_F(ExceptionUnificationTest, ExceptionPropagationThroughSsta) {
         FAIL() << "Unexpected exception type";
     }
 }
-

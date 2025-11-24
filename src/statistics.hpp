@@ -4,10 +4,10 @@
 #ifndef NH_STATISTICS__H
 #define NH_STATISTICS__H
 
-#include "normal.hpp"
-#include "max.hpp"
 #include "add.hpp"
-#include "sub.hpp"
 #include "covariance.hpp"
+#include "max.hpp"
+#include "normal.hpp"
+#include "sub.hpp"
 
-#endif // NH_STATISTICS__H
+#endif  // NH_STATISTICS__H

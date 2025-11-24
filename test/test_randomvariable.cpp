@@ -1,13 +1,15 @@
 #include <gtest/gtest.h>
-#include "../src/random_variable.hpp"
-#include "../src/normal.hpp"
-#include "../src/add.hpp"
+
 #include <cmath>
+
+#include "../src/add.hpp"
+#include "../src/normal.hpp"
+#include "../src/random_variable.hpp"
 
 using RandomVar = RandomVariable::RandomVariable;
 
 class RandomVariableTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Setup code if needed
     }
@@ -86,4 +88,3 @@ TEST_F(RandomVariableTest, OperationResultSurvivesSourceScope) {
     EXPECT_DOUBLE_EQ(sum->mean(), 7.0);
     EXPECT_DOUBLE_EQ(sum->variance(), 0.5);
 }
-

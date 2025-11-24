@@ -2,23 +2,25 @@
 // This test verifies exit codes and error messages for different failure patterns
 
 #include <gtest/gtest.h>
-#include <cstdlib>
-#include <cstdio>
-#include <string>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+
 #include "test_path_helper.h"
 
 class CliExitCodeTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         nhssta_path = find_nhssta_path();
         if (nhssta_path.empty()) {
-            nhssta_path = "../src/nhssta"; // Fallback
+            nhssta_path = "../src/nhssta";  // Fallback
         }
         example_dir = find_example_dir();
         if (example_dir.empty()) {
-            example_dir = "../example"; // Fallback
+            example_dir = "../example";  // Fallback
         }
     }
 
@@ -31,20 +33,20 @@ protected:
     // Run nhssta and capture stderr output
     std::string run_nhssta_get_stderr(const std::string& args) {
         std::string cmd = nhssta_path + " " + args + " 2>&1";
-        
+
         FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe) {
             return "";
         }
-        
+
         std::string result;
         char buffer[128];
         while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
             result += buffer;
         }
         int exit_code = pclose(pipe);
-        (void)exit_code; // Exit code from pclose is not the program exit code
-        
+        (void)exit_code;  // Exit code from pclose is not the program exit code
+
         return result;
     }
 
@@ -103,11 +105,11 @@ TEST_F(CliExitCodeTest, ParseErrorExitCode) {
         fprintf(f, "invalid format line\n");
         fclose(f);
     }
-    
+
     std::string args = "-l -d " + temp_dlib + " -b " + example_dir + "/ex4.bench";
     int exit_code = run_nhssta_get_exit_code(args);
     EXPECT_EQ(WEXITSTATUS(exit_code), 1) << "Parse error should return exit code 1";
-    
+
     // Cleanup
     unlink(temp_dlib.c_str());
 }
@@ -122,11 +124,11 @@ TEST_F(CliExitCodeTest, RuntimeErrorExitCode) {
         fprintf(f, "unknown_gate 0 y gauss (10.0, 2.0)\n");
         fclose(f);
     }
-    
+
     std::string args = "-l -d " + temp_dlib + " -b " + example_dir + "/ex4.bench";
     int exit_code = run_nhssta_get_exit_code(args);
     EXPECT_EQ(WEXITSTATUS(exit_code), 1) << "Runtime error should return exit code 1";
-    
+
     // Cleanup
     unlink(temp_dlib.c_str());
 }
@@ -134,32 +136,28 @@ TEST_F(CliExitCodeTest, RuntimeErrorExitCode) {
 // Test: Error messages should be clear and informative
 TEST_F(CliExitCodeTest, ErrorMessageClarity) {
     std::string output = run_nhssta_get_stderr("-l -b " + example_dir + "/ex4.bench");
-    
+
     // Should contain error message about -d
-    EXPECT_NE(output.find("error"), std::string::npos) 
+    EXPECT_NE(output.find("error"), std::string::npos)
         << "Error message should contain 'error'. Got: " << output.substr(0, 200);
-    EXPECT_NE(output.find("-d"), std::string::npos) 
-        << "Error message should mention '-d' option";
+    EXPECT_NE(output.find("-d"), std::string::npos) << "Error message should mention '-d' option";
 }
 
 // Test: File not found error message
 TEST_F(CliExitCodeTest, FileNotFoundErrorMessage) {
-    std::string output = run_nhssta_get_stderr("-l -d nonexistent.dlib -b " + example_dir + "/ex4.bench");
-    
+    std::string output =
+        run_nhssta_get_stderr("-l -d nonexistent.dlib -b " + example_dir + "/ex4.bench");
+
     // Should contain error message about file
-    EXPECT_NE(output.find("error"), std::string::npos) 
+    EXPECT_NE(output.find("error"), std::string::npos)
         << "File not found should show error message";
 }
 
 // Test: Usage message format
 TEST_F(CliExitCodeTest, UsageMessageFormat) {
     std::string output = run_nhssta_get_stderr("-h");
-    
-    EXPECT_NE(output.find("usage"), std::string::npos) 
-        << "Help should show usage message";
-    EXPECT_NE(output.find("-d"), std::string::npos) 
-        << "Usage should mention -d option";
-    EXPECT_NE(output.find("-b"), std::string::npos) 
-        << "Usage should mention -b option";
-}
 
+    EXPECT_NE(output.find("usage"), std::string::npos) << "Help should show usage message";
+    EXPECT_NE(output.find("-d"), std::string::npos) << "Usage should mention -d option";
+    EXPECT_NE(output.find("-b"), std::string::npos) << "Usage should mention -b option";
+}

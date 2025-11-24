@@ -4,53 +4,47 @@
 #ifndef PARSER__H
 #define PARSER__H
 
-#include <string>
 #include <fstream>
-#include <stdexcept>
-#include <type_traits>
-#include "tokenizer.hpp"
 #include <nhssta/exception.hpp>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+
+#include "tokenizer.hpp"
 
 class Parser {
-
-private:
-
+   private:
     typedef Tokenizer::iterator Token;
 
-public:
-
+   public:
     // Backward compatibility: keep exception as alias to Nh::ParseException
     // This will be removed in a later phase
     using exception = Nh::ParseException;
 
-    Parser
-    (
-		const std::string& file,
-		char begin_comment,
-		const char* keep_separator,
-		const char* drop_separator = " \t"
-		);
+    Parser(const std::string& file, char begin_comment, const char* keep_separator,
+           const char* drop_separator = " \t");
 
-    ~Parser() { delete tokenizer_; }
+    ~Parser() {
+        delete tokenizer_;
+    }
 
     void checkFile();
 
     std::istream& getLine();
 
-    template < class U >
-    void getToken( U& u )
-		{
-			checkTermination();
-			try {
-				u = convertToken<U>(*token_);
-			} catch ( std::exception& e ){
-				unexpectedToken_(*token_);
-			}
-			pre_ = *token_;
-			token_++;
-		}
+    template <class U>
+    void getToken(U& u) {
+        checkTermination();
+        try {
+            u = convertToken<U>(*token_);
+        } catch (std::exception& e) {
+            unexpectedToken_(*token_);
+        }
+        pre_ = *token_;
+        token_++;
+    }
 
-private:
+   private:
     // Helper template for converting tokens to different types
     template <typename T>
     T convertToken(const std::string& token) {
@@ -69,26 +63,35 @@ private:
             // For other types, try to use string conversion
             // This maintains compatibility with boost::lexical_cast behavior
             static_assert(std::is_convertible_v<std::string, T>,
-                        "Type must be convertible from string");
+                          "Type must be convertible from string");
             return static_cast<T>(token);
         }
     }
 
-public:
-
-    void checkSepalator( char sepalator );
+   public:
+    void checkSepalator(char sepalator);
     void checkEnd();
     void unexpectedToken();
-    const std::string& getFileName() const { return file_; }
-    int getNumLine() const { return line_number_; }
+    const std::string& getFileName() const {
+        return file_;
+    }
+    int getNumLine() const {
+        return line_number_;
+    }
 
-private:
-
+   private:
     void unexpectedToken_(const std::string& token);
-    bool fail() const { return infile_.fail(); }
+    bool fail() const {
+        return infile_.fail();
+    }
     void checkTermination();
-    Token& begin() { token_ = tokenizer_->begin(); return token_; }
-    Token end() { return tokenizer_->end(); }
+    Token& begin() {
+        token_ = tokenizer_->begin();
+        return token_;
+    }
+    Token end() {
+        return tokenizer_->end();
+    }
 
     int line_number_ = 0;
     std::string file_;
@@ -102,4 +105,4 @@ private:
     Token token_;
 };
 
-#endif	// PARSER__H
+#endif  // PARSER__H

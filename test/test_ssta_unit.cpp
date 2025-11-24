@@ -3,13 +3,15 @@
 // Phase 2: Comprehensive unit test coverage for Ssta class
 
 #include <gtest/gtest.h>
+#include <sys/stat.h>
+
+#include <cmath>
+#include <fstream>
+#include <iostream>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
-#include <fstream>
 #include <sstream>
-#include <iostream>
-#include <sys/stat.h>
-#include <cmath>
+
 #include "test_path_helper.h"
 
 using namespace Nh;
@@ -18,14 +20,14 @@ using Normal = ::RandomVariable::Normal;
 using std::isnan;
 
 class SstaUnitTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         ssta_ = new Ssta();
         example_dir = find_example_dir();
         if (example_dir.empty()) {
             example_dir = "../example";
         }
-        
+
         // Create test directory if needed
         test_dir = "../test/test_data";
         struct stat info;
@@ -182,14 +184,14 @@ TEST_F(SstaUnitTest, ReadBenchInput) {
     std::string bench_content = "INPUT(A)\n";
     std::string dlib_path = createTestFile("test.dlib", dlib_content);
     std::string bench_path = createTestFile("test.bench", bench_content);
-    
+
     ssta_->set_dlib(dlib_path);
     ssta_->set_bench(bench_path);
     ssta_->set_lat();
     ssta_->check();
     ssta_->read_dlib();
     EXPECT_NO_THROW(ssta_->read_bench());
-    
+
     deleteTestFile("test.dlib");
     deleteTestFile("test.bench");
 }
@@ -200,14 +202,14 @@ TEST_F(SstaUnitTest, ReadBenchOutput) {
     std::string bench_content = "INPUT(A)\nOUTPUT(Y)\n";
     std::string dlib_path = createTestFile("test2.dlib", dlib_content);
     std::string bench_path = createTestFile("test2.bench", bench_content);
-    
+
     ssta_->set_dlib(dlib_path);
     ssta_->set_bench(bench_path);
     ssta_->set_lat();
     ssta_->check();
     ssta_->read_dlib();
     EXPECT_NO_THROW(ssta_->read_bench());
-    
+
     deleteTestFile("test2.dlib");
     deleteTestFile("test2.bench");
 }
@@ -218,14 +220,14 @@ TEST_F(SstaUnitTest, ReadBenchNet) {
     std::string bench_content = "INPUT(A)\nY = gate1(A)\n";
     std::string dlib_path = createTestFile("test3.dlib", dlib_content);
     std::string bench_path = createTestFile("test3.bench", bench_content);
-    
+
     ssta_->set_dlib(dlib_path);
     ssta_->set_bench(bench_path);
     ssta_->set_lat();
     ssta_->check();
     ssta_->read_dlib();
     EXPECT_NO_THROW(ssta_->read_bench());
-    
+
     deleteTestFile("test3.dlib");
     deleteTestFile("test3.bench");
 }
@@ -244,10 +246,10 @@ TEST_F(SstaUnitTest, GetLatResultsAfterRead) {
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    
+
     LatResults results = ssta_->getLatResults();
     EXPECT_GT(results.size(), 0);
-    
+
     // Check that results have valid values
     for (const auto& result : results) {
         EXPECT_FALSE(result.node_name.empty());
@@ -272,10 +274,10 @@ TEST_F(SstaUnitTest, GetCorrelationMatrixAfterRead) {
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    
+
     CorrelationMatrix matrix = ssta_->getCorrelationMatrix();
     EXPECT_GT(matrix.node_names.size(), 0);
-    
+
     // Check that matrix is symmetric
     for (const auto& node1 : matrix.node_names) {
         for (const auto& node2 : matrix.node_names) {
@@ -337,10 +339,10 @@ TEST_F(SstaUnitTest, InvalidGateInDlib) {
 // Test: Exception handling for duplicate signal definition
 TEST_F(SstaUnitTest, DuplicateSignalDefinition) {
     std::string dlib_content = "gate1 0 y gauss (10.0, 2.0)\n";
-    std::string bench_content = "INPUT(A)\nINPUT(A)\n"; // Duplicate INPUT
+    std::string bench_content = "INPUT(A)\nINPUT(A)\n";  // Duplicate INPUT
     std::string dlib_path = createTestFile("dup.dlib", dlib_content);
     std::string bench_path = createTestFile("dup.bench", bench_content);
-    
+
     ssta_->set_dlib(dlib_path);
     ssta_->set_bench(bench_path);
     ssta_->set_lat();
@@ -348,7 +350,7 @@ TEST_F(SstaUnitTest, DuplicateSignalDefinition) {
     ssta_->read_dlib();
     // read_bench() converts Nh::RuntimeException to Nh::Exception
     EXPECT_THROW(ssta_->read_bench(), Nh::Exception);
-    
+
     try {
         ssta_->read_bench();
         FAIL() << "Expected exception was not thrown";
@@ -357,7 +359,7 @@ TEST_F(SstaUnitTest, DuplicateSignalDefinition) {
         EXPECT_NE(msg.find("input"), std::string::npos);
         EXPECT_NE(msg.find("multiply defined"), std::string::npos);
     }
-    
+
     deleteTestFile("dup.dlib");
     deleteTestFile("dup.bench");
 }
@@ -365,10 +367,10 @@ TEST_F(SstaUnitTest, DuplicateSignalDefinition) {
 // Test: Exception handling for floating circuit
 TEST_F(SstaUnitTest, FloatingCircuit) {
     std::string dlib_content = "gate1 0 y gauss (10.0, 2.0)\n";
-    std::string bench_content = "Y = gate1(Z)\n"; // Z is not defined
+    std::string bench_content = "Y = gate1(Z)\n";  // Z is not defined
     std::string dlib_path = createTestFile("float.dlib", dlib_content);
     std::string bench_path = createTestFile("float.bench", bench_content);
-    
+
     ssta_->set_dlib(dlib_path);
     ssta_->set_bench(bench_path);
     ssta_->set_lat();
@@ -376,7 +378,7 @@ TEST_F(SstaUnitTest, FloatingCircuit) {
     ssta_->read_dlib();
     // read_bench() converts Nh::RuntimeException to Nh::Exception
     EXPECT_THROW(ssta_->read_bench(), Nh::Exception);
-    
+
     try {
         ssta_->read_bench();
         FAIL() << "Expected exception was not thrown";
@@ -384,7 +386,7 @@ TEST_F(SstaUnitTest, FloatingCircuit) {
         std::string msg = e.what();
         EXPECT_NE(msg.find("floating"), std::string::npos);
     }
-    
+
     deleteTestFile("float.dlib");
     deleteTestFile("float.bench");
 }
@@ -398,16 +400,16 @@ TEST_F(SstaUnitTest, ConstructorDoesNotOutputToStdout) {
     std::ostringstream captured_stdout;
     std::streambuf* original_stdout = std::cout.rdbuf();
     std::cout.rdbuf(captured_stdout.rdbuf());
-    
+
     // Create Ssta instance - should not output to stdout
     Ssta* test_ssta = new Ssta();
-    
+
     // Restore stdout
     std::cout.rdbuf(original_stdout);
-    
+
     // Verify no output to stdout
     EXPECT_EQ(captured_stdout.str(), "");
-    
+
     delete test_ssta;
 }
 
@@ -416,17 +418,17 @@ TEST_F(SstaUnitTest, ConstructorDoesNotOutputToStderr) {
     std::ostringstream captured_stderr;
     std::streambuf* original_stderr = std::cerr.rdbuf();
     std::cerr.rdbuf(captured_stderr.rdbuf());
-    
+
     // Create Ssta instance - should not output to stderr (ideal state)
     Ssta* test_ssta = new Ssta();
-    
+
     // Restore stderr
     std::cerr.rdbuf(original_stderr);
-    
+
     // Note: Currently constructor outputs to stderr, but ideal state is no output
     // This test documents the desired behavior
     // TODO: Remove output from constructor to pass this test
-    
+
     delete test_ssta;
 }
 
@@ -435,15 +437,15 @@ TEST_F(SstaUnitTest, DestructorDoesNotOutputToStdout) {
     std::ostringstream captured_stdout;
     std::streambuf* original_stdout = std::cout.rdbuf();
     std::cout.rdbuf(captured_stdout.rdbuf());
-    
+
     // Create and destroy Ssta instance - should not output to stdout
     {
         Ssta test_ssta;
     }
-    
+
     // Restore stdout
     std::cout.rdbuf(original_stdout);
-    
+
     // Verify no output to stdout
     EXPECT_EQ(captured_stdout.str(), "");
 }
@@ -453,15 +455,15 @@ TEST_F(SstaUnitTest, DestructorDoesNotOutputToStderr) {
     std::ostringstream captured_stderr;
     std::streambuf* original_stderr = std::cerr.rdbuf();
     std::cerr.rdbuf(captured_stderr.rdbuf());
-    
+
     // Create and destroy Ssta instance - should not output to stderr (ideal state)
     {
         Ssta test_ssta;
     }
-    
+
     // Restore stderr
     std::cerr.rdbuf(original_stderr);
-    
+
     // Note: Currently destructor outputs to stderr, but ideal state is no output
     // This test documents the desired behavior
     // TODO: Remove output from destructor to pass this test
@@ -475,18 +477,18 @@ TEST_F(SstaUnitTest, GetLatResultsDoesNotOutput) {
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    
+
     // Redirect stdout to capture any output
     std::ostringstream captured_stdout;
     std::streambuf* original_stdout = std::cout.rdbuf();
     std::cout.rdbuf(captured_stdout.rdbuf());
-    
+
     // Call getLatResults - should not output
     LatResults results = ssta_->getLatResults();
-    
+
     // Restore stdout
     std::cout.rdbuf(original_stdout);
-    
+
     // Verify no output and results are valid
     EXPECT_EQ(captured_stdout.str(), "");
     EXPECT_FALSE(results.empty());
@@ -500,18 +502,18 @@ TEST_F(SstaUnitTest, GetCorrelationMatrixDoesNotOutput) {
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    
+
     // Redirect stdout to capture any output
     std::ostringstream captured_stdout;
     std::streambuf* original_stdout = std::cout.rdbuf();
     std::cout.rdbuf(captured_stdout.rdbuf());
-    
+
     // Call getCorrelationMatrix - should not output
     CorrelationMatrix matrix = ssta_->getCorrelationMatrix();
-    
+
     // Restore stdout
     std::cout.rdbuf(original_stdout);
-    
+
     // Verify no output and results are valid
     EXPECT_EQ(captured_stdout.str(), "");
     EXPECT_FALSE(matrix.node_names.empty());
@@ -521,31 +523,29 @@ TEST_F(SstaUnitTest, CheckMethodDoesNotCallExit) {
     // This test verifies that check() throws exception instead of calling exit()
     // Note: Currently check() calls exit(1), but ideal state is to throw exception
     // This test documents the desired behavior
-    
+
     Ssta test_ssta;
     test_ssta.set_dlib("");  // Empty dlib to trigger error
-    
+
     // Should throw exception instead of calling exit()
-    EXPECT_THROW({
-        test_ssta.check();
-    }, Nh::Exception);
+    EXPECT_THROW({ test_ssta.check(); }, Nh::Exception);
 }
 
 TEST_F(SstaUnitTest, PureLogicFunctionsDoNotDependOnOutputFlags) {
     // Verify that getLatResults() and getCorrelationMatrix() work
     // regardless of is_lat_ and is_correlation_ flags
     // These flags should only affect report() behavior, not logic functions
-    
+
     ssta_->set_dlib(example_dir + "/ex4_gauss.dlib");
     ssta_->set_bench(example_dir + "/ex4.bench");
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    
+
     // Call getLatResults without setting is_lat_ flag
     LatResults results = ssta_->getLatResults();
     EXPECT_FALSE(results.empty());
-    
+
     // Call getCorrelationMatrix without setting is_correlation_ flag
     CorrelationMatrix matrix = ssta_->getCorrelationMatrix();
     EXPECT_FALSE(matrix.node_names.empty());
@@ -556,4 +556,3 @@ TEST_F(SstaUnitTest, PureLogicFunctionsDoNotDependOnOutputFlags) {
 // so the assert in connect_instances() is only triggered if dff gate
 // is somehow added to net_ (which should not happen in normal operation).
 // The assert->exception conversion is tested indirectly through other tests.
-

@@ -1,16 +1,18 @@
 #include <gtest/gtest.h>
-#include "parser.hpp"
+#include <sys/stat.h>
+
+#include <cstdio>
 #include <fstream>
 #include <sstream>
-#include <cstdio>
-#include <sys/stat.h>
 #include <vector>
+
+#include "parser.hpp"
 
 // Test boost::tokenizer behavior before replacement
 // This test verifies the current tokenization behavior with different separators
 
 class ParserTokenizerTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         test_dir = "../test/test_data";
         struct stat info;
@@ -62,11 +64,11 @@ protected:
 TEST_F(ParserTokenizerTest, DropSeparatorsRemoved) {
     std::string content = "token1 token2  token3\n";
     std::string filepath = createTestFile("test_drop.txt", content);
-    
+
     Parser parser(filepath, '#', "(),", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     std::vector<std::string> tokens;
     std::string token;
     parser.getToken(token);
@@ -75,12 +77,12 @@ TEST_F(ParserTokenizerTest, DropSeparatorsRemoved) {
     tokens.push_back(token);
     parser.getToken(token);
     tokens.push_back(token);
-    
+
     EXPECT_EQ(tokens.size(), 3);
     EXPECT_EQ(tokens[0], "token1");
     EXPECT_EQ(tokens[1], "token2");
     EXPECT_EQ(tokens[2], "token3");
-    
+
     deleteTestFile("test_drop.txt");
 }
 
@@ -88,11 +90,11 @@ TEST_F(ParserTokenizerTest, DropSeparatorsRemoved) {
 TEST_F(ParserTokenizerTest, KeepSeparatorsPreserved) {
     std::string content = "gate_name(15.0, 2.0)\n";
     std::string filepath = createTestFile("test_keep.txt", content);
-    
+
     Parser parser(filepath, '#', "(),", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     std::vector<std::string> tokens;
     std::string token;
     while (true) {
@@ -103,7 +105,7 @@ TEST_F(ParserTokenizerTest, KeepSeparatorsPreserved) {
             break;
         }
     }
-    
+
     // Should have: gate_name, (, 15.0, ,, 2.0, )
     EXPECT_GE(tokens.size(), 6);
     EXPECT_EQ(tokens[0], "gate_name");
@@ -112,7 +114,7 @@ TEST_F(ParserTokenizerTest, KeepSeparatorsPreserved) {
     EXPECT_EQ(tokens[3], ",");
     EXPECT_EQ(tokens[4], "2.0");
     EXPECT_EQ(tokens[5], ")");
-    
+
     deleteTestFile("test_keep.txt");
 }
 
@@ -120,11 +122,11 @@ TEST_F(ParserTokenizerTest, KeepSeparatorsPreserved) {
 TEST_F(ParserTokenizerTest, MixedSeparatorsDlibFormat) {
     std::string content = "gate_name 0 y gauss (15.0, 2.0)\n";
     std::string filepath = createTestFile("test_mixed_dlib.txt", content);
-    
+
     Parser parser(filepath, '#', "(),", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     std::string gate_name, in, out, type;
     parser.getToken(gate_name);
     parser.getToken(in);
@@ -136,14 +138,14 @@ TEST_F(ParserTokenizerTest, MixedSeparatorsDlibFormat) {
     parser.checkSepalator(',');
     parser.getToken(param2);
     parser.checkSepalator(')');
-    
+
     EXPECT_EQ(gate_name, "gate_name");
     EXPECT_EQ(in, "0");
     EXPECT_EQ(out, "y");
     EXPECT_EQ(type, "gauss");
     EXPECT_DOUBLE_EQ(param1, 15.0);
     EXPECT_DOUBLE_EQ(param2, 2.0);
-    
+
     deleteTestFile("test_mixed_dlib.txt");
 }
 
@@ -151,11 +153,11 @@ TEST_F(ParserTokenizerTest, MixedSeparatorsDlibFormat) {
 TEST_F(ParserTokenizerTest, MixedSeparatorsBenchFormat) {
     std::string content = "NET signal1 = gate1(signal2, signal3)\n";
     std::string filepath = createTestFile("test_mixed_bench.txt", content);
-    
+
     Parser parser(filepath, '#', "(),=", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     std::vector<std::string> tokens;
     std::string token;
     while (true) {
@@ -166,7 +168,7 @@ TEST_F(ParserTokenizerTest, MixedSeparatorsBenchFormat) {
             break;
         }
     }
-    
+
     // Should have: NET, signal1, =, gate1, (, signal2, ,, signal3, )
     EXPECT_GE(tokens.size(), 9);
     EXPECT_EQ(tokens[0], "NET");
@@ -174,7 +176,7 @@ TEST_F(ParserTokenizerTest, MixedSeparatorsBenchFormat) {
     EXPECT_EQ(tokens[2], "=");
     EXPECT_EQ(tokens[3], "gate1");
     EXPECT_EQ(tokens[4], "(");
-    
+
     deleteTestFile("test_mixed_bench.txt");
 }
 
@@ -182,37 +184,38 @@ TEST_F(ParserTokenizerTest, MixedSeparatorsBenchFormat) {
 TEST_F(ParserTokenizerTest, EmptyTokensBetweenSeparators) {
     std::string content = "gate_name(,)\n";  // Empty tokens between ( and ,
     std::string filepath = createTestFile("test_empty.txt", content);
-    
+
     Parser parser(filepath, '#', "(),", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     std::string gate_name;
     parser.getToken(gate_name);
     parser.checkSepalator('(');
     parser.checkSepalator(',');
     parser.checkSepalator(')');
-    
+
     EXPECT_EQ(gate_name, "gate_name");
-    
+
     deleteTestFile("test_empty.txt");
 }
 
 // Test: Comment lines are skipped
 TEST_F(ParserTokenizerTest, CommentLinesSkipped) {
-    std::string content = "# comment line\n"
-                         "actual_token\n"
-                         "# another comment\n";
+    std::string content =
+        "# comment line\n"
+        "actual_token\n"
+        "# another comment\n";
     std::string filepath = createTestFile("test_comment.txt", content);
-    
+
     Parser parser(filepath, '#', "(),", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     std::string token;
     parser.getToken(token);
     EXPECT_EQ(token, "actual_token");
-    
+
     deleteTestFile("test_comment.txt");
 }
 
@@ -220,20 +223,20 @@ TEST_F(ParserTokenizerTest, CommentLinesSkipped) {
 TEST_F(ParserTokenizerTest, MultipleDropSeparators) {
     std::string content = "token1    token2\t\t\ttoken3\n";
     std::string filepath = createTestFile("test_multiple_drop.txt", content);
-    
+
     Parser parser(filepath, '#', "(),", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     std::string token1, token2, token3;
     parser.getToken(token1);
     parser.getToken(token2);
     parser.getToken(token3);
-    
+
     EXPECT_EQ(token1, "token1");
     EXPECT_EQ(token2, "token2");
     EXPECT_EQ(token3, "token3");
-    
+
     deleteTestFile("test_multiple_drop.txt");
 }
 
@@ -241,18 +244,17 @@ TEST_F(ParserTokenizerTest, MultipleDropSeparators) {
 TEST_F(ParserTokenizerTest, SeparatorsAtStartEnd) {
     std::string content = "(token)\n";
     std::string filepath = createTestFile("test_start_end.txt", content);
-    
+
     Parser parser(filepath, '#', "(),", " \t\r");
     parser.checkFile();
     parser.getLine();
-    
+
     parser.checkSepalator('(');
     std::string token;
     parser.getToken(token);
     parser.checkSepalator(')');
-    
+
     EXPECT_EQ(token, "token");
-    
+
     deleteTestFile("test_start_end.txt");
 }
-

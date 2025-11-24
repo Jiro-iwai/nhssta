@@ -3,14 +3,15 @@
 // Issue #57: ドキュメント: READMEとCONTRIBUTING.mdの最新化
 
 #include <gtest/gtest.h>
+
+#include <filesystem>
 #include <fstream>
+#include <regex>
 #include <sstream>
 #include <string>
-#include <filesystem>
-#include <regex>
 
 class DocumentationAccuracyTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         project_root = std::filesystem::current_path();
         readme_path = project_root / "README.md";
@@ -45,11 +46,13 @@ TEST_F(DocumentationAccuracyTest, ContributingExists) {
 // Test: README.md should mention snake_case file naming convention
 TEST_F(DocumentationAccuracyTest, ReadmeMentionsSnakeCase) {
     std::string content = readFile(readme_path);
-    
+
     // Should mention .cpp and .hpp extensions
-    EXPECT_TRUE(content.find(".cpp") != std::string::npos) << "README.md should mention .cpp extension";
-    EXPECT_TRUE(content.find(".hpp") != std::string::npos) << "README.md should mention .hpp extension";
-    
+    EXPECT_TRUE(content.find(".cpp") != std::string::npos)
+        << "README.md should mention .cpp extension";
+    EXPECT_TRUE(content.find(".hpp") != std::string::npos)
+        << "README.md should mention .hpp extension";
+
     // Should NOT mention old .C or .h extensions (unless in historical context)
     // Allow mentions in comments or historical context, but not as current standard
     std::regex old_ext_regex(R"(\b\.C\b|\b\.h\b(?!pp))");
@@ -59,10 +62,8 @@ TEST_F(DocumentationAccuracyTest, ReadmeMentionsSnakeCase) {
         size_t pos = match.position();
         std::string context = content.substr(std::max(0, (int)pos - 50), 100);
         // Allow if it's clearly historical or commented out
-        if (context.find("old") == std::string::npos && 
-            context.find("以前") == std::string::npos &&
-            context.find("//") == std::string::npos &&
-            context.find("#") == std::string::npos) {
+        if (context.find("old") == std::string::npos && context.find("以前") == std::string::npos &&
+            context.find("//") == std::string::npos && context.find("#") == std::string::npos) {
             FAIL() << "README.md should not mention old .C or .h extensions as current standard";
         }
     }
@@ -71,21 +72,22 @@ TEST_F(DocumentationAccuracyTest, ReadmeMentionsSnakeCase) {
 // Test: CONTRIBUTING.md should mention snake_case file naming convention
 TEST_F(DocumentationAccuracyTest, ContributingMentionsSnakeCase) {
     std::string content = readFile(contributing_path);
-    
+
     // Should mention .cpp and .hpp extensions
-    EXPECT_TRUE(content.find(".cpp") != std::string::npos || 
-                content.find("snake_case") != std::string::npos) 
+    EXPECT_TRUE(content.find(".cpp") != std::string::npos ||
+                content.find("snake_case") != std::string::npos)
         << "CONTRIBUTING.md should mention .cpp extension or snake_case naming";
-    
+
     // Should NOT mention old .C extensions as current standard
     // Allow in comments or historical context
     if (content.find(".C") != std::string::npos) {
         size_t pos = content.find(".C");
         std::string context = content.substr(std::max(0, (int)pos - 50), 100);
-        if (context.find("//") == std::string::npos && 
-            context.find("以前") == std::string::npos &&
+        if (context.find("//") == std::string::npos && context.find("以前") == std::string::npos &&
             context.find("old") == std::string::npos) {
-            FAIL() << "CONTRIBUTING.md should not mention .C extension as current standard (found at position " << pos << ")";
+            FAIL() << "CONTRIBUTING.md should not mention .C extension as current standard (found "
+                      "at position "
+                   << pos << ")";
         }
     }
 }
@@ -93,9 +95,9 @@ TEST_F(DocumentationAccuracyTest, ContributingMentionsSnakeCase) {
 // Test: README.md should mention GTEST_DIR override mechanism
 TEST_F(DocumentationAccuracyTest, ReadmeMentionsGtestDirOverride) {
     std::string content = readFile(readme_path);
-    
+
     // Should mention GTEST_DIR or environment variable override
-    EXPECT_TRUE(content.find("GTEST_DIR") != std::string::npos || 
+    EXPECT_TRUE(content.find("GTEST_DIR") != std::string::npos ||
                 content.find("環境変数") != std::string::npos ||
                 content.find("environment variable") != std::string::npos)
         << "README.md should mention GTEST_DIR override mechanism";
@@ -104,9 +106,9 @@ TEST_F(DocumentationAccuracyTest, ReadmeMentionsGtestDirOverride) {
 // Test: CONTRIBUTING.md should mention GTEST_DIR override mechanism
 TEST_F(DocumentationAccuracyTest, ContributingMentionsGtestDirOverride) {
     std::string content = readFile(contributing_path);
-    
+
     // Should mention GTEST_DIR or environment variable override
-    EXPECT_TRUE(content.find("GTEST_DIR") != std::string::npos || 
+    EXPECT_TRUE(content.find("GTEST_DIR") != std::string::npos ||
                 content.find("環境変数") != std::string::npos ||
                 content.find("environment variable") != std::string::npos)
         << "CONTRIBUTING.md should mention GTEST_DIR override mechanism";
@@ -115,9 +117,9 @@ TEST_F(DocumentationAccuracyTest, ContributingMentionsGtestDirOverride) {
 // Test: README.md should mention dev-setup and dev-check scripts
 TEST_F(DocumentationAccuracyTest, ReadmeMentionsDevScripts) {
     std::string content = readFile(readme_path);
-    
+
     // Should mention dev-setup or dev-check
-    EXPECT_TRUE(content.find("dev-setup") != std::string::npos || 
+    EXPECT_TRUE(content.find("dev-setup") != std::string::npos ||
                 content.find("dev-check") != std::string::npos ||
                 content.find("dev-setup.sh") != std::string::npos ||
                 content.find("run-all-checks.sh") != std::string::npos)
@@ -128,27 +130,28 @@ TEST_F(DocumentationAccuracyTest, ReadmeMentionsDevScripts) {
 // Note: This test checks that test count is mentioned and is reasonable
 TEST_F(DocumentationAccuracyTest, ReadmeTestCountReasonable) {
     std::string content = readFile(readme_path);
-    
+
     // Should mention test count
-    EXPECT_TRUE(content.find("test") != std::string::npos || 
+    EXPECT_TRUE(content.find("test") != std::string::npos ||
                 content.find("テスト") != std::string::npos)
         << "README.md should mention tests";
-    
+
     // If test count is mentioned, it should be >= 300 (current count is 316)
     std::regex test_count_regex(R"((\d+)\s+test)");
     std::smatch match;
     if (std::regex_search(content, match, test_count_regex)) {
         int count = std::stoi(match[1].str());
-        EXPECT_GE(count, 300) << "Test count in README.md should be >= 300 (current: " << count << ")";
+        EXPECT_GE(count, 300) << "Test count in README.md should be >= 300 (current: " << count
+                              << ")";
     }
 }
 
 // Test: CONTRIBUTING.md should mention regression test framework
 TEST_F(DocumentationAccuracyTest, ContributingMentionsRegressionTests) {
     std::string content = readFile(contributing_path);
-    
+
     // Should mention regression test or test_regression
-    EXPECT_TRUE(content.find("回帰テスト") != std::string::npos || 
+    EXPECT_TRUE(content.find("回帰テスト") != std::string::npos ||
                 content.find("regression") != std::string::npos ||
                 content.find("test_regression") != std::string::npos)
         << "CONTRIBUTING.md should mention regression test framework";
@@ -157,7 +160,7 @@ TEST_F(DocumentationAccuracyTest, ContributingMentionsRegressionTests) {
 // Test: CONTRIBUTING.md should mention clang-format usage
 TEST_F(DocumentationAccuracyTest, ContributingMentionsClangFormat) {
     std::string content = readFile(contributing_path);
-    
+
     // Should mention clang-format
     EXPECT_TRUE(content.find("clang-format") != std::string::npos)
         << "CONTRIBUTING.md should mention clang-format";
@@ -166,7 +169,7 @@ TEST_F(DocumentationAccuracyTest, ContributingMentionsClangFormat) {
 // Test: CONTRIBUTING.md should mention clang-tidy usage
 TEST_F(DocumentationAccuracyTest, ContributingMentionsClangTidy) {
     std::string content = readFile(contributing_path);
-    
+
     // Should mention clang-tidy
     EXPECT_TRUE(content.find("clang-tidy") != std::string::npos)
         << "CONTRIBUTING.md should mention clang-tidy";
@@ -175,10 +178,9 @@ TEST_F(DocumentationAccuracyTest, ContributingMentionsClangTidy) {
 // Test: README.md should mention make check vs make dev-check distinction
 TEST_F(DocumentationAccuracyTest, ReadmeMentionsCheckVsDevCheck) {
     std::string content = readFile(readme_path);
-    
+
     // Should mention make check or make dev-check
-    EXPECT_TRUE(content.find("make check") != std::string::npos || 
+    EXPECT_TRUE(content.find("make check") != std::string::npos ||
                 content.find("make dev-check") != std::string::npos)
         << "README.md should mention make check or make dev-check";
 }
-

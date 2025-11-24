@@ -1,9 +1,10 @@
 #include <gtest/gtest.h>
+
 #include <string>
 
 // Test fixture for shared setup/teardown
 class MathTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Common setup code
     }
@@ -46,8 +47,7 @@ TEST(StringOperationsTest, Length) {
 }
 
 // Parameterized test example
-class MathParameterizedTest : public ::testing::TestWithParam<std::tuple<int, int, int>> {
-};
+class MathParameterizedTest : public ::testing::TestWithParam<std::tuple<int, int, int>> {};
 
 TEST_P(MathParameterizedTest, AdditionParameterized) {
     int a, b, expected;
@@ -55,17 +55,11 @@ TEST_P(MathParameterizedTest, AdditionParameterized) {
     EXPECT_EQ(a + b, expected);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    AdditionTests,
-    MathParameterizedTest,
-    ::testing::Values(
-        std::make_tuple(1, 1, 2),
-        std::make_tuple(2, 3, 5),
-        std::make_tuple(10, 20, 30)
-    )
-);
+INSTANTIATE_TEST_SUITE_P(AdditionTests, MathParameterizedTest,
+                         ::testing::Values(std::make_tuple(1, 1, 2), std::make_tuple(2, 3, 5),
+                                           std::make_tuple(10, 20, 30)));
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

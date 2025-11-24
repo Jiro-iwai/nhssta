@@ -3,13 +3,15 @@
 // Issue #10: 既存assertテストの移行
 
 #include <gtest/gtest.h>
-#include "../src/expression.hpp"
+
 #include <cmath>
+
+#include "../src/expression.hpp"
 
 using namespace Nh;
 
 class ExpressionAssertMigrationTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Clear expression table before each test
         // Note: Expression uses static table, so we need to be careful
@@ -26,7 +28,7 @@ TEST_F(ExpressionAssertMigrationTest, TestMultiplicationByConstant) {
     Expression z;
     double v;
 
-    z = 2.0*x;
+    z = 2.0 * x;
 
     x = 1.0;
     EXPECT_DOUBLE_EQ((v << z), 2.0);
@@ -66,7 +68,7 @@ TEST_F(ExpressionAssertMigrationTest, TestMultiplication) {
     Expression z;
     double v;
 
-    z = x*y;
+    z = x * y;
 
     x = 3.0;
     y = 4.0;
@@ -102,7 +104,7 @@ TEST_F(ExpressionAssertMigrationTest, TestDivision) {
     Expression z;
     double v;
 
-    z = x/y;
+    z = x / y;
     x = 2.0;
     y = 1.0;
 
@@ -134,7 +136,7 @@ TEST_F(ExpressionAssertMigrationTest, TestTripleMultiplication) {
     Expression z;
     double v;
 
-    z = x*y*w;
+    z = x * y * w;
     x = 2.0;
     y = 1.0;
     w = 1.0;
@@ -164,7 +166,7 @@ TEST_F(ExpressionAssertMigrationTest, TestPower) {
     Expression z;
     double v;
 
-    z = x^2;
+    z = x ^ 2;
     x = 2.0;
 
     EXPECT_DOUBLE_EQ((v << x), 2.0);
@@ -179,26 +181,26 @@ TEST_F(ExpressionAssertMigrationTest, TestComplexExpression) {
     Expression z;
     double v;
 
-    z = log(x*x*y/w*w)*exp(x)/w;
-    
+    z = log(x * x * y / w * w) * exp(x) / w;
+
     // Set variable values before evaluating
     x = 1.0;
     y = 1.0;
     w = 1.0;
-    
+
     // Original test had these commented out:
     // assert( (v << x) == 1.0 );
     // assert( (v << z) == 0.0 );
     // assert( (v << z->d(x)) == 1.0 );
-    
+
     // Verify that we can evaluate the expression
     EXPECT_DOUBLE_EQ((v << x), 1.0);
-    
+
     // Just verify that derivatives can be computed without crashing
     v << z->d(x);
     v << z->d(y);
     v << z->d(w);
-    
+
     // If we get here, the test passed
     EXPECT_TRUE(true);
 }
@@ -235,4 +237,3 @@ TEST_F(ExpressionAssertMigrationTest, SharedSubexpressionEvaluatesConsistently) 
     EXPECT_DOUBLE_EQ((value << expr1), 9.0);
     EXPECT_DOUBLE_EQ((value << expr2), 12.0);
 }
-
