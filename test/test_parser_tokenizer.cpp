@@ -50,7 +50,7 @@ class ParserTokenizerTest : public ::testing::Test {
                 std::string token;
                 parser.getToken(token);
                 tokens.push_back(token);
-            } catch (Parser::exception& e) {
+            } catch (Nh::ParseException& e) {
                 break;
             }
         }
@@ -101,7 +101,7 @@ TEST_F(ParserTokenizerTest, KeepSeparatorsPreserved) {
         try {
             parser.getToken(token);
             tokens.push_back(token);
-        } catch (Parser::exception& e) {
+        } catch (Nh::ParseException& e) {
             break;
         }
     }
@@ -164,7 +164,7 @@ TEST_F(ParserTokenizerTest, MixedSeparatorsBenchFormat) {
         try {
             parser.getToken(token);
             tokens.push_back(token);
-        } catch (Parser::exception& e) {
+        } catch (Nh::ParseException& e) {
             break;
         }
     }

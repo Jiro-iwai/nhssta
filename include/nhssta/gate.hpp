@@ -89,9 +89,6 @@ class _Gate_ {
 // - Storing as member variable creates ownership relationship
 class Gate {
    public:
-    // Backward compatibility: keep exception as alias to Nh::RuntimeException
-    // This will be removed in a later phase
-    using exception = Nh::RuntimeException;
     Gate();
     explicit Gate(std::shared_ptr<_Gate_> body);
 

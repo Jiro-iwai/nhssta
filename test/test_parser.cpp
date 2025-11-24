@@ -186,7 +186,7 @@ TEST_F(ParserTest, GetTokenInvalidConversion) {
     parser.getLine();
 
     int value;
-    EXPECT_THROW(parser.getToken(value), Parser::exception);
+    EXPECT_THROW(parser.getToken(value), Nh::ParseException);
 
     deleteTestFile("test7.txt");
 }
@@ -220,7 +220,7 @@ TEST_F(ParserTest, CheckSeparatorFailure) {
     parser.checkFile();
     parser.getLine();
 
-    EXPECT_THROW(parser.checkSepalator('['), Parser::exception);
+    EXPECT_THROW(parser.checkSepalator('['), Nh::ParseException);
 
     deleteTestFile("test9.txt");
 }
@@ -252,7 +252,7 @@ TEST_F(ParserTest, CheckEndFailure) {
 
     std::string token;
     parser.getToken(token);
-    EXPECT_THROW(parser.checkEnd(), Parser::exception);
+    EXPECT_THROW(parser.checkEnd(), Nh::ParseException);
 
     deleteTestFile("test11.txt");
 }
@@ -268,7 +268,7 @@ TEST_F(ParserTest, UnexpectedTermination) {
 
     std::string token1, token2;
     parser.getToken(token1);
-    EXPECT_THROW(parser.getToken(token2), Parser::exception);
+    EXPECT_THROW(parser.getToken(token2), Nh::ParseException);
 
     deleteTestFile("test12.txt");
 }

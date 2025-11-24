@@ -52,28 +52,7 @@ class ExceptionUnificationTest : public ::testing::Test {
     std::string test_dir;
 };
 
-// Test: Ssta::exception behavior (now Nh::Exception)
-TEST_F(ExceptionUnificationTest, SstaExceptionBehavior) {
-    try {
-        throw Nh::Exception("Test Ssta exception");
-    } catch (Nh::Ssta::exception& e) {
-        // Ssta::exception is now an alias to Nh::Exception
-        EXPECT_STREQ(e.what(), "Test Ssta exception");
-    }
-}
-
-// Test: Parser::exception behavior (now Nh::ParseException)
-TEST_F(ExceptionUnificationTest, ParserExceptionBehavior) {
-    try {
-        throw Nh::ParseException("test.txt", 1, "Test Parser exception");
-    } catch (Parser::exception& e) {
-        // Parser::exception is now an alias to Nh::ParseException
-        EXPECT_NE(std::string(e.what()).find("Parse error"), std::string::npos);
-        EXPECT_NE(std::string(e.what()).find("test.txt"), std::string::npos);
-    }
-}
-
-// Test: Parser::exception thrown on file error (now Nh::FileException)
+// Test: Parser exception thrown on file error (now Nh::FileException)
 TEST_F(ExceptionUnificationTest, ParserExceptionOnFileError) {
     Parser parser("nonexistent_file.txt", '#', "(),", " \t\r");
 
@@ -87,27 +66,6 @@ TEST_F(ExceptionUnificationTest, ParserExceptionOnFileError) {
     }
 }
 
-// Test: Gate::exception behavior (now Nh::RuntimeException)
-TEST_F(ExceptionUnificationTest, GateExceptionBehavior) {
-    try {
-        throw Nh::RuntimeException("Test Gate exception");
-    } catch (Nh::Gate::exception& e) {
-        // Gate::exception is now an alias to Nh::RuntimeException
-        EXPECT_NE(std::string(e.what()).find("Runtime error"), std::string::npos);
-        EXPECT_NE(std::string(e.what()).find("Test Gate exception"), std::string::npos);
-    }
-}
-
-// Test: RandomVariable::Exception behavior (now Nh::RuntimeException)
-TEST_F(ExceptionUnificationTest, RandomVariableExceptionBehavior) {
-    try {
-        throw Nh::RuntimeException("Test RandomVariable exception");
-    } catch (RandomVariable::Exception& e) {
-        // RandomVariable::Exception is now an alias to Nh::RuntimeException
-        EXPECT_NE(std::string(e.what()).find("Runtime error"), std::string::npos);
-        EXPECT_NE(std::string(e.what()).find("Test RandomVariable exception"), std::string::npos);
-    }
-}
 
 // Test: SmartPtrException behavior (now Nh::RuntimeException)
 // SmartPtrException has been removed - use Nh::RuntimeException directly

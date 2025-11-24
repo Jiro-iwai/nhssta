@@ -26,9 +26,6 @@ namespace Nh {
 
 class Ssta {
    public:
-    // Backward compatibility: keep exception as alias to Nh::Exception
-    // This will be removed in a later phase
-    using exception = Nh::Exception;
 
     Ssta();
     ~Ssta();
