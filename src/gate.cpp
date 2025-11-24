@@ -10,6 +10,8 @@
 #include <string>
 
 #include "add.hpp"
+#include "normal.hpp"
+#include "random_variable.hpp"
 
 namespace Nh {
 

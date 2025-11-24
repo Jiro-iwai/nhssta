@@ -10,6 +10,10 @@
 #include <string>
 #include <unordered_map>
 
+// Note: statistics.hpp is an internal implementation detail
+// It aggregates headers for RandomVariable types (Normal, RandomVariable, etc.)
+// Gate class requires complete type definitions for Normal and RandomVariable
+// as they are used as template arguments in std::unordered_map
 #include "../src/statistics.hpp"
 
 namespace Nh {
