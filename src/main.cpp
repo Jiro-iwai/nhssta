@@ -87,7 +87,7 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
 // Helper function to get version string (moved from Ssta constructor)
 std::string get_version_string() {
     auto now = std::time(nullptr);
-    std::tm timeinfo;
+    std::tm timeinfo{};  // Initialize to zero
 #ifdef _WIN32
     localtime_s(&timeinfo, &now);  // Windows thread-safe version
 #else

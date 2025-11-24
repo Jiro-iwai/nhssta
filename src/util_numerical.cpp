@@ -3,6 +3,7 @@
 
 #include "util_numerical.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <ctime>
@@ -152,15 +153,9 @@ static void set_range(double a, int& lower, int& upper) {
     lower = int(floor(len));
     upper = int(ceil(len));
     // Clamp to valid array bounds
-    if (lower < 0) {
-        lower = 0;
-    }
-    if (upper >= TAB_SIZE) {
-        upper = TAB_SIZE - 1;
-    }
-    if (lower >= TAB_SIZE) {
-        lower = TAB_SIZE - 1;
-    }
+    lower = std::max(lower, 0);
+    upper = std::min(upper, TAB_SIZE - 1);
+    lower = std::min(lower, TAB_SIZE - 1);
 }
 
 double MeanMax(double a) {
