@@ -15,8 +15,8 @@
 #include <nhssta/exception.hpp>
 #include <nhssta/ssta_results.hpp>
 
-#include "../src/gate.hpp"
-#include "../src/net_line.hpp"
+#include <nhssta/gate.hpp>
+#include <nhssta/net_line.hpp>
 
 // Forward declaration for Parser (internal implementation detail)
 // Parser is defined in global namespace in src/parser.hpp

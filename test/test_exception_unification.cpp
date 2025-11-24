@@ -2,8 +2,9 @@
 
 #include <nhssta/exception.hpp>
 #include <nhssta/ssta.hpp>
+#include <nhssta/gate.hpp>
 
-#include "../src/gate.hpp"
+// Internal implementation details (for testing)
 #include "../src/parser.hpp"
 #include "../src/random_variable.hpp"
 // SmartPtrException has been removed - use Nh::RuntimeException directly

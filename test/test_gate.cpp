@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "../src/add.hpp"
-#include "../src/gate.hpp"
+#include <nhssta/gate.hpp>
 #include "../src/max.hpp"
 #include "../src/normal.hpp"
 

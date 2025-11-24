@@ -1,7 +1,7 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
 
-#include "gate.hpp"
+#include <nhssta/gate.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -10,6 +10,8 @@
 #include <string>
 
 #include "add.hpp"
+#include "normal.hpp"
+#include "random_variable.hpp"
 
 namespace Nh {
 
