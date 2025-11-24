@@ -63,8 +63,8 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 351 tests from 37 test suites.
-[  PASSED  ] 351 tests.
+[==========] Running 333 tests from 34 test suites.
+[  PASSED  ] 333 tests.
 ==========================================
 Running integration tests...
 ==========================================

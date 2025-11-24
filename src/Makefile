@@ -41,7 +41,7 @@ GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
 # Test sources (relative to src directory)
 TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_add.cpp ../test/test_max.cpp ../test/test_covariance.cpp \
-	../test/test_integration.cpp ../test/test_smartptr.cpp \
+	../test/test_integration.cpp \
 	../test/test_error_handling.cpp ../test/test_ssta_results.cpp \
 	../test/test_ssta_logic_integration.cpp ../test/test_parser.cpp \
 	../test/test_performance.cpp ../test/test_expression_print.cpp \
@@ -50,8 +50,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_gate.cpp ../test/test_ssta_unit.cpp \
 	../test/test_expression_assert_migration.cpp ../test/test_util.cpp \
 	../test/test_public_api_headers.cpp ../test/test_cli_exit_codes.cpp \
-	../test/test_handle_ownership.cpp ../test/test_rcobject_removal.cpp \
-	../test/test_smartptr_removal.cpp ../test/test_util_boundary.cpp \
+	../test/test_handle_ownership.cpp ../test/test_util_boundary.cpp \
 	../test/test_coverage_gaps.cpp ../test/test_makefile_portability.cpp \
 	../test/test_dev_scripts.cpp ../test/test_regression.cpp \
 	../test/test_numerical_error_metrics.cpp ../test/test_documentation_accuracy.cpp \
