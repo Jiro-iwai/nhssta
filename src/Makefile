@@ -195,6 +195,8 @@ $(TEST_OBJS): ../test/%.o: ../test/%.cpp
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
 	rm -f $(TEST_OBJS) ../test/nhssta_test
+	# Remove old object files from previous file naming conventions
+	rm -f RandomVariable.o util.o
 
 tags :
 	etags *.hpp *.cpp
