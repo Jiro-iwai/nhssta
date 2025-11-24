@@ -383,7 +383,7 @@ void Ssta::report_lat() const {
     std::cout << "#" << std::endl;
     std::cout << "# LAT" << std::endl;
     std::cout << "#" << std::endl;
-    std::cout << "#node                     mu             std" << std::endl;
+    std::cout << std::left << std::setw(15) << "#node" << std::right << std::setw(10) << "mu" << std::setw(9) << "std" << std::endl;
     std::cout << "#---------------------------------" << std::endl;
 
     for (const auto& result : results) {
