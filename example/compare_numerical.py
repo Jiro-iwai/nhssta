@@ -42,7 +42,7 @@ def is_correlation_value(val_str):
     except ValueError:
         return False
 
-def compare_lines(line1, line2, lat_tol, corr_tol):
+def compare_lines(line1, line2, lat_tol, corr_tol, max_errors):
     """Compare two lines with numerical tolerance.
     
     Args:
@@ -50,6 +50,7 @@ def compare_lines(line1, line2, lat_tol, corr_tol):
         line2: Second line to compare
         lat_tol: Tolerance for LAT values (mean, stddev) - relative error
         corr_tol: Tolerance for correlation values - relative error
+        max_errors: Dictionary to track maximum errors {'lat': max_lat_error, 'corr': max_corr_error}
     """
     if line1 == line2:
         return True
@@ -74,15 +75,27 @@ def compare_lines(line1, line2, lat_tol, corr_tol):
             # Determine tolerance based on value type
             val1 = float(f1)
             val2 = float(f2)
+            diff = abs(val1 - val2)
+            
+            # Calculate relative error
+            rel_err = 0.0
+            if abs(val1) > 1e-10 and abs(val2) > 1e-10:
+                rel_err = diff / max(abs(val1), abs(val2))
             
             # Use correlation tolerance if:
             # 1. Line contains tabs (correlation matrix format)
             # 2. Both values are in [0, 1] range (correlation coefficients)
             if is_correlation_line or (is_correlation_value(f1) and is_correlation_value(f2)):
                 tol = corr_tol
+                # Update maximum correlation error
+                if rel_err > max_errors['corr']:
+                    max_errors['corr'] = rel_err
             else:
                 # LAT values (mean, stddev)
                 tol = lat_tol
+                # Update maximum LAT error
+                if rel_err > max_errors['lat']:
+                    max_errors['lat'] = rel_err
             
             if not compare_values(f1, f2, tol):
                 return False
@@ -104,6 +117,9 @@ def main():
     lat_tol = float(sys.argv[3])
     corr_tol = float(sys.argv[4]) if len(sys.argv) > 4 else 0.032  # Default 3.2%
     
+    # Track maximum errors
+    max_errors = {'lat': 0.0, 'corr': 0.0}
+    
     try:
         with open(file1, 'r') as f1, open(file2, 'r') as f2:
             lines1 = f1.readlines()
@@ -113,9 +129,12 @@ def main():
                 sys.exit(1)
             
             for l1, l2 in zip(lines1, lines2):
-                if not compare_lines(l1, l2, lat_tol, corr_tol):
+                if not compare_lines(l1, l2, lat_tol, corr_tol, max_errors):
                     sys.exit(1)
         
+        # Output maximum errors to stdout (for parsing by shell script)
+        # Format: MAX_LAT_ERROR:0.001234 MAX_CORR_ERROR:0.023456
+        print(f"MAX_LAT_ERROR:{max_errors['lat']:.6f} MAX_CORR_ERROR:{max_errors['corr']:.6f}")
         sys.exit(0)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

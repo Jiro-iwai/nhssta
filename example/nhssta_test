@@ -167,9 +167,28 @@ run_test() {
     fi
 
     # Compare with expected result using numerical tolerance
-    # LAT tolerance: 0.2%, Correlation tolerance: 3.2%
-    if python3 compare_numerical.py "${TEMP_RESULT_FILE}" "${RESULT_FILE}" "${LAT_TOLERANCE}" "${CORR_TOLERANCE}" 2>/dev/null; then
-        print_success "  ✓ PASSED"
+    # LAT tolerance: 1.6%, Correlation tolerance: 3.8%
+    COMPARE_OUTPUT=$(python3 compare_numerical.py "${TEMP_RESULT_FILE}" "${RESULT_FILE}" "${LAT_TOLERANCE}" "${CORR_TOLERANCE}" 2>/dev/null)
+    COMPARE_EXIT_CODE=$?
+    
+    if [ ${COMPARE_EXIT_CODE} -eq 0 ]; then
+        # Extract maximum errors from output using awk (compatible with macOS)
+        MAX_LAT_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_LAT_ERROR:' '{print $2}' | awk '{print $1}' | awk -F'MAX_CORR_ERROR:' '{print $1}')
+        MAX_CORR_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_CORR_ERROR:' '{print $2}')
+        
+        # Default to 0.0 if extraction failed
+        if [ -z "${MAX_LAT_ERROR}" ] || [ "${MAX_LAT_ERROR}" = "" ]; then
+            MAX_LAT_ERROR="0.000000"
+        fi
+        if [ -z "${MAX_CORR_ERROR}" ] || [ "${MAX_CORR_ERROR}" = "" ]; then
+            MAX_CORR_ERROR="0.000000"
+        fi
+        
+        # Convert to percentage
+        MAX_LAT_PCT=$(awk "BEGIN {printf \"%.2f\", ${MAX_LAT_ERROR} * 100}")
+        MAX_CORR_PCT=$(awk "BEGIN {printf \"%.2f\", ${MAX_CORR_ERROR} * 100}")
+        
+        print_success "  ✓ PASSED (最大誤差: LAT ${MAX_LAT_PCT}%, 相関 ${MAX_CORR_PCT}%)"
         PASSED_TESTS=$((PASSED_TESTS + 1))
         rm -f "${TEMP_RESULT_FILE}" # Clean up on success
     else
