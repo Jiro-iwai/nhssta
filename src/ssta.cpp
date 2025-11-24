@@ -354,6 +354,9 @@ namespace Nh {
         parser.checkSepalator('(');
 
         Ins& ins = l->ins();
+        // Reserve space for input signals (typical gates have 2-4 inputs)
+        // This reduces memory reallocation overhead during parsing
+        ins.reserve(4);
         while(true) {
 
             std::string in_signal_name;
