@@ -6,6 +6,8 @@
 #include <cmath>
 #include <iomanip>
 #include <string>
+#include <vector>
+#include <algorithm>
 #include "util_numerical.hpp"
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
@@ -472,11 +474,18 @@ namespace Nh {
     LatResults Ssta::getLatResults() const {
         LatResults results;
         
-        auto si = signals_.begin();
-        for( ; si != signals_.end(); si++ ) {
-            const RandomVariable& sigi = si->second;
-            double mean = si->second->mean();
-            double variance = si->second->variance();
+        // Collect signal names and sort them for consistent output order
+        // (unordered_map doesn't guarantee order, so we sort by key)
+        std::vector<std::string> signal_names;
+        for (const auto& pair : signals_) {
+            signal_names.push_back(pair.first);
+        }
+        std::sort(signal_names.begin(), signal_names.end());
+        
+        for (const auto& signal_name : signal_names) {
+            const RandomVariable& sigi = signals_.at(signal_name);
+            double mean = sigi->mean();
+            double variance = sigi->variance();
             double sigma = sqrt(variance);
             
             results.emplace_back(sigi->name(), mean, sigma);
@@ -488,22 +497,27 @@ namespace Nh {
     CorrelationMatrix Ssta::getCorrelationMatrix() const {
         CorrelationMatrix matrix;
         
-        // Collect node names
-        auto si = signals_.begin();
-        for( ; si != signals_.end(); si++ ) {
-            const RandomVariable& sigi = si->second;
+        // Collect signal names and sort them for consistent output order
+        // (unordered_map doesn't guarantee order, so we sort by key)
+        std::vector<std::string> signal_names;
+        for (const auto& pair : signals_) {
+            signal_names.push_back(pair.first);
+        }
+        std::sort(signal_names.begin(), signal_names.end());
+        
+        // Collect node names in sorted order
+        for (const auto& signal_name : signal_names) {
+            const RandomVariable& sigi = signals_.at(signal_name);
             matrix.node_names.push_back(sigi->name());
         }
         
         // Calculate correlations
-        si = signals_.begin();
-        for( ; si != signals_.end(); si++ ) {
-            const RandomVariable& sigi = si->second;
+        for (const auto& signal_name_i : signal_names) {
+            const RandomVariable& sigi = signals_.at(signal_name_i);
             double vi = sigi->variance();
             
-            auto sj = signals_.begin();
-            for( ; sj != signals_.end(); sj++ ) {
-                const RandomVariable& sigj = sj->second;
+            for (const auto& signal_name_j : signal_names) {
+                const RandomVariable& sigj = signals_.at(signal_name_j);
                 double vj = sigj->variance();
                 double cov = covariance(sigi, sigj);
                 double corr = (vi > 0.0 && vj > 0.0) ? (cov / sqrt(vi * vj)) : 0.0;
