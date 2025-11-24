@@ -124,10 +124,6 @@ class Ssta {
 
     void node_error(const std::string& head, const std::string& signal_name) const;
 
-    void report_lat() const;
-    void report_correlation() const;
-    void print_line() const;
-
     ////
 
     // Use unordered_map for better performance (O(1) average vs O(log n) for map)
