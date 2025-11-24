@@ -12,11 +12,10 @@ Parser::Parser(const std::string& file, const char begin_comment, const char* ke
     , begin_comment_(begin_comment) {}
 
 std::istream& Parser::getLine() {
-    delete tokenizer_;
+    tokenizer_.reset();
     std::istream& r = std::getline(infile_, line_);  // not support Mac. "\r"
     line_number_++;
-    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory)
-    tokenizer_ = new Tokenizer(line_, drop_separator_, keep_separator_);
+    tokenizer_ = std::make_unique<Tokenizer>(line_, drop_separator_, keep_separator_);
     if ((begin() == end() || (*begin())[0] == begin_comment_) && !r.eof()) {
         return getLine();
     }

@@ -3,9 +3,11 @@
 
 #include <cstring>
 #include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <nhssta/exception.hpp>
 #include <nhssta/ssta.hpp>
+#include <sstream>
 #include <string>
 
 using namespace std;
@@ -84,18 +86,19 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
 
 // Helper function to get version string (moved from Ssta constructor)
 std::string get_version_string() {
-    time_t t = time(0);
-    char* s = nullptr;
-    char* p = nullptr;
-    p = s = asctime(localtime(&t));
-    while (*s != '\0') {
-        if (*s == '\n') {
-            *s = '\0';
-            break;
-        }
-        s++;
-    }
-    return std::string("nhssta 0.1.0 (") + p + ")";
+    auto now = std::time(nullptr);
+    std::tm timeinfo{};  // Initialize to zero
+#ifdef _WIN32
+    localtime_s(&timeinfo, &now);  // Windows thread-safe version
+#else
+    localtime_r(&now, &timeinfo);  // POSIX thread-safe version
+#endif
+    
+    std::ostringstream oss;
+    oss << "nhssta 0.1.0 (";
+    oss << std::put_time(&timeinfo, "%a %b %d %H:%M:%S %Y");
+    oss << ")";
+    return oss.str();
 }
 
 int main(int argc, char* argv[]) {

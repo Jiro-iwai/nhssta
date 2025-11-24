@@ -3,6 +3,7 @@
 
 #include "util_numerical.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <ctime>
@@ -145,11 +146,16 @@ double mean_max2_tab[] = {
 
 static double cut = 5.0;
 static double div = cut / 100.0;
+static constexpr int TAB_SIZE = 201;  // Array size: -5 to 5 with 0.05 step
 
 static void set_range(double a, int& lower, int& upper) {
     double len = (a + cut) / div;
     lower = int(floor(len));
     upper = int(ceil(len));
+    // Clamp to valid array bounds
+    lower = std::max(lower, 0);
+    upper = std::min(upper, TAB_SIZE - 1);
+    lower = std::min(lower, TAB_SIZE - 1);
 }
 
 double MeanMax(double a) {
