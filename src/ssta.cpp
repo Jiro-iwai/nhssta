@@ -176,7 +176,7 @@ void Ssta::read_bench_input(Parser& parser) {
     }
     inputs_.insert(signal_name);
 
-    Normal in(0.0, ::RandomVariable::minimum_variance);  //////
+    Normal in(0.0, ::RandomVariable::MINIMUM_VARIANCE);  //////
     in->set_name(signal_name);
     signals_[signal_name] = in;
 
@@ -293,7 +293,7 @@ void Ssta::connect_instances() {
 
 // treat ck of dff as input
 void Ssta::set_dff_out(const std::string& out_signal_name) {
-    Normal in(0.0, ::RandomVariable::minimum_variance);  //////
+    Normal in(0.0, ::RandomVariable::MINIMUM_VARIANCE);  //////
     auto gi = gates_.find("dff");
     Gate dff = gi->second;
 

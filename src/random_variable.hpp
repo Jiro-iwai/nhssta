@@ -11,7 +11,7 @@
 
 namespace RandomVariable {
 
-const double minimum_variance = 1.0e-6;
+const double MINIMUM_VARIANCE = 1.0e-6;
 
 // Backward compatibility: keep Exception as alias to Nh::RuntimeException
 // This will be removed in a later phase

@@ -10,22 +10,20 @@
 #include <sstream>
 #include <string>
 
-using namespace std;
-
 void usage(const char* first, const char* last) {
-    cerr << "usage: nhssta" << endl;
-    cerr << " -d, --dlib         specifies .dlib file" << endl;
-    cerr << " -b, --bench        specifies .bench file" << endl;
-    cerr << " -l, --lat          prints all LAT data" << endl;
-    cerr << " -c, --correlation  prints correlation matrix of LAT" << endl;
-    cerr << " -h, --help         gives this help" << endl;
+    std::cerr << "usage: nhssta" << std::endl;
+    std::cerr << " -d, --dlib         specifies .dlib file" << std::endl;
+    std::cerr << " -b, --bench        specifies .bench file" << std::endl;
+    std::cerr << " -l, --lat          prints all LAT data" << std::endl;
+    std::cerr << " -c, --correlation  prints correlation matrix of LAT" << std::endl;
+    std::cerr << " -h, --help         gives this help" << std::endl;
     throw Nh::RuntimeException("Invalid command-line arguments");
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
 void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
     for (int i = 1; i < argc; i++) {
-        string arg = argv[i];
+        std::string arg = argv[i];
 
         // Handle long options
         if (arg == "--help") {
@@ -36,13 +34,13 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
             ssta->set_correlation();
         } else if (arg == "--dlib") {
             if (i + 1 < argc) {
-                ssta->set_dlib(string(argv[++i]));
+                ssta->set_dlib(std::string(argv[++i]));
             } else {
                 usage(0, 0);
             }
         } else if (arg == "--bench") {
             if (i + 1 < argc) {
-                ssta->set_bench(string(argv[++i]));
+                ssta->set_bench(std::string(argv[++i]));
             } else {
                 usage(0, 0);
             }
@@ -61,14 +59,14 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
                     break;
                 case 'd':
                     if (i + 1 < argc) {
-                        ssta->set_dlib(string(argv[++i]));
+                        ssta->set_dlib(std::string(argv[++i]));
                     } else {
                         usage(0, 0);
                     }
                     break;
                 case 'b':
                     if (i + 1 < argc) {
-                        ssta->set_bench(string(argv[++i]));
+                        ssta->set_bench(std::string(argv[++i]));
                     } else {
                         usage(0, 0);
                     }
@@ -104,7 +102,7 @@ std::string get_version_string() {
 int main(int argc, char* argv[]) {
     try {
         // CLI layer: Output version information
-        cerr << get_version_string() << endl;
+        std::cerr << get_version_string() << std::endl;
 
         Nh::Ssta ssta;
         set_option(argc, argv, &ssta);
@@ -114,18 +112,18 @@ int main(int argc, char* argv[]) {
         ssta.report();
 
         // CLI layer: Output success message
-        cerr << "OK" << endl;
+        std::cerr << "OK" << std::endl;
 
     } catch (Nh::Exception& e) {
-        cerr << "error: " << e.what() << endl;
+        std::cerr << "error: " << e.what() << std::endl;
         return 1;
 
-    } catch (exception& e) {
-        cerr << "error: " << e.what() << endl;
+    } catch (std::exception& e) {
+        std::cerr << "error: " << e.what() << std::endl;
         return 2;
 
     } catch (...) {
-        cerr << "error: unknown error" << endl;
+        std::cerr << "error: unknown error" << std::endl;
         return 3;
     }
 

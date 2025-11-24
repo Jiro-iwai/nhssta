@@ -144,12 +144,12 @@ double mean_max2_tab[] = {
 
 /* ------------------------------- */
 
-static double cut = 5.0;
-static double div = cut / 100.0;
+static constexpr double kCut = 5.0;
+static constexpr double kDiv = kCut / 100.0;
 static constexpr int TAB_SIZE = 201;  // Array size: -5 to 5 with 0.05 step
 
 static void set_range(double a, int& lower, int& upper) {
-    double len = (a + cut) / div;
+    double len = (a + kCut) / kDiv;
     lower = int(floor(len));
     upper = int(ceil(len));
     // Clamp to valid array bounds
@@ -159,10 +159,10 @@ static void set_range(double a, int& lower, int& upper) {
 }
 
 double MeanMax(double a) {
-    if (a < -cut) {
+    if (a < -kCut) {
         return 0.0;
     }
-    if (cut < a) {
+    if (kCut < a) {
         return a;
     }
     int l = 0;
@@ -173,10 +173,10 @@ double MeanMax(double a) {
 }
 
 double MeanPhiMax(double a) {
-    if (a < -cut) {
+    if (a < -kCut) {
         return 1.0;
     }
-    if (cut < a) {
+    if (kCut < a) {
         return 0.0;
     }
     int l = 0;
@@ -187,10 +187,10 @@ double MeanPhiMax(double a) {
 }
 
 double MeanMax2(double a) {
-    if (a < -cut) {
+    if (a < -kCut) {
         return 1.0;
     }
-    if (cut < a) {
+    if (kCut < a) {
         return a * a;
     }
     int l = 0;

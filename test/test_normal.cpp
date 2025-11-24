@@ -62,6 +62,7 @@ TEST_F(NormalTest, VarianceCalculation) {
 
 // Test Normal with minimum variance
 TEST_F(NormalTest, MinimumVariance) {
-    Normal n(0.0, minimum_variance);
-    EXPECT_DOUBLE_EQ(n->variance(), minimum_variance);
+    using namespace RandomVariable;
+    Normal n(0.0, MINIMUM_VARIANCE);
+    EXPECT_DOUBLE_EQ(n->variance(), MINIMUM_VARIANCE);
 }
