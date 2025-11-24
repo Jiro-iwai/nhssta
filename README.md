@@ -52,7 +52,7 @@ $ make
 
 コンパイルが終了すると、ディレクトリ `src/` 以下に `nhssta` という実行ファイルが作成されます。
 
-- ユニットテストを実行する場合：
+- すべてのテスト（ユニットテスト + 統合テスト）を実行する場合：
 
 ```bash
 $ make test
@@ -61,11 +61,18 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 325 tests from 34 test suites.
-[  PASSED  ] 325 tests.
+[==========] Running 351 tests from 37 test suites.
+[  PASSED  ] 351 tests.
+==========================================
+Running integration tests...
+==========================================
+Total tests: 8
+Passed: 8
+Failed: 0
+✓ All tests passed!
 ```
 
-- 統合テスト（exampleディレクトリのテストスクリプト）を実行する場合：
+- 統合テストのみを実行する場合（後方互換性のため）：
 
 ```bash
 $ make check
@@ -211,7 +218,7 @@ make dev-check
 ./scripts/run-all-checks.sh
 ```
 
-**注意**: `make check`は統合テスト用の既存ターゲットです。開発チェックには`make dev-check`を使用してください。
+**注意**: `make test`はユニットテストと統合テストの両方を実行します。`make check`は統合テストのみを実行します（後方互換性のため）。開発チェックには`make dev-check`を使用してください。
 
 #### 個別のコマンド
 
