@@ -18,9 +18,6 @@ class Parser {
     typedef Tokenizer::iterator Token;
 
    public:
-    // Backward compatibility: keep exception as alias to Nh::ParseException
-    // This will be removed in a later phase
-    using exception = Nh::ParseException;
 
     Parser(const std::string& file, char begin_comment, const char* keep_separator,
            const char* drop_separator = " \t");

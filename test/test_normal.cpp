@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "../src/normal.hpp"
+#include <nhssta/exception.hpp>
 
 using namespace RandomVariable;
 
@@ -45,7 +46,7 @@ TEST_F(NormalTest, Clone) {
 
 // Test Normal with negative variance (should throw)
 TEST_F(NormalTest, NegativeVarianceThrows) {
-    EXPECT_THROW({ Normal n(10.0, -1.0); }, Exception);
+    EXPECT_THROW({ Normal n(10.0, -1.0); }, Nh::RuntimeException);
 }
 
 // Test Normal mean calculation

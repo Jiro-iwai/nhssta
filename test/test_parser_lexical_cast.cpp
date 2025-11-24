@@ -140,7 +140,7 @@ TEST_F(ParserLexicalCastTest, ParseInvalidInt) {
     parser.getLine();
 
     int val;
-    EXPECT_THROW(parser.getToken(val), Parser::exception);
+    EXPECT_THROW(parser.getToken(val), Nh::ParseException);
 
     deleteTestFile("test_invalid_int.txt");
 }
@@ -155,7 +155,7 @@ TEST_F(ParserLexicalCastTest, ParseInvalidDouble) {
     parser.getLine();
 
     double val;
-    EXPECT_THROW(parser.getToken(val), Parser::exception);
+    EXPECT_THROW(parser.getToken(val), Nh::ParseException);
 
     deleteTestFile("test_invalid_double.txt");
 }
