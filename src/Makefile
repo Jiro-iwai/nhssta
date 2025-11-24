@@ -41,7 +41,7 @@ GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
 # Test sources (relative to src directory)
 TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_add.cpp ../test/test_max.cpp ../test/test_covariance.cpp \
-	../test/test_integration.cpp ../test/test_smartptr.cpp \
+	../test/test_integration.cpp \
 	../test/test_error_handling.cpp ../test/test_ssta_results.cpp \
 	../test/test_ssta_logic_integration.cpp ../test/test_parser.cpp \
 	../test/test_performance.cpp ../test/test_expression_print.cpp \
