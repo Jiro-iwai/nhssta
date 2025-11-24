@@ -2,8 +2,9 @@
 // This test verifies that public API headers can be included from include/nhssta/
 
 #include <gtest/gtest.h>
-#include <nhssta/ssta.hpp>
+
 #include <nhssta/exception.hpp>
+#include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
 
 // Test that public API headers can be included with the new path
@@ -25,7 +26,7 @@ TEST(PublicApiHeadersTest, IncludeSstaResultsHeader) {
     EXPECT_EQ(result.node_name, "test_node");
     EXPECT_DOUBLE_EQ(result.mean, 10.0);
     EXPECT_DOUBLE_EQ(result.std_dev, 2.0);
-    
+
     Nh::CorrelationMatrix matrix;
     EXPECT_EQ(matrix.node_names.size(), 0);
     EXPECT_EQ(matrix.correlations.size(), 0);
@@ -37,4 +38,3 @@ TEST(PublicApiHeadersTest, SstaClassInstantiation) {
     // If this compiles and runs, the public API is accessible
     EXPECT_TRUE(true);
 }
-

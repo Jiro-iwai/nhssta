@@ -1,11 +1,13 @@
 #include <gtest/gtest.h>
-#include "../src/util_numerical.hpp"
+
 #include <cmath>
+
+#include "../src/util_numerical.hpp"
 
 using namespace RandomVariable;
 
 class UtilTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Setup code if needed
     }
@@ -40,11 +42,11 @@ TEST_F(UtilTest, MeanMaxInRange) {
     double result1 = MeanMax(-2.5);
     EXPECT_GE(result1, 0.0);
     EXPECT_LE(result1, 1.0);
-    
+
     double result2 = MeanMax(2.5);
     EXPECT_GE(result2, 0.0);
     EXPECT_LE(result2, 5.0);
-    
+
     double result3 = MeanMax(1.0);
     EXPECT_GE(result3, 0.0);
     EXPECT_LE(result3, 5.0);
@@ -75,11 +77,11 @@ TEST_F(UtilTest, MeanPhiMaxInRange) {
     double result1 = MeanPhiMax(-2.5);
     EXPECT_GE(result1, 0.0);
     EXPECT_LE(result1, 1.0);
-    
+
     double result2 = MeanPhiMax(2.5);
     EXPECT_GE(result2, 0.0);
     EXPECT_LE(result2, 1.0);
-    
+
     double result3 = MeanPhiMax(1.0);
     EXPECT_GE(result3, 0.0);
     EXPECT_LE(result3, 1.0);
@@ -111,11 +113,11 @@ TEST_F(UtilTest, MeanMax2InRange) {
     double result1 = MeanMax2(-2.5);
     EXPECT_GE(result1, 0.0);
     EXPECT_LE(result1, 10.0);
-    
+
     double result2 = MeanMax2(2.5);
     EXPECT_GE(result2, 0.0);
     EXPECT_LE(result2, 10.0);
-    
+
     double result3 = MeanMax2(1.0);
     EXPECT_GE(result3, 0.0);
     EXPECT_LE(result3, 10.0);
@@ -128,13 +130,13 @@ TEST_F(UtilTest, MeanMaxMonotonicity) {
     double a3 = 0.0;
     double a4 = 1.0;
     double a5 = 2.0;
-    
+
     double r1 = MeanMax(a1);
     double r2 = MeanMax(a2);
     double r3 = MeanMax(a3);
     double r4 = MeanMax(a4);
     double r5 = MeanMax(a5);
-    
+
     EXPECT_LE(r1, r2);
     EXPECT_LE(r2, r3);
     EXPECT_LE(r3, r4);
@@ -145,8 +147,7 @@ TEST_F(UtilTest, MeanMaxMonotonicity) {
 TEST_F(UtilTest, MeanMaxBoundaryValues) {
     double result_minus5 = MeanMax(-5.0);
     EXPECT_GE(result_minus5, 0.0);
-    
+
     double result_plus5 = MeanMax(5.0);
     EXPECT_LE(result_plus5, 5.0);
 }
-

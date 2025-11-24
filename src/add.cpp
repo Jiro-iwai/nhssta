@@ -1,8 +1,10 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
 
-#include <memory>
 #include "add.hpp"
+
+#include <memory>
+
 #include "covariance.hpp"
 
 namespace RandomVariable {
@@ -32,4 +34,4 @@ double OpADD::calc_variance() const {
 RandomVariable operator+(const RandomVariable& a, const RandomVariable& b) {
     return RandomVariable(std::make_shared<OpADD>(a, b));
 }
-}
+}  // namespace RandomVariable

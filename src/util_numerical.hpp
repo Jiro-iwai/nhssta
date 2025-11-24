@@ -8,11 +8,10 @@
 
 namespace RandomVariable {
 
-    double MeanMax(double a);
-    double MeanMax2(double a);
-    double MeanPhiMax(double a);
+double MeanMax(double a);
+double MeanMax2(double a);
+double MeanPhiMax(double a);
 
+}  // namespace RandomVariable
 
-}
-
-#endif // NH_UTIL_NUMERICAL__H
+#endif  // NH_UTIL_NUMERICAL__H

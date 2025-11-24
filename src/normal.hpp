@@ -5,39 +5,37 @@
 #define NORMAL__H
 
 #include <memory>
+
 #include "random_variable.hpp"
 
 namespace RandomVariable {
 
-    class Normal;
+class Normal;
 
-    // Normal Random Variable
-    class _Normal_ : public _RandomVariable_ {
-    public:
+// Normal Random Variable
+class _Normal_ : public _RandomVariable_ {
+   public:
+    _Normal_();
 
-		_Normal_();
+    _Normal_(double mean, double variance);
 
-		_Normal_(double mean, double variance);
+    ~_Normal_() override;
 
-		~_Normal_() override;
+    [[nodiscard]] Normal clone() const;
 
-		[[nodiscard]] Normal clone() const;
+   private:
+    [[nodiscard]] const RandomVariable& left() const;
+    [[nodiscard]] const RandomVariable& right() const;
+};
 
-    private:
+class Normal : public RandomVariable {
+   public:
+    Normal() = default;
+    Normal(double mean, double variance)
+        : RandomVariable(std::make_shared<_Normal_>(mean, variance)) {}
 
-		[[nodiscard]] const RandomVariable& left() const;
-		[[nodiscard]] const RandomVariable& right() const;
+    [[nodiscard]] Normal clone() const;
+};
+}  // namespace RandomVariable
 
-    };
-
-    class Normal : public RandomVariable {
-    public:
-		Normal() = default;
-		Normal( double mean, double variance ) :
-			RandomVariable(std::make_shared<_Normal_>(mean,variance)) {}
-
-		[[nodiscard]] Normal clone() const;
-    };
-}
-
-#endif // NORMAL__H
+#endif  // NORMAL__H

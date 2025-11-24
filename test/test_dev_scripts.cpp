@@ -3,16 +3,17 @@
 // Issue #54: 改善: テスト実行のプリセットスクリプト追加
 
 #include <gtest/gtest.h>
-#include <cstdlib>
-#include <string>
-#include <fstream>
-#include <vector>
+#include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <limits.h>
+
+#include <cstdlib>
+#include <fstream>
+#include <string>
+#include <vector>
 
 class DevScriptsTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Find scripts directory dynamically based on current working directory
         // Tests may run from src/ or test/ directory
@@ -21,13 +22,14 @@ protected:
         if (getcwd(cwd, sizeof(cwd)) != nullptr) {
             current_dir = cwd;
         }
-        
+
         // Try different possible paths relative to current directory
         std::vector<std::string> possible_paths;
         possible_paths.push_back("../scripts");  // From src/ directory
         possible_paths.push_back("scripts");     // From project root
-        possible_paths.push_back("../../scripts"); // From test/ directory (if tests run from there)
-        
+        possible_paths.push_back(
+            "../../scripts");  // From test/ directory (if tests run from there)
+
         // Also try absolute paths if we have current directory
         if (!current_dir.empty()) {
             possible_paths.push_back(current_dir + "/../scripts");
@@ -38,7 +40,7 @@ protected:
                 possible_paths.push_back(parent + "/scripts");
             }
         }
-        
+
         struct stat info;
         scripts_dir = "";  // Initialize to empty
         for (const auto& path : possible_paths) {
@@ -47,9 +49,10 @@ protected:
                 break;
             }
         }
-        
+
         if (scripts_dir.empty()) {
-            GTEST_SKIP() << "scripts directory not found (tried: ../scripts, scripts, ../../scripts)";
+            GTEST_SKIP()
+                << "scripts directory not found (tried: ../scripts, scripts, ../../scripts)";
         }
     }
 
@@ -118,10 +121,9 @@ TEST_F(DevScriptsTest, GenerateCoverageScriptIsExecutable) {
 // Test: Verify scripts directory structure
 TEST_F(DevScriptsTest, ScriptsDirectoryStructure) {
     EXPECT_TRUE(file_exists(scripts_dir)) << "scripts directory should exist";
-    
+
     // Check for expected scripts
     EXPECT_TRUE(file_exists(scripts_dir + "/dev-setup.sh"));
     EXPECT_TRUE(file_exists(scripts_dir + "/run-all-checks.sh"));
     EXPECT_TRUE(file_exists(scripts_dir + "/generate_coverage.sh"));
 }
-

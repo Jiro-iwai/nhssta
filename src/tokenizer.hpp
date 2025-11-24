@@ -5,17 +5,20 @@
 #ifndef TOKENIZER__H
 #define TOKENIZER__H
 
+#include <cstring>
 #include <string>
 #include <vector>
-#include <cstring>
 
 class Tokenizer {
-public:
+   public:
     class iterator {
-    public:
-        iterator() : tokens_(nullptr), index_(0) {}
+       public:
+        iterator()
+            : tokens_(nullptr)
+            , index_(0) {}
         iterator(const std::vector<std::string>* tokens, size_t index)
-            : tokens_(tokens), index_(index) {}
+            : tokens_(tokens)
+            , index_(index) {}
 
         const std::string& operator*() const {
             return (*tokens_)[index_];
@@ -44,12 +47,13 @@ public:
             return !(*this == other);
         }
 
-    private:
+       private:
         const std::vector<std::string>* tokens_;
         size_t index_;
     };
 
-    Tokenizer(const std::string& str, const std::string& drop_separator, const std::string& keep_separator) {
+    Tokenizer(const std::string& str, const std::string& drop_separator,
+              const std::string& keep_separator) {
         tokenize(str, drop_separator, keep_separator);
     }
 
@@ -61,8 +65,9 @@ public:
         return {&tokens_, tokens_.size()};
     }
 
-private:
-    void tokenize(const std::string& str, const std::string& drop_separator, const std::string& keep_separator) {
+   private:
+    void tokenize(const std::string& str, const std::string& drop_separator,
+                  const std::string& keep_separator) {
         tokens_.clear();
         if (str.empty()) {
             return;
@@ -111,5 +116,4 @@ private:
     std::vector<std::string> tokens_;
 };
 
-#endif // TOKENIZER__H
-
+#endif  // TOKENIZER__H

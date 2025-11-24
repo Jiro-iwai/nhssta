@@ -1,14 +1,16 @@
 #include <gtest/gtest.h>
+
+#include <cmath>
+#include <nhssta/exception.hpp>
+
 #include "../src/max.hpp"
 #include "../src/normal.hpp"
-#include <nhssta/exception.hpp>
-#include <cmath>
 
 using RandomVar = RandomVariable::RandomVariable;
 using Normal = RandomVariable::Normal;
 
 class MaxTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Setup code if needed
     }
@@ -22,16 +24,16 @@ protected:
 TEST_F(MaxTest, MaxTwoNormals) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
-    
+
     RandomVar max = MAX(a, b);
-    
+
     // MAX(a, b) = a + MAX0(b - a)
     // Since b - a = -5.0 (negative), MAX0 is approximately 0
     // So mean should be close to a's mean (10.0), but may be slightly higher
     double mean = max->mean();
-    EXPECT_GE(mean, 9.5); // Should be >= a's mean (with some tolerance)
-    EXPECT_LE(mean, 12.0); // Should be reasonable upper bound
-    
+    EXPECT_GE(mean, 9.5);   // Should be >= a's mean (with some tolerance)
+    EXPECT_LE(mean, 12.0);  // Should be reasonable upper bound
+
     // Variance should be positive
     double variance = max->variance();
     EXPECT_GT(variance, 0.0);
@@ -41,9 +43,9 @@ TEST_F(MaxTest, MaxTwoNormals) {
 TEST_F(MaxTest, MaxWhenFirstLarger) {
     Normal a(20.0, 4.0);
     Normal b(5.0, 1.0);
-    
+
     RandomVar max = MAX(a, b);
-    
+
     // Mean should be close to 20.0 (since a is much larger)
     double mean = max->mean();
     EXPECT_GT(mean, 15.0);
@@ -54,9 +56,9 @@ TEST_F(MaxTest, MaxWhenFirstLarger) {
 TEST_F(MaxTest, MaxWhenSecondLarger) {
     Normal a(5.0, 1.0);
     Normal b(20.0, 4.0);
-    
+
     RandomVar max = MAX(a, b);
-    
+
     // Mean should be close to 20.0 (since b is much larger)
     double mean = max->mean();
     EXPECT_GT(mean, 15.0);
@@ -67,13 +69,13 @@ TEST_F(MaxTest, MaxWhenSecondLarger) {
 TEST_F(MaxTest, MaxEqualMeans) {
     Normal a(10.0, 4.0);
     Normal b(10.0, 4.0);
-    
+
     RandomVar max = MAX(a, b);
-    
+
     // Mean should be >= 10.0
     double mean = max->mean();
     EXPECT_GE(mean, 10.0);
-    
+
     // Variance should be positive
     double variance = max->variance();
     EXPECT_GT(variance, 0.0);
@@ -82,13 +84,13 @@ TEST_F(MaxTest, MaxEqualMeans) {
 // Test MAX0 (max with zero)
 TEST_F(MaxTest, Max0Test) {
     Normal a(5.0, 4.0);
-    
+
     RandomVar max0 = MAX0(a);
-    
+
     // Mean should be >= 5.0 (since we're taking max with 0)
     double mean = max0->mean();
     EXPECT_GE(mean, 5.0);
-    
+
     // Variance should be positive
     double variance = max0->variance();
     EXPECT_GT(variance, 0.0);
@@ -97,9 +99,9 @@ TEST_F(MaxTest, Max0Test) {
 // Test MAX0 with negative mean
 TEST_F(MaxTest, Max0NegativeMean) {
     Normal a(-5.0, 4.0);
-    
+
     RandomVar max0 = MAX0(a);
-    
+
     // Mean should be >= 0.0 (since we're taking max with 0)
     double mean = max0->mean();
     EXPECT_GE(mean, 0.0);
@@ -109,12 +111,14 @@ TEST_F(MaxTest, Max0NegativeMean) {
 // Test MAX0 with zero variance (should throw exception instead of assert)
 TEST_F(MaxTest, Max0WithZeroVarianceThrowsException) {
     Normal a(5.0, 0.0);
-    
+
     // Should throw exception instead of asserting
-    EXPECT_THROW({
-        RandomVar max0 = MAX0(a);
-        (void)max0->mean(); // Trigger calculation
-    }, Nh::RuntimeException);
+    EXPECT_THROW(
+        {
+            RandomVar max0 = MAX0(a);
+            (void)max0->mean();  // Trigger calculation
+        },
+        Nh::RuntimeException);
 }
 
 // Test MAX0 with negative variance (should throw exception instead of assert)
@@ -123,4 +127,3 @@ TEST_F(MaxTest, Max0WithNegativeVarianceThrowsException) {
     // but if somehow we get a negative variance, MAX0 should handle it gracefully
     // This test documents the desired behavior
 }
-

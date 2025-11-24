@@ -1,16 +1,18 @@
 #include <gtest/gtest.h>
-#include "../src/gate.hpp"
-#include "../src/normal.hpp"
-#include "../src/add.hpp"
-#include "../src/max.hpp"
+
 #include <memory>
+
+#include "../src/add.hpp"
+#include "../src/gate.hpp"
+#include "../src/max.hpp"
+#include "../src/normal.hpp"
 
 using RandomVar = RandomVariable::RandomVariable;
 using Normal = RandomVariable::Normal;
 using namespace Nh;
 
 class GateTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Common setup code
     }
@@ -39,7 +41,7 @@ TEST_F(GateTest, SetAndGetTypeName) {
     Gate gate;
     gate->set_type_name("or2");
     EXPECT_EQ(gate->type_name(), "or2");
-    
+
     gate->set_type_name("nand2");
     EXPECT_EQ(gate->type_name(), "nand2");
 }
@@ -48,10 +50,10 @@ TEST_F(GateTest, SetAndGetTypeName) {
 TEST_F(GateTest, SetDelay) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay1(10.0, 2.0);
     gate->set_delay("a", "y", delay1);
-    
+
     const Normal& retrieved = gate->delay("a", "y");
     EXPECT_DOUBLE_EQ(retrieved->mean(), 10.0);
     EXPECT_DOUBLE_EQ(retrieved->variance(), 2.0);
@@ -61,16 +63,16 @@ TEST_F(GateTest, SetDelay) {
 TEST_F(GateTest, SetMultipleDelays) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay1(10.0, 2.0);
     Normal delay2(15.0, 3.0);
-    
+
     gate->set_delay("a", "y", delay1);
     gate->set_delay("b", "y", delay2);
-    
+
     const Normal& d1 = gate->delay("a", "y");
     const Normal& d2 = gate->delay("b", "y");
-    
+
     EXPECT_DOUBLE_EQ(d1->mean(), 10.0);
     EXPECT_DOUBLE_EQ(d2->mean(), 15.0);
 }
@@ -79,10 +81,10 @@ TEST_F(GateTest, SetMultipleDelays) {
 TEST_F(GateTest, GetDelayWithDefaultOutput) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay1(10.0, 2.0);
     gate->set_delay("a", "y", delay1);
-    
+
     const Normal& retrieved = gate->delay("a");
     EXPECT_DOUBLE_EQ(retrieved->mean(), 10.0);
 }
@@ -91,7 +93,7 @@ TEST_F(GateTest, GetDelayWithDefaultOutput) {
 TEST_F(GateTest, ExceptionWhenDelayNotSet) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     EXPECT_THROW((void)gate->delay("a", "y"), Nh::RuntimeException);
 }
 
@@ -99,7 +101,7 @@ TEST_F(GateTest, ExceptionWhenDelayNotSet) {
 TEST_F(GateTest, CreateInstance) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Instance inst = gate.create_instance();
     EXPECT_TRUE(inst.get() != nullptr);
     EXPECT_FALSE(inst->name().empty());
@@ -110,11 +112,11 @@ TEST_F(GateTest, CreateInstance) {
 TEST_F(GateTest, CreateMultipleInstances) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Instance inst1 = gate.create_instance();
     Instance inst2 = gate.create_instance();
     Instance inst3 = gate.create_instance();
-    
+
     EXPECT_NE(inst1->name(), inst2->name());
     EXPECT_NE(inst2->name(), inst3->name());
     EXPECT_NE(inst1->name(), inst3->name());
@@ -124,7 +126,7 @@ TEST_F(GateTest, CreateMultipleInstances) {
 TEST_F(GateTest, InstanceSetAndGetName) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Instance inst = gate.create_instance();
     inst->set_name("inst1");
     EXPECT_EQ(inst->name(), "inst1");
@@ -134,15 +136,15 @@ TEST_F(GateTest, InstanceSetAndGetName) {
 TEST_F(GateTest, InstanceSetInput) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay(10.0, 2.0);
     gate->set_delay("a", "y", delay);
-    
+
     Instance inst = gate.create_instance();
-    
+
     Normal input_signal(5.0, 1.0);
     inst->set_input("a", input_signal);
-    
+
     // Should not throw
     EXPECT_NO_THROW(inst->set_input("a", input_signal));
 }
@@ -151,12 +153,12 @@ TEST_F(GateTest, InstanceSetInput) {
 TEST_F(GateTest, InstanceSetInputInvalidPin) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay(10.0, 2.0);
     gate->set_delay("a", "y", delay);
-    
+
     Instance inst = gate.create_instance();
-    
+
     Normal input_signal(5.0, 1.0);
     // Should throw when trying to set input for non-existent delay
     EXPECT_THROW(inst->set_input("b", input_signal), Nh::RuntimeException);
@@ -166,49 +168,49 @@ TEST_F(GateTest, InstanceSetInputInvalidPin) {
 TEST_F(GateTest, InstanceOutputCalculation) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay(10.0, 2.0);
     gate->set_delay("a", "y", delay);
-    
+
     Instance inst = gate.create_instance();
-    
+
     Normal input_signal(5.0, 1.0);
     inst->set_input("a", input_signal);
-    
+
     RandomVar output = inst->output("y");
-    EXPECT_DOUBLE_EQ(output->mean(), 15.0); // 5.0 + 10.0
+    EXPECT_DOUBLE_EQ(output->mean(), 15.0);  // 5.0 + 10.0
 }
 
 // Test: Instance output with multiple inputs
 TEST_F(GateTest, InstanceOutputMultipleInputs) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay_a(10.0, 2.0);
     Normal delay_b(15.0, 3.0);
     gate->set_delay("a", "y", delay_a);
     gate->set_delay("b", "y", delay_b);
-    
+
     Instance inst = gate.create_instance();
-    
+
     Normal input_a(5.0, 1.0);
     Normal input_b(8.0, 1.5);
     inst->set_input("a", input_a);
     inst->set_input("b", input_b);
-    
+
     RandomVar output = inst->output("y");
     // Output should be MAX of (5.0+10.0) and (8.0+15.0) = MAX(15.0, 23.0) = 23.0
     EXPECT_GE(output->mean(), 15.0);
-    EXPECT_LE(output->mean(), 25.0); // Allow some variance
+    EXPECT_LE(output->mean(), 25.0);  // Allow some variance
 }
 
 // Test: Instance output exception when no delay set
 TEST_F(GateTest, InstanceOutputExceptionNoDelay) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Instance inst = gate.create_instance();
-    
+
     EXPECT_THROW(inst->output("y"), Nh::RuntimeException);
 }
 
@@ -216,18 +218,18 @@ TEST_F(GateTest, InstanceOutputExceptionNoDelay) {
 TEST_F(GateTest, InstanceOutputCaching) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay(10.0, 2.0);
     gate->set_delay("a", "y", delay);
-    
+
     Instance inst = gate.create_instance();
-    
+
     Normal input_signal(5.0, 1.0);
     inst->set_input("a", input_signal);
-    
+
     RandomVar output1 = inst->output("y");
     RandomVar output2 = inst->output("y");
-    
+
     // Should return the same cached value
     EXPECT_DOUBLE_EQ(output1->mean(), output2->mean());
 }
@@ -236,13 +238,13 @@ TEST_F(GateTest, InstanceOutputCaching) {
 TEST_F(GateTest, GetDelaysMap) {
     Gate gate;
     gate->set_type_name("test_gate");
-    
+
     Normal delay1(10.0, 2.0);
     Normal delay2(15.0, 3.0);
-    
+
     gate->set_delay("a", "y", delay1);
     gate->set_delay("b", "y", delay2);
-    
+
     const _Gate_::Delays& delays = gate->delays();
     EXPECT_EQ(delays.size(), 2);
 }
@@ -318,4 +320,3 @@ TEST_F(GateTest, InstancesShareGateStateAcrossCopies) {
     EXPECT_DOUBLE_EQ(inst1->output("y")->mean(), inst2->output("y")->mean());
     EXPECT_EQ(gate->type_name(), "alias_gate");
 }
-

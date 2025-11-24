@@ -3,19 +3,21 @@
 // Phase 2: I/O and logic separation
 
 #include <gtest/gtest.h>
+
+#include <algorithm>
+#include <cmath>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
-#include "random_variable.hpp"
+
 #include "normal.hpp"
-#include <cmath>
-#include <algorithm>
+#include "random_variable.hpp"
 
 using namespace Nh;
 using RandomVar = ::RandomVariable::RandomVariable;
 using Normal = ::RandomVariable::Normal;
 
 class SstaResultsTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         ssta_ = new Ssta();
     }
@@ -49,7 +51,7 @@ TEST(CorrelationMatrixTest, GetCorrelationSameNode) {
     CorrelationMatrix matrix;
     matrix.node_names.push_back("node1");
     matrix.correlations[std::make_pair("node1", "node1")] = 1.0;
-    
+
     EXPECT_DOUBLE_EQ(matrix.getCorrelation("node1", "node1"), 1.0);
 }
 
@@ -58,7 +60,7 @@ TEST(CorrelationMatrixTest, GetCorrelationDifferentNodes) {
     matrix.node_names.push_back("node1");
     matrix.node_names.push_back("node2");
     matrix.correlations[std::make_pair("node1", "node2")] = 0.5;
-    
+
     EXPECT_DOUBLE_EQ(matrix.getCorrelation("node1", "node2"), 0.5);
     EXPECT_DOUBLE_EQ(matrix.getCorrelation("node2", "node1"), 0.5);
 }
@@ -67,10 +69,9 @@ TEST(CorrelationMatrixTest, GetCorrelationNotFound) {
     CorrelationMatrix matrix;
     matrix.node_names.push_back("node1");
     matrix.node_names.push_back("node2");
-    
+
     EXPECT_DOUBLE_EQ(matrix.getCorrelation("node1", "node3"), 0.0);
 }
 
 // Integration test: Test that getLatResults and report_lat produce consistent results
 // This will be tested via integration tests with actual data files
-

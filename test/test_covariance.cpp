@@ -1,19 +1,21 @@
 #include <gtest/gtest.h>
-#include "../src/covariance.hpp"
-#include "../src/normal.hpp"
-#include "../src/add.hpp"
-#include "../src/max.hpp"
-#include <nhssta/exception.hpp>
+
 #include <cmath>
+#include <nhssta/exception.hpp>
+
+#include "../src/add.hpp"
+#include "../src/covariance.hpp"
+#include "../src/max.hpp"
+#include "../src/normal.hpp"
 
 using RandomVar = RandomVariable::RandomVariable;
 using Normal = RandomVariable::Normal;
 
 class CovarianceTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         // Clear covariance matrix before each test
-        // Note: CovarianceMatrix doesn't have clear() method, 
+        // Note: CovarianceMatrix doesn't have clear() method,
         // so we rely on test isolation
     }
 
@@ -25,9 +27,9 @@ protected:
 // Test covariance of same Normal variable
 TEST_F(CovarianceTest, CovarianceSameVariable) {
     Normal a(10.0, 4.0);
-    
+
     double cov = covariance(a, a);
-    
+
     // Covariance of variable with itself should equal variance
     EXPECT_DOUBLE_EQ(cov, 4.0);
 }
@@ -36,9 +38,9 @@ TEST_F(CovarianceTest, CovarianceSameVariable) {
 TEST_F(CovarianceTest, CovarianceIndependentVariables) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
-    
+
     double cov = covariance(a, b);
-    
+
     // Independent variables should have zero covariance
     EXPECT_DOUBLE_EQ(cov, 0.0);
 }
@@ -47,9 +49,9 @@ TEST_F(CovarianceTest, CovarianceIndependentVariables) {
 TEST_F(CovarianceTest, CovarianceDifferentIndependent) {
     Normal a(20.0, 9.0);
     Normal b(15.0, 16.0);
-    
+
     double cov = covariance(a, b);
-    
+
     EXPECT_DOUBLE_EQ(cov, 0.0);
 }
 
@@ -57,13 +59,13 @@ TEST_F(CovarianceTest, CovarianceDifferentIndependent) {
 TEST_F(CovarianceTest, CovarianceWithAddition) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
-    
+
     RandomVar sum = a + b;
-    
+
     // Covariance of a with (a+b) should be variance of a
     double cov_a_sum = covariance(a, sum);
     EXPECT_DOUBLE_EQ(cov_a_sum, 4.0);
-    
+
     // Covariance of b with (a+b) should be variance of b
     double cov_b_sum = covariance(b, sum);
     EXPECT_DOUBLE_EQ(cov_b_sum, 1.0);
@@ -73,15 +75,15 @@ TEST_F(CovarianceTest, CovarianceWithAddition) {
 TEST_F(CovarianceTest, CovarianceMatrixCaching) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
-    
+
     RandomVar sum = a + b;
-    
+
     // First call
     double cov1 = covariance(a, sum);
-    
+
     // Second call should use cached value
     double cov2 = covariance(a, sum);
-    
+
     EXPECT_DOUBLE_EQ(cov1, cov2);
 }
 
@@ -89,12 +91,12 @@ TEST_F(CovarianceTest, CovarianceMatrixCaching) {
 TEST_F(CovarianceTest, CovarianceSymmetry) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
-    
+
     RandomVar sum = a + b;
-    
+
     double cov_ab = covariance(a, sum);
     double cov_ba = covariance(sum, a);
-    
+
     EXPECT_DOUBLE_EQ(cov_ab, cov_ba);
 }
 
@@ -103,7 +105,7 @@ TEST_F(CovarianceTest, CovarianceSymmetry) {
 TEST_F(CovarianceTest, CovarianceWithZeroVarianceThrowsException) {
     Normal a(5.0, 0.0);
     Normal b(10.0, 4.0);
-    
+
     // Should throw exception instead of asserting when variance is zero
     // This test documents the desired behavior
     // Note: Currently this may not trigger the assert, but we want to ensure
@@ -118,12 +120,14 @@ TEST_F(CovarianceTest, CovarianceWithZeroVarianceThrowsException) {
 TEST_F(CovarianceTest, CovarianceMax0WithZeroVarianceThrowsException) {
     Normal a(5.0, 0.0);
     RandomVar max0 = MAX0(a);
-    
+
     // Should throw exception instead of asserting when variance is zero
-    EXPECT_THROW({
-        double cov = covariance(a, max0);
-        (void)cov;
-    }, Nh::RuntimeException);
+    EXPECT_THROW(
+        {
+            double cov = covariance(a, max0);
+            (void)cov;
+        },
+        Nh::RuntimeException);
 }
 
 // Test covariance with non-MAX0 RandomVariable (should throw exception instead of assert)
@@ -131,7 +135,7 @@ TEST_F(CovarianceTest, CovarianceWithNonMax0ThrowsException) {
     Normal a(5.0, 4.0);
     Normal b(10.0, 4.0);
     RandomVar sum = a + b;
-    
+
     // When computing covariance with MAX0-specific logic but variable is not MAX0,
     // should throw exception instead of asserting
     // This test documents the desired behavior
@@ -141,4 +145,3 @@ TEST_F(CovarianceTest, CovarianceWithNonMax0ThrowsException) {
         (void)cov;
     });
 }
-

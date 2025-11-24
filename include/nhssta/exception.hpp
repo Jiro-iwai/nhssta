@@ -7,56 +7,58 @@
 #ifndef NH_EXCEPTION__H
 #define NH_EXCEPTION__H
 
-#include <string>
 #include <stdexcept>
+#include <string>
 
 namespace Nh {
 
-    // Base exception class for all nhssta exceptions
-    class Exception : public std::exception {
-    public:
-        Exception(const std::string& message) : message_(message) {}
-        Exception(const std::string& context, const std::string& message) 
-            : message_(context + ": " + message) {}
-        
-        ~Exception() noexcept override = default;
-        
-        [[nodiscard]] const char* what() const noexcept override {
-            return message_.c_str();
-        }
-        
-        [[nodiscard]] const std::string& message() const { return message_; }
+// Base exception class for all nhssta exceptions
+class Exception : public std::exception {
+   public:
+    Exception(const std::string& message)
+        : message_(message) {}
+    Exception(const std::string& context, const std::string& message)
+        : message_(context + ": " + message) {}
 
-    protected:
-        std::string message_;
-    };
+    ~Exception() noexcept override = default;
 
-    // Exception categories for better error handling
-    class FileException : public Exception {
-    public:
-        FileException(const std::string& filename, const std::string& message)
-            : Exception("File error", filename + ": " + message) {}
-    };
+    [[nodiscard]] const char* what() const noexcept override {
+        return message_.c_str();
+    }
 
-    class ParseException : public Exception {
-    public:
-        ParseException(const std::string& filename, int line, const std::string& message)
-            : Exception("Parse error", filename + ":" + std::to_string(line) + ": " + message) {}
-    };
+    [[nodiscard]] const std::string& message() const {
+        return message_;
+    }
 
-    class ConfigurationException : public Exception {
-    public:
-        ConfigurationException(const std::string& message)
-            : Exception("Configuration error", message) {}
-    };
+   protected:
+    std::string message_;
+};
 
-    class RuntimeException : public Exception {
-    public:
-        RuntimeException(const std::string& message)
-            : Exception("Runtime error", message) {}
-    };
+// Exception categories for better error handling
+class FileException : public Exception {
+   public:
+    FileException(const std::string& filename, const std::string& message)
+        : Exception("File error", filename + ": " + message) {}
+};
 
-}
+class ParseException : public Exception {
+   public:
+    ParseException(const std::string& filename, int line, const std::string& message)
+        : Exception("Parse error", filename + ":" + std::to_string(line) + ": " + message) {}
+};
 
-#endif // NH_EXCEPTION__H
+class ConfigurationException : public Exception {
+   public:
+    ConfigurationException(const std::string& message)
+        : Exception("Configuration error", message) {}
+};
 
+class RuntimeException : public Exception {
+   public:
+    RuntimeException(const std::string& message)
+        : Exception("Runtime error", message) {}
+};
+
+}  // namespace Nh
+
+#endif  // NH_EXCEPTION__H

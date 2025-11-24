@@ -12,23 +12,25 @@
 // 4. バグ修正前はテストが失敗し、修正後はパスすることを確認
 
 #include <gtest/gtest.h>
-#include <nhssta/ssta.hpp>
-#include <nhssta/exception.hpp>
-#include "../src/parser.hpp"
-#include "../src/expression.hpp"
-#include "../src/random_variable.hpp"
-#include "../src/gate.hpp"
-#include <fstream>
-#include <sstream>
-#include <cstdio>
 #include <sys/stat.h>
+
+#include <cstdio>
+#include <fstream>
+#include <nhssta/exception.hpp>
+#include <nhssta/ssta.hpp>
+#include <sstream>
+
+#include "../src/expression.hpp"
+#include "../src/gate.hpp"
+#include "../src/parser.hpp"
+#include "../src/random_variable.hpp"
 
 using namespace Nh;
 using RandomVar = ::RandomVariable::RandomVariable;
 using Normal = ::RandomVariable::Normal;
 
 class RegressionTest : public ::testing::Test {
-protected:
+   protected:
     void SetUp() override {
         test_dir = "../test/test_data";
         struct stat info;
@@ -71,10 +73,10 @@ protected:
 //     // Issue: #<番号>
 //     // 問題: <何が問題だったか>
 //     // 修正: <どのように修正したか>
-//     
+//
 //     // バグを再現する最小限のテストケース
 //     // ...
-//     
+//
 //     // 期待される動作の検証
 //     // ...
 // }
@@ -91,12 +93,12 @@ protected:
 TEST_F(RegressionTest, Regression_Example_BasicTest) {
     // このテストは、回帰テストフレームワークが正しく動作することを確認します
     // 実際のバグ修正時は、このサンプルを参考にしてテストを追加してください
-    
+
     // 基本的な動作確認の例
     Ssta ssta;
     EXPECT_NO_THROW(ssta.set_lat());
     EXPECT_NO_THROW(ssta.set_correlation());
-    
+
     // このテストは常にパスします（フレームワークの動作確認用）
     EXPECT_TRUE(true);
 }
@@ -112,4 +114,3 @@ TEST_F(RegressionTest, Regression_Example_BasicTest) {
 // TEST_F(RegressionTest, Regression_123_MemoryLeakInGateCreation) {
 //     // バグの説明とテストケース
 // }
-

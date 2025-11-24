@@ -6,16 +6,17 @@
 
 #include <cassert>
 #include <map>
-#include <set>
 #include <memory>
-#include <type_traits>
 #include <nhssta/exception.hpp>
+#include <set>
+#include <type_traits>
 
 ////////////////////
 
 // Backward compatibility: keep ExpressionException as alias to Nh::RuntimeException
 // This will be removed in a later phase
-// Note: ExpressionException originally had assert(0), but we remove it for unified exception handling
+// Note: ExpressionException originally had assert(0), but we remove it for unified exception
+// handling
 using ExpressionException = Nh::RuntimeException;
 
 class Expression_;
@@ -33,39 +34,57 @@ class Expression_;
 // - Move is cheap (transfers shared_ptr ownership)
 // - Use const reference for read-only access when ownership is not needed
 class ExpressionHandle {
-public:
+   public:
     using element_type = Expression_;
 
     ExpressionHandle() = default;
-    ExpressionHandle(std::nullptr_t) : body_(nullptr) {}
-    
+    ExpressionHandle(std::nullptr_t)
+        : body_(nullptr) {}
+
     // Takes ownership of the raw pointer (creates new shared_ptr)
     explicit ExpressionHandle(Expression_* body)
         : body_(body != nullptr ? std::shared_ptr<Expression_>(body) : nullptr) {}
-    
+
     // Takes ownership via move (transfers shared_ptr ownership)
     explicit ExpressionHandle(std::shared_ptr<Expression_> body)
         : body_(std::move(body)) {}
 
     // Takes ownership via copy (shares shared_ptr ownership)
-    template <class Derived,
-              class = std::enable_if_t<std::is_base_of_v<Expression_, Derived>>>
+    template <class Derived, class = std::enable_if_t<std::is_base_of_v<Expression_, Derived>>>
     explicit ExpressionHandle(const std::shared_ptr<Derived>& body)
         : body_(std::static_pointer_cast<Expression_>(body)) {}
 
     // Non-owning access: returns raw pointer (no ownership transfer)
-    Expression_* operator->() const { return body_.get(); }
-    Expression_& operator*() const { return *body_; }
-    [[nodiscard]] Expression_* get() const { return body_.get(); }
-    
-    // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<Expression_> shared() const { return body_; }
-    explicit operator bool() const { return static_cast<bool>(body_); }
+    Expression_* operator->() const {
+        return body_.get();
+    }
+    Expression_& operator*() const {
+        return *body_;
+    }
+    [[nodiscard]] Expression_* get() const {
+        return body_.get();
+    }
 
-    bool operator==(const ExpressionHandle& rhs) const { return body_.get() == rhs.body_.get(); }
-    bool operator!=(const ExpressionHandle& rhs) const { return !(*this == rhs); }
-    bool operator<(const ExpressionHandle& rhs) const { return body_.get() < rhs.body_.get(); }
-    bool operator>(const ExpressionHandle& rhs) const { return body_.get() > rhs.body_.get(); }
+    // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
+    [[nodiscard]] std::shared_ptr<Expression_> shared() const {
+        return body_;
+    }
+    explicit operator bool() const {
+        return static_cast<bool>(body_);
+    }
+
+    bool operator==(const ExpressionHandle& rhs) const {
+        return body_.get() == rhs.body_.get();
+    }
+    bool operator!=(const ExpressionHandle& rhs) const {
+        return !(*this == rhs);
+    }
+    bool operator<(const ExpressionHandle& rhs) const {
+        return body_.get() < rhs.body_.get();
+    }
+    bool operator>(const ExpressionHandle& rhs) const {
+        return body_.get() > rhs.body_.get();
+    }
 
     template <class U>
     std::shared_ptr<U> dynamic_pointer_cast() const {
@@ -76,7 +95,7 @@ public:
         return ptr;
     }
 
-private:
+   private:
     // Owned shared_ptr: this Handle owns the underlying object
     // Copying the Handle shares this ownership (lightweight copy)
     std::shared_ptr<Expression_> body_;
@@ -90,37 +109,36 @@ private:
 using Expression = ExpressionHandle;
 
 class Expression_ : public std::enable_shared_from_this<Expression_> {
-public:
-
+   public:
     friend class Variable;
 
-    friend Expression operator + (const Expression& a, const Expression& b);
-    friend Expression operator + (double a, const Expression& b);
-    friend Expression operator + (const Expression& a, double b);
-    friend Expression operator + (const Expression& a);
+    friend Expression operator+(const Expression& a, const Expression& b);
+    friend Expression operator+(double a, const Expression& b);
+    friend Expression operator+(const Expression& a, double b);
+    friend Expression operator+(const Expression& a);
 
-    friend Expression operator - (const Expression& a, const Expression& b);
-    friend Expression operator - (double a, const Expression& b);
-    friend Expression operator - (const Expression& a, double b);
-    friend Expression operator - (const Expression& a);
+    friend Expression operator-(const Expression& a, const Expression& b);
+    friend Expression operator-(double a, const Expression& b);
+    friend Expression operator-(const Expression& a, double b);
+    friend Expression operator-(const Expression& a);
 
-    friend Expression operator * (const Expression& a, const Expression& b);
-    friend Expression operator * (double a, const Expression& b);
-    friend Expression operator * (const Expression& a, double b);
+    friend Expression operator*(const Expression& a, const Expression& b);
+    friend Expression operator*(double a, const Expression& b);
+    friend Expression operator*(const Expression& a, double b);
 
-    friend Expression operator / (const Expression& a, const Expression& b);
-    friend Expression operator / (const Expression& a, double b);
-    friend Expression operator / (double a, const Expression& b);
+    friend Expression operator/(const Expression& a, const Expression& b);
+    friend Expression operator/(const Expression& a, double b);
+    friend Expression operator/(double a, const Expression& b);
 
-    friend Expression operator ^ (const Expression& a, const Expression& b);
-    friend Expression operator ^ (const Expression& a, double b);
-    friend Expression operator ^ (double a, const Expression& b);
+    friend Expression operator^(const Expression& a, const Expression& b);
+    friend Expression operator^(const Expression& a, double b);
+    friend Expression operator^(double a, const Expression& b);
 
-    friend Expression exp (const Expression& a);
-    friend Expression log (const Expression& a);
+    friend Expression exp(const Expression& a);
+    friend Expression log(const Expression& a);
 
-    // assignment to (double) 
-    friend double& operator << (double& a, const Expression& b);
+    // assignment to (double)
+    friend double& operator<<(double& a, const Expression& b);
 
     // print all expression infomation
     friend void print_all();
@@ -128,17 +146,7 @@ public:
     // differential
     virtual Expression d(const Expression& y);
 
-    enum Op {
-		CONST = 0,
-		PARAM, 
-		PLUS,
-		MINUS,
-		MUL,
-		DIV,
-		POWER,
-		EXP,
-		LOG
-    };
+    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG };
 
     static void print_all();
     void print();
@@ -146,42 +154,44 @@ public:
     Expression_();
     Expression_(double value);
 
-    Expression_
-    (
-		const Op& op, 
-		const Expression& left, 
-		const Expression& right
-		);
+    Expression_(const Op& op, const Expression& left, const Expression& right);
 
     virtual ~Expression_();
 
-    [[nodiscard]] int id() const { return id_; }
+    [[nodiscard]] int id() const {
+        return id_;
+    }
 
-protected:
-
-    [[nodiscard]] const Expression& left() const { return left_; }
-    [[nodiscard]] const Expression& right() const { return right_; }
+   protected:
+    [[nodiscard]] const Expression& left() const {
+        return left_;
+    }
+    [[nodiscard]] const Expression& right() const {
+        return right_;
+    }
 
     virtual double value();
     void set_value(double value);
     void _set_value(double value);
     void unset_value();
     void unset_root_value();
-    [[nodiscard]] bool is_set_value() const { return is_set_value_; }
+    [[nodiscard]] bool is_set_value() const {
+        return is_set_value_;
+    }
 
     void add_root(Expression_* root);
     void remove_root(Expression_* root);
 
-protected:
-
-    typedef std::map<Expression,Expression> Dfrntls;
+   protected:
+    typedef std::map<Expression, Expression> Dfrntls;
     typedef std::set<Expression_*> Expressions;
 
     int id_;
     bool is_set_value_;
     double value_;
 
-    const Op op_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members) - Op is a handle type, const is intentional
+    const Op op_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members) - Op is a handle
+                   // type, const is intentional
     Expression left_;
     Expression right_;
     Dfrntls dfrntls_;
@@ -198,16 +208,18 @@ void print_all();
 ////////////////
 
 class Const_ : public Expression_ {
-public:
-    Const_(double value) : Expression_(value) {}
+   public:
+    Const_(double value)
+        : Expression_(value) {}
     ~Const_() override = default;
-private:
+
+   private:
     // differential
     Expression d(const Expression& y) override;
 };
 
 class Const : public Expression {
-public:
+   public:
     Const(double value);
     ~Const() = default;
 };
@@ -215,7 +227,7 @@ public:
 ////////////////
 
 class Variable_ : public Expression_ {
-public:
+   public:
     Variable_() = default;
     ~Variable_() override = default;
     double value() override;
@@ -223,42 +235,42 @@ public:
 };
 
 class Variable : public Expression {
-public:
+   public:
     Variable();
     ~Variable() = default;
 
     ////// substitution from (double)
-    Variable& operator = (double value);
+    Variable& operator=(double value);
 };
 
 ////////////////
 
-Expression operator + (const Expression& a, const Expression& b);
-Expression operator + (double a, const Expression& b);
-Expression operator + (const Expression& a, double b);
-Expression operator + (const Expression& a);
+Expression operator+(const Expression& a, const Expression& b);
+Expression operator+(double a, const Expression& b);
+Expression operator+(const Expression& a, double b);
+Expression operator+(const Expression& a);
 
-Expression operator - (const Expression& a, const Expression& b);
-Expression operator - (double a, const Expression& b);
-Expression operator - (const Expression& a, double b);
-Expression operator - (const Expression& a);
+Expression operator-(const Expression& a, const Expression& b);
+Expression operator-(double a, const Expression& b);
+Expression operator-(const Expression& a, double b);
+Expression operator-(const Expression& a);
 
-Expression operator * (const Expression& a, const Expression& b);
-Expression operator * (double a, const Expression& b);
-Expression operator * (const Expression& a, double b);
+Expression operator*(const Expression& a, const Expression& b);
+Expression operator*(double a, const Expression& b);
+Expression operator*(const Expression& a, double b);
 
-Expression operator / (const Expression& a, const Expression& b);
-Expression operator / (const Expression& a, double b);
-Expression operator / (double a, const Expression& b);
+Expression operator/(const Expression& a, const Expression& b);
+Expression operator/(const Expression& a, double b);
+Expression operator/(double a, const Expression& b);
 
-Expression operator ^ (const Expression& a, const Expression& b);
-Expression operator ^ (const Expression& a, double b);
-Expression operator ^ (double a, const Expression& b);
+Expression operator^(const Expression& a, const Expression& b);
+Expression operator^(const Expression& a, double b);
+Expression operator^(double a, const Expression& b);
 
-Expression exp (const Expression& a);
-Expression log (const Expression& a);
+Expression exp(const Expression& a);
+Expression log(const Expression& a);
 
 // assignment to (double)
-double& operator << (double& a, const Expression& b);
+double& operator<<(double& a, const Expression& b);
 
-#endif // EXPRESSION__H
+#endif  // EXPRESSION__H
