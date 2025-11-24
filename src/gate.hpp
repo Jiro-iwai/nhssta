@@ -6,6 +6,7 @@
 
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include "statistics.hpp"
 #include <nhssta/exception.hpp>
@@ -17,7 +18,8 @@ namespace Nh {
 
     class _Instance_;
     class Instance;
-    typedef std::map<std::string,RandomVariable> Signals;
+    // Use unordered_map for better performance (O(1) average vs O(log n) for map)
+    typedef std::unordered_map<std::string,RandomVariable> Signals;
 
     /////
 
