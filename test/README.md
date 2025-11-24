@@ -52,11 +52,11 @@ Tests are compiled into a single test binary:
 
 **Phase 1 (Modern C++ Migration)**: ✅ Complete
 - Boost dependencies removed
-- All 343 tests passing
+- All 333 tests passing
 
 ## Current Test Coverage
 
-- **343 tests** across **36 test suites**
+- **333 tests** across **34 test suites**
 - Unit tests for core components (RandomVariable, Expression, Gate, Parser, Ssta)
 - Integration tests for end-to-end functionality
 - Performance benchmarks
