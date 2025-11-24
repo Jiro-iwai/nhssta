@@ -4,6 +4,13 @@
 src/nhssta
 test/nhssta_test
 example/result*_
+example/*_test
+example/result*_new
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
 
 # clang-format/clang-tidy
 .clang-format.bak
