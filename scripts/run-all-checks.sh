@@ -81,7 +81,22 @@ fi
 # 3. Linting (clang-tidy)
 print_section "3. Running clang-tidy"
 cd "$PROJECT_ROOT/src"
+
+# Find clang-tidy - check standard PATH first, then Homebrew locations
+CLANG_TIDY_FOUND=0
 if command -v clang-tidy >/dev/null 2>&1; then
+    CLANG_TIDY_FOUND=1
+elif [ -f "/opt/homebrew/opt/llvm/bin/clang-tidy" ]; then
+    # Add Homebrew llvm bin to PATH for this session
+    export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+    CLANG_TIDY_FOUND=1
+elif [ -f "/usr/local/opt/llvm/bin/clang-tidy" ]; then
+    # Add Homebrew llvm bin to PATH for this session (Intel Mac)
+    export PATH="/usr/local/opt/llvm/bin:$PATH"
+    CLANG_TIDY_FOUND=1
+fi
+
+if [ $CLANG_TIDY_FOUND -eq 1 ]; then
     if make tidy >/dev/null 2>&1; then
         print_success "clang-tidy check passed (no critical issues)"
     else
@@ -91,6 +106,7 @@ if command -v clang-tidy >/dev/null 2>&1; then
 else
     print_warning "clang-tidy not found, skipping lint check"
     echo "Install with: brew install llvm (macOS) or apt-get install clang-tidy (Ubuntu)"
+    echo "Note: If installed via Homebrew, ensure /opt/homebrew/opt/llvm/bin is in PATH"
 fi
 
 # 4. Code coverage (optional)

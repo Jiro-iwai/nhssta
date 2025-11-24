@@ -69,9 +69,22 @@ fi
 # Check for clang-tidy
 echo ""
 echo "Checking clang-tidy..."
+CLANG_TIDY_CMD=""
 if command -v clang-tidy >/dev/null 2>&1; then
-    CLANG_TIDY_VERSION=$(clang-tidy --version | head -n1)
+    CLANG_TIDY_CMD="clang-tidy"
+elif [ -f "/opt/homebrew/opt/llvm/bin/clang-tidy" ]; then
+    CLANG_TIDY_CMD="/opt/homebrew/opt/llvm/bin/clang-tidy"
+elif [ -f "/usr/local/opt/llvm/bin/clang-tidy" ]; then
+    CLANG_TIDY_CMD="/usr/local/opt/llvm/bin/clang-tidy"
+fi
+
+if [ -n "$CLANG_TIDY_CMD" ]; then
+    CLANG_TIDY_VERSION=$($CLANG_TIDY_CMD --version | head -n1)
     echo "  ✓ Found: $CLANG_TIDY_VERSION"
+    if [ "$CLANG_TIDY_CMD" != "clang-tidy" ]; then
+        echo "    Note: clang-tidy is installed but not in PATH"
+        echo "    Add to PATH: export PATH=\"$(dirname $CLANG_TIDY_CMD):\$PATH\""
+    fi
 else
     echo "  ⚠ clang-tidy not found (optional but recommended)"
     echo "    Install with:"
