@@ -126,8 +126,8 @@ double _RandomVariable_::relative_error() {
 }
 
 void _RandomVariable_::check_variance(double& v) {
-    if (fabs(v) < minimum_variance) {
-        v = minimum_variance;
+    if (fabs(v) < MINIMUM_VARIANCE) {
+        v = MINIMUM_VARIANCE;
     }
     if (v < 0.0) {
         throw Nh::RuntimeException("RandomVariable: negative variance");

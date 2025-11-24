@@ -75,11 +75,11 @@ static void check_covariance(double& cov, const RandomVariable& a, const RandomV
     double v0 = a->variance();
     double v1 = b->variance();
     double max_cov = sqrt(v0 * v1);
-    if (max_cov < minimum_variance) {
-        if (cov >= minimum_variance) {
+    if (max_cov < MINIMUM_VARIANCE) {
+        if (cov >= MINIMUM_VARIANCE) {
             throw Nh::RuntimeException("check_covariance: covariance " + std::to_string(cov) +
                                        " exceeds maximum possible value " +
-                                       std::to_string(minimum_variance));
+                                       std::to_string(MINIMUM_VARIANCE));
         }
         return;
     }

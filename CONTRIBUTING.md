@@ -18,10 +18,13 @@
 ### 命名規則
 
 - **クラス名**: PascalCase（例: `Ssta`, `RandomVariable`, `OpADD`）
-- **関数名**: camelCase（例: `getLatResults()`, `read_dlib()`）
+  - 内部実装クラス（Handleパターンの実体クラス）はアンダースコアで始まる/終わる命名も可（例: `_RandomVariable_`, `_Gate_`, `Expression_`）
+- **関数名**: snake_case（例: `read_dlib()`, `read_bench()`, `set_instance_input()`）
+  - 数学関数などはPascalCaseも可（例: `MeanMax()`, `MeanPhiMax()`）
 - **メンバ変数**: snake_case with trailing underscore（例: `is_lat_`, `signals_`, `dlib_`）
 - **ローカル変数**: snake_case（例: `gate_name`, `signal_name`）
-- **定数**: UPPER_SNAKE_CASE（例: `MINIMUM_VARIANCE`）
+- **定数**: UPPER_SNAKE_CASE（例: `MINIMUM_VARIANCE`, `TAB_SIZE`）
+  - static constexpr変数は`k`プレフィックスも可（例: `kCut`, `kDiv`）
 - **ファイル名**: snake_case（例: `random_variable.cpp`, `ssta.hpp`）
 - **ファイル拡張子**: `.cpp`（ソースファイル）、`.hpp`（ヘッダーファイル）
 
@@ -33,8 +36,8 @@
 ### 名前空間
 
 - グローバル名前空間の汚染を避けるため、適切な名前空間を使用します
-- `using namespace` は関数スコープ内でのみ使用可能とします
-- グローバルスコープでの `using namespace std;` は避けます
+- `using namespace` は関数スコープ内またはテストファイル内でのみ使用可能とします
+- グローバルスコープでの `using namespace std;` は避けます（`std::`プレフィックスを使用）
 
 ### コメント
 
