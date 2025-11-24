@@ -181,7 +181,7 @@ protected:
     bool is_set_value_;
     double value_;
 
-    const Op op_;
+    const Op op_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members) - Op is a handle type, const is intentional
     Expression left_;
     Expression right_;
     Dfrntls dfrntls_;
@@ -200,7 +200,7 @@ void print_all();
 class Const_ : public Expression_ {
 public:
     Const_(double value) : Expression_(value) {}
-    ~Const_() = default;
+    ~Const_() override = default;
 private:
     // differential
     Expression d(const Expression& y) override;
@@ -217,7 +217,7 @@ public:
 class Variable_ : public Expression_ {
 public:
     Variable_() = default;
-    ~Variable_() = default;
+    ~Variable_() override = default;
     double value() override;
     Expression d(const Expression& y) override;
 };

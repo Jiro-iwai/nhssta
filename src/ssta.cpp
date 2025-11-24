@@ -15,16 +15,9 @@
 
 namespace Nh {
 
-    Ssta::Ssta()
-    {
-        // No I/O operations - pure logic initialization
-        // Version information should be handled by CLI layer
-    }
+    Ssta::Ssta() = default;
 
-    Ssta::~Ssta() {
-        // No I/O operations - pure logic cleanup
-        // Success message should be handled by CLI layer
-    }
+    Ssta::~Ssta() = default;
 
     void Ssta::check() {
         // Validate configuration and throw exception if invalid
