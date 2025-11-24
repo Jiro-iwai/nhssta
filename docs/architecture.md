@@ -110,7 +110,9 @@ nhssta/
 ├── include/nhssta/          # 公開APIヘッダー
 │   ├── ssta.hpp
 │   ├── exception.hpp
-│   └── ssta_results.hpp
+│   ├── ssta_results.hpp
+│   ├── gate.hpp
+│   └── net_line.hpp
 ├── src/                     # 実装ファイル
 │   ├── ssta.cpp
 │   ├── gate.cpp
@@ -127,8 +129,12 @@ nhssta/
 ## 関連ファイル
 
 - `include/nhssta/ssta.hpp`: Sstaクラスの定義
+- `include/nhssta/gate.hpp`: Gateクラスの定義（公開API）
+- `include/nhssta/net_line.hpp`: NetLineクラスの定義（公開API）
+- `include/nhssta/exception.hpp`: 例外クラス階層の定義
+- `include/nhssta/ssta_results.hpp`: SSTA結果データ構造の定義
 - `src/ssta.cpp`: Sstaクラスの実装
-- `src/gate.hpp`, `src/gate.cpp`: GateとInstanceの実装
+- `src/gate.cpp`: GateとInstanceの実装
 - `src/random_variable.hpp`, `src/random_variable.cpp`: RandomVariableの実装
 - `src/parser.hpp`, `src/parser.cpp`: Parserの実装
 - `src/main.cpp`: CLIエントリーポイント
