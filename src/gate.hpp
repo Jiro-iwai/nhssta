@@ -53,10 +53,18 @@ namespace Nh {
 			) const;
 
 		typedef std::pair<std::string,std::string> IO;
-		// Note: Using std::map instead of std::unordered_map to preserve iteration order
-		// This is important because _Instance_::output() iterates delays() and the order
-		// affects floating-point calculation order, which can cause slight differences in results
-		typedef std::map<IO,Normal> Delays;
+		// Custom hash function for IO (std::pair<std::string, std::string>)
+		struct IOHash {
+			std::size_t operator () (const IO& io) const {
+				auto h1 = std::hash<std::string>{}(io.first);
+				auto h2 = std::hash<std::string>{}(io.second);
+				return h1 ^ (h2 << 1);
+			}
+		};
+		// Use unordered_map for better performance (O(1) average vs O(log n) for map)
+		// Note: MAX operation is commutative, so iteration order doesn't affect the final result
+		// Small floating-point rounding differences due to different calculation order are acceptable
+		typedef std::unordered_map<IO,Normal,IOHash> Delays;
 		const Delays& delays() { return delays_; }
 
 		std::string allocate_instance_name() {
