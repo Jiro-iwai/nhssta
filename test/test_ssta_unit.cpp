@@ -544,8 +544,8 @@ TEST_F(SstaUnitTest, CheckMethodDoesNotCallExit) {
     Ssta test_ssta;
     test_ssta.set_dlib("");  // Empty dlib to trigger error
 
-    // Should throw exception instead of calling exit()
-    EXPECT_THROW({ test_ssta.check(); }, Nh::Exception);
+    // Should throw ConfigurationException instead of calling exit()
+    EXPECT_THROW({ test_ssta.check(); }, Nh::ConfigurationException);
 }
 
 TEST_F(SstaUnitTest, PureLogicFunctionsDoNotDependOnOutputFlags) {

@@ -236,12 +236,12 @@ TEST_F(CoverageGapsTest, SstaCheckMissingDlib) {
     ssta.set_bench("../example/ex4.bench");
     // dlib not set
 
-    EXPECT_THROW(ssta.check(), Exception);
+    EXPECT_THROW(ssta.check(), Nh::ConfigurationException);
 
     try {
         ssta.check();
-        FAIL() << "Expected Exception was not thrown";
-    } catch (const Exception& e) {
+        FAIL() << "Expected ConfigurationException was not thrown";
+    } catch (const Nh::ConfigurationException& e) {
         std::string msg = e.what();
         EXPECT_NE(msg.find("-d"), std::string::npos);
     }
@@ -253,12 +253,12 @@ TEST_F(CoverageGapsTest, SstaCheckMissingBench) {
     ssta.set_dlib("../example/ex4_gauss.dlib");
     // bench not set
 
-    EXPECT_THROW(ssta.check(), Exception);
+    EXPECT_THROW(ssta.check(), Nh::ConfigurationException);
 
     try {
         ssta.check();
-        FAIL() << "Expected Exception was not thrown";
-    } catch (const Exception& e) {
+        FAIL() << "Expected ConfigurationException was not thrown";
+    } catch (const Nh::ConfigurationException& e) {
         std::string msg = e.what();
         EXPECT_NE(msg.find("-b"), std::string::npos);
     }
@@ -269,12 +269,12 @@ TEST_F(CoverageGapsTest, SstaCheckMissingBoth) {
     Ssta ssta;
     // Both dlib and bench not set
 
-    EXPECT_THROW(ssta.check(), Exception);
+    EXPECT_THROW(ssta.check(), Nh::ConfigurationException);
 
     try {
         ssta.check();
-        FAIL() << "Expected Exception was not thrown";
-    } catch (const Exception& e) {
+        FAIL() << "Expected ConfigurationException was not thrown";
+    } catch (const Nh::ConfigurationException& e) {
         std::string msg = e.what();
         EXPECT_NE(msg.find("-d"), std::string::npos);
         EXPECT_NE(msg.find("-b"), std::string::npos);

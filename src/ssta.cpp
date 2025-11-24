@@ -39,7 +39,7 @@ void Ssta::check() {
     }
 
     if (!error_msg.empty()) {
-        throw Nh::Exception("error: " + error_msg);
+        throw Nh::ConfigurationException(error_msg);
     }
 }
 
