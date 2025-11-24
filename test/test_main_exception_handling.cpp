@@ -30,7 +30,7 @@ class MainExceptionHandlingTest : public ::testing::Test {
         
         nhssta_path = find_nhssta_path();
         if (nhssta_path.empty()) {
-            nhssta_path = "../src/nhssta";  // Fallback
+            nhssta_path = "../build/bin/nhssta";  // Fallback (new location)
         }
     }
 

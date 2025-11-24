@@ -22,24 +22,30 @@ inline std::string find_nhssta_path() {
     std::vector<std::string> paths;
 
     // Relative paths from current directory (most common cases)
-    paths.push_back("src/nhssta");     // From project root
-    paths.push_back("../src/nhssta");  // From test/ directory
-    paths.push_back("./src/nhssta");   // Explicit current dir
+    paths.push_back("build/bin/nhssta");     // From project root (new location)
+    paths.push_back("../build/bin/nhssta");  // From test/ directory (new location)
+    paths.push_back("./build/bin/nhssta");   // Explicit current dir (new location)
+    paths.push_back("src/nhssta");     // From project root (old location, for backward compatibility)
+    paths.push_back("../src/nhssta");  // From test/ directory (old location, for backward compatibility)
+    paths.push_back("./src/nhssta");   // Explicit current dir (old location, for backward compatibility)
 
     // Absolute paths if we have current directory
     if (!current_dir.empty()) {
-        paths.push_back(current_dir + "/src/nhssta");
+        paths.push_back(current_dir + "/build/bin/nhssta");
+        paths.push_back(current_dir + "/src/nhssta");  // Old location
         // If we're in test/ directory, go up one level
         size_t test_pos = current_dir.find("/test");
         if (test_pos != std::string::npos) {
             std::string parent = current_dir.substr(0, test_pos);
-            paths.push_back(parent + "/src/nhssta");
+            paths.push_back(parent + "/build/bin/nhssta");
+            paths.push_back(parent + "/src/nhssta");  // Old location
         }
         // Also try going up from any directory
         size_t last_slash = current_dir.find_last_of("/");
         if (last_slash != std::string::npos) {
             std::string parent = current_dir.substr(0, last_slash);
-            paths.push_back(parent + "/src/nhssta");
+            paths.push_back(parent + "/build/bin/nhssta");
+            paths.push_back(parent + "/src/nhssta");  // Old location
         }
     }
 
