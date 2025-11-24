@@ -22,6 +22,8 @@
 - **メンバ変数**: snake_case with trailing underscore（例: `is_lat_`, `signals_`, `dlib_`）
 - **ローカル変数**: snake_case（例: `gate_name`, `signal_name`）
 - **定数**: UPPER_SNAKE_CASE（例: `MINIMUM_VARIANCE`）
+- **ファイル名**: snake_case（例: `random_variable.cpp`, `ssta.hpp`）
+- **ファイル拡張子**: `.cpp`（ソースファイル）、`.hpp`（ヘッダーファイル）
 
 ### ヘッダガード
 
@@ -32,7 +34,7 @@
 
 - グローバル名前空間の汚染を避けるため、適切な名前空間を使用します
 - `using namespace` は関数スコープ内でのみ使用可能とします
-- グローバルスコープでの `using namespace std;` は避けます（既存コードの `main.C` は段階的に改善）
+- グローバルスコープでの `using namespace std;` は避けます
 
 ### コメント
 
@@ -67,6 +69,16 @@
    ```bash
    make test
    ```
+   
+   **注意**: Google Testが標準的な場所にインストールされていない場合は、`GTEST_DIR`環境変数を設定するか、`make`コマンドに引数として渡してください：
+   ```bash
+   # 環境変数で設定
+   export GTEST_DIR=/path/to/googletest
+   make test
+   
+   # または make コマンドで直接指定
+   make GTEST_DIR=/path/to/googletest test
+   ```
 
 2. コードを変更した後、以下を実行します：
    ```bash
@@ -77,7 +89,7 @@
    make tidy
    
    # コードフォーマット（必要に応じて）
-   clang-format -i src/YourFile.C
+   clang-format -i src/your_file.cpp
    ```
 
 3. すべてのテストがパスし、警告が許容範囲内であることを確認してからコミットします
