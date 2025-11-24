@@ -1,6 +1,6 @@
-# 統計的PERT法 nhssta 0.1.0
+# 統計的PERT法 nhssta 0.1.1
 
-本ドキュメントには統計的PERT法 nhssta 0.1.0 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
+本ドキュメントには統計的PERT法 nhssta 0.1.1 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
 
 ## 1. 概要
 
@@ -142,7 +142,7 @@ nhsstaは以下のexit codeを返します：
 # exampleディレクトリから実行する場合
 $ cd example
 $ ../src/nhssta -l -c -d ex4_gauss.dlib -b ex4.bench
-nhssta 0.1.0
+nhssta 0.1.1
 
 #
 # LAT
