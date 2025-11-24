@@ -9,7 +9,7 @@
 
 #include "../src/add.hpp"
 #include "../src/expression.hpp"
-#include "../src/gate.hpp"
+#include <nhssta/gate.hpp>
 #include "../src/normal.hpp"
 #include "../src/random_variable.hpp"
 

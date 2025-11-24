@@ -15,7 +15,7 @@
 #include <nhssta/exception.hpp>
 #include <nhssta/ssta_results.hpp>
 
-#include "../src/gate.hpp"
+#include <nhssta/gate.hpp>
 #include "../src/net_line.hpp"
 
 // Forward declaration for Parser (internal implementation detail)

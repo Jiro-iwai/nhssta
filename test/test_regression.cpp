@@ -21,7 +21,7 @@
 #include <sstream>
 
 #include "../src/expression.hpp"
-#include "../src/gate.hpp"
+#include <nhssta/gate.hpp>
 #include "../src/parser.hpp"
 #include "../src/random_variable.hpp"
 

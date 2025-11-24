@@ -1,7 +1,7 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
 
-#include "gate.hpp"
+#include <nhssta/gate.hpp>
 
 #include <cmath>
 #include <iostream>
