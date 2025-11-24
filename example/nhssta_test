@@ -2,12 +2,6 @@
 
 NHSSTA=../src/nhssta
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
 # Track overall success
 TOTAL_TESTS=0
 PASSED_TESTS=0
@@ -23,12 +17,12 @@ print_section() {
 
 # Function to print success
 print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
+    echo "✓ $1"
 }
 
 # Function to print failure
 print_failure() {
-    echo -e "${RED}✗ $1${NC}"
+    echo "✗ $1"
 }
 
 # Function to run a single test
@@ -45,20 +39,20 @@ run_test() {
 
     rm -f "${TEMP_RESULT_FILE}"
 
-    # Run nhssta, filter comments, and save output
-    if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "nhssta 0.0.8" > "${TEMP_RESULT_FILE}"; then
-        print_failure "  ✗ FAILED (nhssta execution failed)"
+    # Run nhssta, filter comments, version, timestamp, and OK line, and save output
+    if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "nhssta 0.0.8" | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
+        print_failure "  FAILED (nhssta execution failed)"
         FAILED_TESTS=$((FAILED_TESTS + 1))
         return 1
     fi
 
-    # Compare with expected result, ignoring first two lines (version and timestamp)
+    # Compare with expected result, ignoring version and timestamp lines
     if diff -q -I "nhssta 0.0.8" "${TEMP_RESULT_FILE}" "${RESULT_FILE}" >/dev/null 2>&1; then
-        print_success "  ✓ PASSED"
+        print_success "  PASSED"
         PASSED_TESTS=$((PASSED_TESTS + 1))
         rm -f "${TEMP_RESULT_FILE}" # Clean up on success
     else
-        print_failure "  ✗ FAILED"
+        print_failure "  FAILED"
         echo "    --- Diff for ${TEST_NAME} ---"
         diff -u -I "nhssta 0.0.8" "${TEMP_RESULT_FILE}" "${RESULT_FILE}"
         echo "    -----------------------------"
