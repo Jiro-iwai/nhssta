@@ -16,8 +16,8 @@ namespace RandomVariable {
 
     public:
 
-		OpMAX( const RandomVariable& left, const RandomVariable& right );
-                ~OpMAX() override;
+	OpMAX( const RandomVariable& left, const RandomVariable& right );
+	~OpMAX() override;
 
 		[[nodiscard]] const RandomVariable& max0() const { return max0_; }
 
@@ -36,8 +36,8 @@ namespace RandomVariable {
     class OpMAX0 : public _RandomVariable_ {
     public:
 
-		OpMAX0( const RandomVariable& left );
-                ~OpMAX0() override;
+	OpMAX0( const RandomVariable& left );
+	~OpMAX0() override;
 
     private:
 
