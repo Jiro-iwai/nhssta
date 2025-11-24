@@ -68,7 +68,11 @@ cd "$PROJECT_ROOT/src"
 if make test >/dev/null 2>&1; then
     print_success "All tests passed"
     # Show test summary
-    if [ -f "../test/nhssta_test" ]; then
+    if [ -f "../build/bin/nhssta_test" ]; then
+        ../build/bin/nhssta_test --gtest_brief=1 2>&1 | tail -3 || true
+    elif [ -f "build/bin/nhssta_test" ]; then
+        build/bin/nhssta_test --gtest_brief=1 2>&1 | tail -3 || true
+    elif [ -f "../test/nhssta_test" ]; then
         ../test/nhssta_test --gtest_brief=1 2>&1 | tail -3 || true
     elif [ -f "test/nhssta_test" ]; then
         test/nhssta_test --gtest_brief=1 2>&1 | tail -3 || true

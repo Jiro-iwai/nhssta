@@ -19,6 +19,7 @@ __pycache__/
 *.gcno
 *.gcov
 coverage/
+build/
 
 # etags/ctags
 TAGS

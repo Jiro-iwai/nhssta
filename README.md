@@ -31,8 +31,14 @@ nhsstaは統計的PERT法を実装したプログラムです。nhsstaは以下�
                /nhssta_test  統合テストスクリプト
                /result*      テストスクリプト実行結果
        /docs/                 開発ドキュメント
-       /coverage/             コードカバレッジレポート（`make coverage`実行後に生成）
-```			   
+       /build/                ビルド成果物（`make`実行後に生成、`.gitignore`で無視）
+               /src/          オブジェクトファイル（.o）と依存関係ファイル（.d）
+               /test/         テストオブジェクトファイル
+               /bin/          実行ファイル（nhssta, nhssta_test）
+               /coverage/     コードカバレッジレポート（`make coverage`実行後に生成）
+```
+
+**注意**: ビルド成果物は`build/`ディレクトリに配置されます。`make clean`で削除できます。			   
 
 ## 2. 使用方法
 
@@ -50,9 +56,9 @@ nhsstaは統計的PERT法を実装したプログラムです。nhsstaは以下�
 $ make
 ```
 
-コンパイルが終了すると、ディレクトリ `src/` 以下に `nhssta` という実行ファイルが作成されます。
+コンパイルが終了すると、ディレクトリ `build/bin/` 以下に `nhssta` という実行ファイルが作成されます。
 
-**注意**: 初回ビルド時は、Google Testがインストールされていない場合、テストのビルドは失敗しますが、メインプログラム（`src/nhssta`）のビルドは成功します。
+**注意**: 初回ビルド時は、Google Testがインストールされていない場合、テストのビルドは失敗しますが、メインプログラム（`build/bin/nhssta`）のビルドは成功します。
 
 - すべてのテスト（ユニットテスト + 統合テスト）を実行する場合：
 
@@ -86,7 +92,7 @@ $ make check
 $ make coverage
 ```
 
-カバレッジレポートは `coverage/html/index.html` に生成されます。
+カバレッジレポートは `build/coverage/html/index.html` に生成されます。
 
 - コードスタイルチェック（clang-tidy）を実行する場合：
 
@@ -96,7 +102,7 @@ $ make tidy
 
 ### 2.2 実行方法
 
-`src/nhssta` をパスの通った適当な場所にコピーするか、直接 `src/nhssta` を実行します。
+`build/bin/nhssta` をパスの通った適当な場所にコピーするか、直接 `build/bin/nhssta` を実行します。
 
 ```bash
 $ nhssta -d [.dlibファイル] -b [.benchファイル] [-l] [-c]
@@ -141,7 +147,7 @@ nhsstaは以下のexit codeを返します：
 ```bash
 # exampleディレクトリから実行する場合
 $ cd example
-$ ../src/nhssta -l -c -d ex4_gauss.dlib -b ex4.bench
+$ ../build/bin/nhssta -l -c -d ex4_gauss.dlib -b ex4.bench
 nhssta 0.1.1
 
 #
@@ -260,7 +266,7 @@ make
 make coverage
 ```
 
-カバレッジレポートは `coverage/html/index.html` に生成されます。
+カバレッジレポートは `build/coverage/html/index.html` に生成されます。
 
 **注意**: テストをビルドする場合、Google Testのパスを環境変数またはmake引数で指定できます：
 

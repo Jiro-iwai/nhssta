@@ -22,7 +22,7 @@ class IntegrationTest : public ::testing::Test {
 
         // Ensure paths are set
         if (nhssta_path.empty()) {
-            nhssta_path = "../src/nhssta";  // Fallback
+            nhssta_path = "../build/bin/nhssta";  // Fallback (new location)
         }
         if (example_dir.empty()) {
             example_dir = "../example";  // Fallback

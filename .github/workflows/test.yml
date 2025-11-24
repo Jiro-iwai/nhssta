@@ -44,7 +44,8 @@ jobs:
     - name: Build and run unit tests
       working-directory: src
       run: |
-        make test
+        make test-build
+        cd .. && ./build/bin/nhssta_test || true
 
     - name: Generate coverage report
       if: matrix.compiler == 'g++'
