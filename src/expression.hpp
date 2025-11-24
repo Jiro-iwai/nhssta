@@ -200,7 +200,7 @@ void print_all();
 class Const_ : public Expression_ {
 public:
     Const_(double value) : Expression_(value) {}
-    ~Const_() = default;
+    ~Const_() override = default;
 private:
     // differential
     Expression d(const Expression& y) override;
@@ -217,7 +217,7 @@ public:
 class Variable_ : public Expression_ {
 public:
     Variable_() = default;
-    ~Variable_() = default;
+    ~Variable_() override = default;
     double value() override;
     Expression d(const Expression& y) override;
 };
