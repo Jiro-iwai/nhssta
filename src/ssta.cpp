@@ -60,18 +60,11 @@ void Ssta::node_error(const std::string& head, const std::string& signal_name) c
 // dlib //
 
 void Ssta::read_dlib() {
-    try {
-        Parser parser(dlib_, '#', "(),", " \t\r");
-        parser.checkFile();
+    Parser parser(dlib_, '#', "(),", " \t\r");
+    parser.checkFile();
 
-        while (parser.getLine()) {
-            read_dlib_line(parser);
-        }
-
-    } catch (Nh::FileException& e) {
-        throw Nh::Exception(e.what());
-    } catch (Nh::ParseException& e) {
-        throw Nh::Exception(e.what());
+    while (parser.getLine()) {
+        read_dlib_line(parser);
     }
 }
 
@@ -136,31 +129,20 @@ void Ssta::read_bench() {
     Parser parser(bench_, '#', "(),=", " \t\r");
     parser.checkFile();
 
-    try {
-        while (parser.getLine()) {
-            std::string keyword;
-            parser.getToken(keyword);
+    while (parser.getLine()) {
+        std::string keyword;
+        parser.getToken(keyword);
 
-            if (keyword == "INPUT") {
-                read_bench_input(parser);
-            } else if (keyword == "OUTPUT") {
-                read_bench_output(parser);
-            } else {
-                read_bench_net(parser, keyword);  // NET
-            }
+        if (keyword == "INPUT") {
+            read_bench_input(parser);
+        } else if (keyword == "OUTPUT") {
+            read_bench_output(parser);
+        } else {
+            read_bench_net(parser, keyword);  // NET
         }
-
-        connect_instances();
-
-    } catch (Nh::RuntimeException& e) {
-        throw Nh::Exception(e.what());
-
-    } catch (Nh::FileException& e) {
-        throw Nh::Exception(e.what());
-
-    } catch (Nh::ParseException& e) {
-        throw Nh::Exception(e.what());
     }
+
+    connect_instances();
 
     gates_.clear();
 }
@@ -366,19 +348,14 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
 //// report ////
 
 void Ssta::report() {
-    try {
-        if (is_lat_) {
-            std::cout << std::endl;
-            report_lat();
-        }
+    if (is_lat_) {
+        std::cout << std::endl;
+        report_lat();
+    }
 
-        if (is_correlation_) {
-            std::cout << std::endl;
-            report_correlation();
-        }
-
-    } catch (Nh::RuntimeException& e) {
-        throw Nh::Exception(e.what());
+    if (is_correlation_) {
+        std::cout << std::endl;
+        report_correlation();
     }
 }
 

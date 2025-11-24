@@ -55,7 +55,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_dev_scripts.cpp ../test/test_regression.cpp \
 	../test/test_numerical_error_metrics.cpp ../test/test_documentation_accuracy.cpp \
 	../test/test_architecture_documentation.cpp ../test/test_profiling.cpp \
-	../test/test_map_to_unordered_map.cpp
+	../test/test_map_to_unordered_map.cpp ../test/test_exception_type_preservation.cpp \
+	../test/test_main_exception_handling.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = ../test/nhssta_test
 
