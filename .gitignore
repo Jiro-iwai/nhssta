@@ -4,7 +4,7 @@
 src/nhssta
 test/nhssta_test
 example/result*_
-example/*_test
+example/result*_test
 example/result*_new
 
 # Python cache
