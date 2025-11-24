@@ -291,10 +291,9 @@ make GTEST_DIR=/usr/local/opt/googletest test
 
 ### 4.4 メモリ管理ポリシー
 
-- `RandomVariable` / `Expression` / `Gate` / `Instance` など、実行時グラフを表す主要コンポーネントは **`std::shared_ptr` ベースの薄いハンドル型**に移行済みです
-- 旧来の `SmartPtr` テンプレートは `NH_ENABLE_LEGACY_SMARTPTR=1` を定義した場合のみ利用できます（デフォルト無効）。新規コードでの使用は禁止です
-- `CovarianceMatrix` も同様に `std::shared_ptr` 化されており、共有キャッシュを安全に扱えます
-- 今後は「所有権は標準スマートポインタで明示する」ことを原則とし、例外はドキュメント化してください
+- `RandomVariable` / `Expression` / `Gate` / `Instance` など、実行時グラフを表す主要コンポーネントは **`std::shared_ptr` ベースの薄いハンドル型**を使用しています
+- `CovarianceMatrix` は確率変数間の共分散値を保持するデータ構造で、`std::shared_ptr` を使用して複数の場所から安全に共有・参照できます
+- 所有権は標準スマートポインタで明示することを原則とし、例外はドキュメント化してください
 
 ## 5. 参考文献
 
