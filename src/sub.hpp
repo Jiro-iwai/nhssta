@@ -12,7 +12,7 @@ namespace RandomVariable {
     public:
 
 		OpSUB( const RandomVariable& left, const RandomVariable& right );
-                ~OpSUB() override;
+		~OpSUB() override;
 
     private:
 

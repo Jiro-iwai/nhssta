@@ -12,7 +12,7 @@ namespace RandomVariable {
 	public:
 
 		OpADD( const RandomVariable& left, const RandomVariable& right );
-                ~OpADD() override;
+		~OpADD() override;
 
 	private:
 
