@@ -23,7 +23,7 @@ namespace RandomVariable {
 			double variance
 			);
 
-                ~_Normal_() override;
+		~_Normal_() override;
 
 		[[nodiscard]] Normal clone() const;
 
