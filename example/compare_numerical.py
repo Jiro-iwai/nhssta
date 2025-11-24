@@ -32,8 +32,25 @@ def compare_values(val1_str, val2_str, tol):
     except ValueError:
         return False
 
-def compare_lines(line1, line2, tol):
-    """Compare two lines with numerical tolerance."""
+def is_correlation_value(val_str):
+    """Check if a value is likely a correlation coefficient (0.0-1.0 range)."""
+    try:
+        val = float(val_str)
+        # Correlation values are typically in [0.0, 1.0] range
+        # LAT values are typically larger (e.g., 35.016, 3.575)
+        return 0.0 <= abs(val) <= 1.0
+    except ValueError:
+        return False
+
+def compare_lines(line1, line2, lat_tol, corr_tol):
+    """Compare two lines with numerical tolerance.
+    
+    Args:
+        line1: First line to compare
+        line2: Second line to compare
+        lat_tol: Tolerance for LAT values (mean, stddev) - relative error
+        corr_tol: Tolerance for correlation values - relative error
+    """
     if line1 == line2:
         return True
     
@@ -48,8 +65,25 @@ def compare_lines(line1, line2, tol):
     if len(fields1) != len(fields2):
         return False
     
+    # Determine if this is a correlation line (tab-separated, values in [0,1] range)
+    # or LAT line (space-separated, larger values)
+    is_correlation_line = '\t' in line1 or '\t' in line2
+    
     for f1, f2 in zip(fields1, fields2):
         if is_numeric(f1) and is_numeric(f2):
+            # Determine tolerance based on value type
+            val1 = float(f1)
+            val2 = float(f2)
+            
+            # Use correlation tolerance if:
+            # 1. Line contains tabs (correlation matrix format)
+            # 2. Both values are in [0, 1] range (correlation coefficients)
+            if is_correlation_line or (is_correlation_value(f1) and is_correlation_value(f2)):
+                tol = corr_tol
+            else:
+                # LAT values (mean, stddev)
+                tol = lat_tol
+            
             if not compare_values(f1, f2, tol):
                 return False
         else:
@@ -59,13 +93,16 @@ def compare_lines(line1, line2, tol):
     return True
 
 def main():
-    if len(sys.argv) != 4:
-        print("Usage: compare_numerical.py <file1> <file2> <tolerance>", file=sys.stderr)
+    if len(sys.argv) < 4:
+        print("Usage: compare_numerical.py <file1> <file2> <lat_tolerance> [corr_tolerance]", file=sys.stderr)
+        print("  lat_tolerance: Tolerance for LAT values (mean, stddev) - relative error (default: 0.002 = 0.2%)", file=sys.stderr)
+        print("  corr_tolerance: Tolerance for correlation values - relative error (default: 0.032 = 3.2%)", file=sys.stderr)
         sys.exit(1)
     
     file1 = sys.argv[1]
     file2 = sys.argv[2]
-    tol = float(sys.argv[3])
+    lat_tol = float(sys.argv[3])
+    corr_tol = float(sys.argv[4]) if len(sys.argv) > 4 else 0.032  # Default 3.2%
     
     try:
         with open(file1, 'r') as f1, open(file2, 'r') as f2:
@@ -76,7 +113,7 @@ def main():
                 sys.exit(1)
             
             for l1, l2 in zip(lines1, lines2):
-                if not compare_lines(l1, l2, tol):
+                if not compare_lines(l1, l2, lat_tol, corr_tol):
                     sys.exit(1)
         
         sys.exit(0)

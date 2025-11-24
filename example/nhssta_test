@@ -8,11 +8,13 @@ PASSED_TESTS=0
 FAILED_TESTS=0
 
 # Tolerance for floating-point comparisons (relative error)
-# Set to 0.05 (5%) to account for floating-point rounding differences
+# LAT values (mean, stddev): 0.2% (0.002)
+# Correlation values: 3.2% (0.032)
 # MAX operation is commutative, so different calculation order causes small differences
-# These differences accumulate in large circuits but are acceptable as they are within
-# numerical precision limits (typically < 1% per operation)
-NUMERICAL_TOLERANCE=0.05
+# LAT values typically have smaller errors (< 0.3%), while correlation values can accumulate
+# more error due to multiple MAX operations (up to ~3%)
+LAT_TOLERANCE=0.002
+CORR_TOLERANCE=0.032
 
 # Function to print section header
 print_section() {
@@ -165,7 +167,8 @@ run_test() {
     fi
 
     # Compare with expected result using numerical tolerance
-    if python3 compare_numerical.py "${TEMP_RESULT_FILE}" "${RESULT_FILE}" "${NUMERICAL_TOLERANCE}" 2>/dev/null; then
+    # LAT tolerance: 0.2%, Correlation tolerance: 3.2%
+    if python3 compare_numerical.py "${TEMP_RESULT_FILE}" "${RESULT_FILE}" "${LAT_TOLERANCE}" "${CORR_TOLERANCE}" 2>/dev/null; then
         print_success "  ✓ PASSED"
         PASSED_TESTS=$((PASSED_TESTS + 1))
         rm -f "${TEMP_RESULT_FILE}" # Clean up on success
