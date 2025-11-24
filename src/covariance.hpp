@@ -4,18 +4,32 @@
 #ifndef NH_COVARIANCE__H
 #define NH_COVARIANCE__H
 
-#include <map>
+#include <unordered_map>
 #include <memory>
+#include <functional>
 #include "random_variable.hpp"
 #include "normal.hpp"
 
 namespace RandomVariable {
 
+    // Custom hash function for std::pair<RandomVariable, RandomVariable>
+    // Uses the underlying shared_ptr addresses for hashing
+    struct PairHash {
+        template <class T1, class T2>
+        std::size_t operator () (const std::pair<T1, T2>& p) const {
+            // Hash based on the underlying shared_ptr addresses
+            auto h1 = std::hash<const void*>{}(p.first.get());
+            auto h2 = std::hash<const void*>{}(p.second.get());
+            // Combine hashes
+            return h1 ^ (h2 << 1);
+        }
+    };
+
     class _CovarianceMatrix_ {
     public:
 
 		using RowCol = std::pair<RandomVariable,RandomVariable>;
-		using Matrix = std::map<RowCol,double>;
+		using Matrix = std::unordered_map<RowCol,double,PairHash>;
 
 		_CovarianceMatrix_() = default;
 		virtual ~_CovarianceMatrix_() = default;
@@ -26,8 +40,7 @@ namespace RandomVariable {
 		void set( const RandomVariable& a,
 				  const RandomVariable& b, double cov ){
 			RowCol rowcol(a,b);
-			std::pair<RowCol,double> rowcolv(rowcol,cov);
-			cmat.insert(rowcolv);
+			cmat[rowcol] = cov;
 		}
 
     private:

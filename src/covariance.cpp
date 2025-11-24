@@ -23,10 +23,8 @@ namespace RandomVariable {
         double& cov
         ) const 
     {
-        Matrix::const_iterator i;
-
         RowCol rowcol0(a,b);
-        i = cmat.find(rowcol0);
+        auto i = cmat.find(rowcol0);
         if( i != cmat.end() ) {
             cov = i->second;
             return true;

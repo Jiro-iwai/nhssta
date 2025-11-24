@@ -53,6 +53,9 @@ namespace Nh {
 			) const;
 
 		typedef std::pair<std::string,std::string> IO;
+		// Note: Using std::map instead of std::unordered_map to preserve iteration order
+		// This is important because _Instance_::output() iterates delays() and the order
+		// affects floating-point calculation order, which can cause slight differences in results
 		typedef std::map<IO,Normal> Delays;
 		const Delays& delays() { return delays_; }
 

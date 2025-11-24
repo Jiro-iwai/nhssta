@@ -9,9 +9,21 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include <functional>
 
 namespace Nh {
+
+    // Custom hash function for std::pair<std::string, std::string>
+    struct StringPairHash {
+        template <class T1, class T2>
+        std::size_t operator () (const std::pair<T1, T2>& p) const {
+            auto h1 = std::hash<T1>{}(p.first);
+            auto h2 = std::hash<T2>{}(p.second);
+            // Combine hashes
+            return h1 ^ (h2 << 1);
+        }
+    };
 
     // LAT (Latest Arrival Time) result for a single signal
     struct LatResult {
@@ -30,7 +42,7 @@ namespace Nh {
     // Correlation matrix result
     struct CorrelationMatrix {
         std::vector<std::string> node_names;
-        std::map<std::pair<std::string, std::string>, double> correlations;
+        std::unordered_map<std::pair<std::string, std::string>, double, StringPairHash> correlations;
         
         // Get correlation between two nodes
         [[nodiscard]] double getCorrelation(const std::string& node1, const std::string& node2) const {

@@ -477,6 +477,7 @@ namespace Nh {
         // Collect signal names and sort them for consistent output order
         // (unordered_map doesn't guarantee order, so we sort by key)
         std::vector<std::string> signal_names;
+        signal_names.reserve(signals_.size()); // Pre-allocate to avoid reallocations
         for (const auto& pair : signals_) {
             signal_names.push_back(pair.first);
         }
@@ -500,6 +501,7 @@ namespace Nh {
         // Collect signal names and sort them for consistent output order
         // (unordered_map doesn't guarantee order, so we sort by key)
         std::vector<std::string> signal_names;
+        signal_names.reserve(signals_.size()); // Pre-allocate to avoid reallocations
         for (const auto& pair : signals_) {
             signal_names.push_back(pair.first);
         }
