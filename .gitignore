@@ -23,3 +23,6 @@ coverage/
 # etags/ctags
 TAGS
 tags
+
+# Temporary PR message files
+PR_MESSAGE.md
