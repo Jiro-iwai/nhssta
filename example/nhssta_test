@@ -1,6 +1,6 @@
 #!/bin/sh
 
-NHSSTA=../src/nhssta
+NHSSTA=../build/bin/nhssta
 
 # Track overall success
 TOTAL_TESTS=0

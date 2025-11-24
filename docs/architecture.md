@@ -120,11 +120,21 @@ nhssta/
 │   ├── random_variable.cpp
 │   └── ...
 ├── test/                    # ユニットテスト
+├── build/                   # ビルド成果物（`make`実行後に生成、`.gitignore`で無視）
+│   ├── src/                 # オブジェクトファイル（.o）と依存関係ファイル（.d）
+│   ├── test/                # テストオブジェクトファイル
+│   ├── bin/                 # 実行ファイル（nhssta, nhssta_test）
+│   └── coverage/            # コードカバレッジレポート（`make coverage`実行後に生成）
 └── docs/                    # ドキュメント
     ├── architecture.md      # このファイル
     ├── domain_model.md      # ドメインモデル詳細
     └── data_flow.md         # データフロー詳細
 ```
+
+**ビルド成果物の配置**:
+- すべてのビルド成果物（オブジェクトファイル、実行ファイル、カバレッジレポート）は`build/`ディレクトリに配置されます
+- `make clean`で`build/`ディレクトリ全体を削除できます
+- ソースディレクトリ（`src/`、`test/`）はクリーンに保たれます
 
 ## 関連ファイル
 
