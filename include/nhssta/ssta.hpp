@@ -7,6 +7,7 @@
 #include <memory>
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <list>
 #include <vector>
 #include <string>
@@ -108,7 +109,8 @@ namespace Nh {
 
 		////
 
-		typedef std::map<std::string,Gate> Gates;
+		// Use unordered_map for better performance (O(1) average vs O(log n) for map)
+		typedef std::unordered_map<std::string,Gate> Gates;
 		typedef std::list<NetLine> Net;
 		typedef std::set<std::string> Pins;
 

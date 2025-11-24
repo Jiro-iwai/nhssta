@@ -180,11 +180,11 @@ TEST_F(NumericalErrorMetricsTest, ErrorMetricsConsistency) {
     EXPECT_GT(max_stddev, 0.0);
     
     // Ensure all RandomVariable types support error metrics
-    EXPECT_NO_THROW(add_rv->standard_deviation());
-    EXPECT_NO_THROW(max_rv->standard_deviation());
-    EXPECT_NO_THROW(add_rv->coefficient_of_variation());
-    EXPECT_NO_THROW(max_rv->coefficient_of_variation());
-    EXPECT_NO_THROW(add_rv->relative_error());
-    EXPECT_NO_THROW(max_rv->relative_error());
+    EXPECT_NO_THROW((void)add_rv->standard_deviation());
+    EXPECT_NO_THROW((void)max_rv->standard_deviation());
+    EXPECT_NO_THROW((void)add_rv->coefficient_of_variation());
+    EXPECT_NO_THROW((void)max_rv->coefficient_of_variation());
+    EXPECT_NO_THROW((void)add_rv->relative_error());
+    EXPECT_NO_THROW((void)max_rv->relative_error());
 }
 

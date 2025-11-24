@@ -26,7 +26,20 @@ clean:
 	     do (test -d $$i && cd $$i && $(MAKE) $@); done
 	cd example; make $@
 
-# Integration tests (original check target)
+# Run all tests: unit tests + integration tests
+test:
+	@echo "=========================================="
+	@echo "Running unit tests..."
+	@echo "=========================================="
+	@for i in $(DIR) ; \
+	     do (test -d $$i && cd $$i && $(MAKE) test) || exit 1; done
+	@echo ""
+	@echo "=========================================="
+	@echo "Running integration tests..."
+	@echo "=========================================="
+	cd example; make
+
+# Integration tests only (for backward compatibility)
 check:
 	cd example; make
 
@@ -39,10 +52,6 @@ dev-check:
 	@./scripts/run-all-checks.sh
 
 .PHONY: test tidy coverage coverage-clean dev-setup dev-check check
-
-test:
-	@for i in $(DIR) ; \
-	     do (test -d $$i && cd $$i && $(MAKE) test) || exit 1; done
 
 tidy:
 	@for i in $(DIR) ; \
