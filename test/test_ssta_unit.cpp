@@ -92,25 +92,31 @@ TEST_F(SstaUnitTest, SetBench) {
 // Test: Set lat flag
 TEST_F(SstaUnitTest, SetLat) {
     ssta_->set_lat();
-    // Should be able to call report after setting up
+    // Should be able to get results after setting up (without report())
     ssta_->set_dlib(example_dir + "/ex4_gauss.dlib");
     ssta_->set_bench(example_dir + "/ex4.bench");
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    EXPECT_NO_THROW(ssta_->report());
+    EXPECT_NO_THROW({
+        Nh::LatResults results = ssta_->getLatResults();
+        EXPECT_FALSE(results.empty());
+    });
 }
 
 // Test: Set correlation flag
 TEST_F(SstaUnitTest, SetCorrelation) {
     ssta_->set_correlation();
-    // Should be able to call report after setting up
+    // Should be able to get results after setting up (without report())
     ssta_->set_dlib(example_dir + "/ex4_gauss.dlib");
     ssta_->set_bench(example_dir + "/ex4.bench");
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    EXPECT_NO_THROW(ssta_->report());
+    EXPECT_NO_THROW({
+        Nh::CorrelationMatrix matrix = ssta_->getCorrelationMatrix();
+        EXPECT_FALSE(matrix.node_names.empty());
+    });
 }
 
 // Test: Check method with missing dlib
@@ -288,30 +294,36 @@ TEST_F(SstaUnitTest, GetCorrelationMatrixAfterRead) {
     }
 }
 
-// Test: Report with lat only
-TEST_F(SstaUnitTest, ReportLatOnly) {
+// Test: Get LAT results (I/O separation - no report() needed)
+TEST_F(SstaUnitTest, GetLatResults) {
     ssta_->set_dlib(example_dir + "/ex4_gauss.dlib");
     ssta_->set_bench(example_dir + "/ex4.bench");
     ssta_->set_lat();
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    EXPECT_NO_THROW(ssta_->report());
+    EXPECT_NO_THROW({
+        Nh::LatResults results = ssta_->getLatResults();
+        EXPECT_FALSE(results.empty());
+    });
 }
 
-// Test: Report with correlation only
-TEST_F(SstaUnitTest, ReportCorrelationOnly) {
+// Test: Get correlation matrix (I/O separation - no report() needed)
+TEST_F(SstaUnitTest, GetCorrelationMatrix) {
     ssta_->set_dlib(example_dir + "/ex4_gauss.dlib");
     ssta_->set_bench(example_dir + "/ex4.bench");
     ssta_->set_correlation();
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    EXPECT_NO_THROW(ssta_->report());
+    EXPECT_NO_THROW({
+        Nh::CorrelationMatrix matrix = ssta_->getCorrelationMatrix();
+        EXPECT_FALSE(matrix.node_names.empty());
+    });
 }
 
-// Test: Report with both lat and correlation
-TEST_F(SstaUnitTest, ReportBoth) {
+// Test: Get both LAT results and correlation matrix (I/O separation - no report() needed)
+TEST_F(SstaUnitTest, GetBothResults) {
     ssta_->set_dlib(example_dir + "/ex4_gauss.dlib");
     ssta_->set_bench(example_dir + "/ex4.bench");
     ssta_->set_lat();
@@ -319,7 +331,12 @@ TEST_F(SstaUnitTest, ReportBoth) {
     ssta_->check();
     ssta_->read_dlib();
     ssta_->read_bench();
-    EXPECT_NO_THROW(ssta_->report());
+    EXPECT_NO_THROW({
+        Nh::LatResults lat_results = ssta_->getLatResults();
+        Nh::CorrelationMatrix corr_matrix = ssta_->getCorrelationMatrix();
+        EXPECT_FALSE(lat_results.empty());
+        EXPECT_FALSE(corr_matrix.node_names.empty());
+    });
 }
 
 // Test: Exception handling for invalid gate in dlib
@@ -534,7 +551,7 @@ TEST_F(SstaUnitTest, CheckMethodDoesNotCallExit) {
 TEST_F(SstaUnitTest, PureLogicFunctionsDoNotDependOnOutputFlags) {
     // Verify that getLatResults() and getCorrelationMatrix() work
     // regardless of is_lat_ and is_correlation_ flags
-    // These flags should only affect report() behavior, not logic functions
+    // These flags should only affect output formatting, not logic functions
 
     ssta_->set_dlib(example_dir + "/ex4_gauss.dlib");
     ssta_->set_bench(example_dir + "/ex4.bench");

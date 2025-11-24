@@ -7,6 +7,7 @@
 #include <iostream>
 #include <nhssta/exception.hpp>
 #include <nhssta/ssta.hpp>
+#include <nhssta/ssta_results.hpp>
 #include <sstream>
 #include <string>
 
@@ -99,6 +100,68 @@ std::string get_version_string() {
     return oss.str();
 }
 
+// Helper function to format LAT results (matching report_lat() format)
+std::string formatLatResults(const Nh::LatResults& results) {
+    std::ostringstream oss;
+    oss << "#" << std::endl;
+    oss << "# LAT" << std::endl;
+    oss << "#" << std::endl;
+    oss << std::left << std::setw(15) << "#node" << std::right << std::setw(10) << "mu" << std::setw(9) << "std" << std::endl;
+    oss << "#---------------------------------" << std::endl;
+
+    for (const auto& result : results) {
+        oss << std::left << std::setw(15) << result.node_name;
+        oss << std::right << std::setw(10) << std::fixed << std::setprecision(3)
+            << result.mean;
+        oss << std::right << std::setw(9) << std::fixed << std::setprecision(3)
+            << result.std_dev << std::endl;
+    }
+
+    oss << "#---------------------------------" << std::endl;
+    return oss.str();
+}
+
+// Helper function to format correlation matrix (matching report_correlation() format)
+std::string formatCorrelationMatrix(const Nh::CorrelationMatrix& matrix) {
+    std::ostringstream oss;
+    oss << "#" << std::endl;
+    oss << "# correlation matrix" << std::endl;
+    oss << "#" << std::endl;
+
+    oss << "#\t";
+    for (const auto& node_name : matrix.node_names) {
+        oss << node_name << "\t";
+    }
+    oss << std::endl;
+
+    // Print separator line
+    oss << "#-------";
+    for (size_t i = 1; i < matrix.node_names.size(); i++) {
+        oss << "--------";
+    }
+    oss << "-----" << std::endl;
+
+    for (const auto& node_name : matrix.node_names) {
+        oss << node_name << "\t";
+
+        for (const auto& other_name : matrix.node_names) {
+            double corr = matrix.getCorrelation(node_name, other_name);
+            oss << std::fixed << std::setprecision(3) << std::setw(4) << corr << "\t";
+        }
+
+        oss << std::endl;
+    }
+
+    // Print separator line
+    oss << "#-------";
+    for (size_t i = 1; i < matrix.node_names.size(); i++) {
+        oss << "--------";
+    }
+    oss << "-----" << std::endl;
+
+    return oss.str();
+}
+
 int main(int argc, char* argv[]) {
     try {
         // CLI layer: Output version information
@@ -109,7 +172,23 @@ int main(int argc, char* argv[]) {
         ssta.check();
         ssta.read_dlib();
         ssta.read_bench();
-        ssta.report();
+
+        // CLI layer: Output results using getLatResults() and getCorrelationMatrix()
+        // This separates I/O from business logic
+        if (ssta.is_lat() || ssta.is_correlation()) {
+            std::cout << std::endl;
+        }
+
+        if (ssta.is_lat()) {
+            Nh::LatResults lat_results = ssta.getLatResults();
+            std::cout << formatLatResults(lat_results);
+        }
+
+        if (ssta.is_correlation()) {
+            std::cout << std::endl;
+            Nh::CorrelationMatrix corr_matrix = ssta.getCorrelationMatrix();
+            std::cout << formatCorrelationMatrix(corr_matrix);
+        }
 
         // CLI layer: Output success message
         std::cerr << "OK" << std::endl;

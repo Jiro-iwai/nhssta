@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
 #include <string>
@@ -343,84 +341,6 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
     } else {
         net_.push_back(l);
     }
-}
-
-//// report ////
-
-void Ssta::report() {
-    if (is_lat_) {
-        std::cout << std::endl;
-        report_lat();
-    }
-
-    if (is_correlation_) {
-        std::cout << std::endl;
-        report_correlation();
-    }
-}
-
-void Ssta::report_lat() const {
-    LatResults results = getLatResults();
-
-    std::cout << "#" << std::endl;
-    std::cout << "# LAT" << std::endl;
-    std::cout << "#" << std::endl;
-    std::cout << std::left << std::setw(15) << "#node" << std::right << std::setw(10) << "mu" << std::setw(9) << "std" << std::endl;
-    std::cout << "#---------------------------------" << std::endl;
-
-    for (const auto& result : results) {
-        std::cout << std::left << std::setw(15) << result.node_name;
-        std::cout << std::right << std::setw(10) << std::fixed << std::setprecision(3)
-                  << result.mean;
-        std::cout << std::right << std::setw(9) << std::fixed << std::setprecision(3)
-                  << result.std_dev << std::endl;
-    }
-
-    std::cout << "#---------------------------------" << std::endl;
-}
-
-void Ssta::print_line() const {
-    bool isfirst = true;
-    auto si = signals_.begin();
-    for (; si != signals_.end(); si++) {
-        if (isfirst) {
-            std::cout << "#-------";
-            isfirst = false;
-        } else {
-            std::cout << "--------";
-        }
-    }
-    std::cout << "-----" << std::endl;
-}
-
-void Ssta::report_correlation() const {
-    CorrelationMatrix matrix = getCorrelationMatrix();
-
-    std::cout << "#" << std::endl;
-    std::cout << "# correlation matrix" << std::endl;
-    std::cout << "#" << std::endl;
-
-    std::cout << "#\t";
-    for (const auto& node_name : matrix.node_names) {
-        std::cout << node_name << "\t";
-    }
-    std::cout << std::endl;
-
-    print_line();  //
-
-    for (const auto& node_name : matrix.node_names) {
-        std::cout << node_name << "\t";
-
-        for (const auto& other_name : matrix.node_names) {
-            double corr = matrix.getCorrelation(node_name, other_name);
-            std::cout << std::fixed << std::setprecision(3) << std::setw(4) << corr << "\t";
-            std::cout.flush();
-        }
-
-        std::cout << std::endl;
-    }
-
-    print_line();  //
 }
 
 // Pure logic functions (Phase 2: I/O separation)

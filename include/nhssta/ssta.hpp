@@ -31,7 +31,6 @@ class Ssta {
     void check();
     void read_dlib();
     void read_bench();
-    void report();
 
    private:
     typedef std::vector<std::string> Ins;
@@ -152,6 +151,13 @@ class Ssta {
     }
     void set_correlation() {
         is_correlation_ = true;
+    }
+
+    [[nodiscard]] bool is_lat() const {
+        return is_lat_;
+    }
+    [[nodiscard]] bool is_correlation() const {
+        return is_correlation_;
     }
 
     void set_dlib(const std::string& dlib) {

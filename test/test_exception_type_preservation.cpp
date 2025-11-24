@@ -238,8 +238,8 @@ TEST_F(ExceptionTypePreservationTest, ReadBenchPreservesRuntimeExceptionFloating
     deleteTestFile("floating.bench");
 }
 
-// Test: Ssta::report() preserves RuntimeException type
-TEST_F(ExceptionTypePreservationTest, ReportPreservesRuntimeException) {
+// Test: Ssta::getLatResults() and getCorrelationMatrix() work without I/O
+TEST_F(ExceptionTypePreservationTest, GetResultsWorksWithoutIO) {
     Nh::Ssta ssta;
     
     // Create a valid dlib file (need both input pins)
@@ -260,14 +260,14 @@ TEST_F(ExceptionTypePreservationTest, ReportPreservesRuntimeException) {
     ssta.set_lat();
     ssta.set_correlation();
     
-    // Note: report() may throw RuntimeException in certain error conditions
-    // For now, we test that if it throws, it preserves the type
-    // This test may need adjustment based on actual error conditions in report()
-    
-    // Most common error would be in correlation calculation
-    // But for normal cases, report() should not throw
-    // We'll test that report() completes successfully for valid input
-    EXPECT_NO_THROW(ssta.report());
+    // Test that getLatResults() and getCorrelationMatrix() work without report()
+    // These methods should not perform I/O operations
+    EXPECT_NO_THROW({
+        Nh::LatResults lat_results = ssta.getLatResults();
+        Nh::CorrelationMatrix corr_matrix = ssta.getCorrelationMatrix();
+        EXPECT_FALSE(lat_results.empty());
+        EXPECT_FALSE(corr_matrix.node_names.empty());
+    });
 
     deleteTestFile("test.dlib");
     deleteTestFile("test.bench");
