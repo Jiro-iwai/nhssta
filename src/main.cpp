@@ -94,7 +94,7 @@ std::string get_version_string() {
 #endif
     
     std::ostringstream oss;
-    oss << "nhssta 0.1.0 (";
+    oss << "nhssta 0.1.1 (";
     oss << std::put_time(&timeinfo, "%a %b %d %H:%M:%S %Y");
     oss << ")";
     return oss.str();
