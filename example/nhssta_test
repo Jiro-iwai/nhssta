@@ -162,7 +162,7 @@ run_test() {
     rm -f "${TEMP_RESULT_FILE}"
 
     # Run nhssta, filter comments, version, timestamp, and OK line, and save output
-    if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "nhssta 0.1" | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
+    if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "^nhssta " | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
         print_failure "  ✗ FAILED (nhssta execution failed)"
         FAILED_TESTS=$((FAILED_TESTS + 1))
         return 1
