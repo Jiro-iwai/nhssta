@@ -17,6 +17,7 @@ void usage(const char* first, const char* last) {
     std::cerr << " -b, --bench        specifies .bench file" << std::endl;
     std::cerr << " -l, --lat          prints all LAT data" << std::endl;
     std::cerr << " -c, --correlation  prints correlation matrix of LAT" << std::endl;
+    std::cerr << " -p, --path [N]     prints top N critical paths (default: 5)" << std::endl;
     std::cerr << " -h, --help         gives this help" << std::endl;
     throw Nh::RuntimeException("Invalid command-line arguments");
 }
@@ -33,6 +34,28 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
             ssta->set_lat();
         } else if (arg == "--correlation") {
             ssta->set_correlation();
+        } else if (arg == "--path") {
+            // Check if next argument is a number
+            if (i + 1 < argc) {
+                std::string next_arg = argv[i + 1];
+                // Check if it's a number (not another option)
+                if (next_arg[0] != '-') {
+                    try {
+                        auto top_n = static_cast<size_t>(std::stoul(next_arg));
+                        ssta->set_critical_path(top_n);
+                        i++;  // Skip the number argument
+                    } catch (...) {
+                        // If conversion fails, use default
+                        ssta->set_critical_path(5);
+                    }
+                } else {
+                    // No number provided, use default
+                    ssta->set_critical_path(5);
+                }
+            } else {
+                // No more arguments, use default
+                ssta->set_critical_path(5);
+            }
         } else if (arg == "--dlib") {
             if (i + 1 < argc) {
                 ssta->set_dlib(std::string(argv[++i]));
@@ -57,6 +80,29 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
                     break;
                 case 'c':
                     ssta->set_correlation();
+                    break;
+                case 'p':
+                    // Check if next argument is a number
+                    if (i + 1 < argc) {
+                        std::string next_arg = argv[i + 1];
+                        // Check if it's a number (not another option)
+                        if (next_arg[0] != '-') {
+                            try {
+                                auto top_n = static_cast<size_t>(std::stoul(next_arg));
+                                ssta->set_critical_path(top_n);
+                                i++;  // Skip the number argument
+                            } catch (...) {
+                                // If conversion fails, use default
+                                ssta->set_critical_path(5);
+                            }
+                        } else {
+                            // No number provided, use default
+                            ssta->set_critical_path(5);
+                        }
+                    } else {
+                        // No more arguments, use default
+                        ssta->set_critical_path(5);
+                    }
                     break;
                 case 'd':
                     if (i + 1 < argc) {
@@ -162,6 +208,38 @@ std::string formatCorrelationMatrix(const Nh::CorrelationMatrix& matrix) {
     return oss.str();
 }
 
+// Helper function to format critical paths
+std::string formatCriticalPaths(const Nh::CriticalPaths& paths) {
+    std::ostringstream oss;
+    oss << "#" << std::endl;
+    oss << "# critical paths" << std::endl;
+    oss << "#" << std::endl;
+    
+    for (size_t i = 0; i < paths.size(); i++) {
+        const auto& path = paths[i];
+        oss << "# Path " << (i + 1) << " (delay: " << std::fixed << std::setprecision(3) << path.delay_mean << ")" << std::endl;
+        oss << "#   Nodes: ";
+        for (size_t j = 0; j < path.node_names.size(); j++) {
+            oss << path.node_names[j];
+            if (j < path.node_names.size() - 1) {
+                oss << " -> ";
+            }
+        }
+        oss << std::endl;
+        oss << "#   Instances: ";
+        for (size_t j = 0; j < path.instance_names.size(); j++) {
+            oss << path.instance_names[j];
+            if (j < path.instance_names.size() - 1) {
+                oss << " -> ";
+            }
+        }
+        oss << std::endl;
+    }
+    
+    oss << "#" << std::endl;
+    return oss.str();
+}
+
 int main(int argc, char* argv[]) {
     try {
         // CLI layer: Output version information
@@ -175,7 +253,7 @@ int main(int argc, char* argv[]) {
 
         // CLI layer: Output results using getLatResults() and getCorrelationMatrix()
         // This separates I/O from business logic
-        if (ssta.is_lat() || ssta.is_correlation()) {
+        if (ssta.is_lat() || ssta.is_correlation() || ssta.is_critical_path()) {
             std::cout << std::endl;
         }
 
@@ -188,6 +266,12 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
             Nh::CorrelationMatrix corr_matrix = ssta.getCorrelationMatrix();
             std::cout << formatCorrelationMatrix(corr_matrix);
+        }
+
+        if (ssta.is_critical_path()) {
+            std::cout << std::endl;
+            Nh::CriticalPaths paths = ssta.getCriticalPaths();
+            std::cout << formatCriticalPaths(paths);
         }
 
         // CLI layer: Output success message

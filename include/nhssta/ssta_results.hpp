@@ -67,6 +67,39 @@ struct CorrelationMatrix {
     }
 };
 
+// Critical path segment (one gate instance)
+struct PathSegment {
+    std::string input_node;
+    std::string instance_name;
+    std::string output_node;
+    double delay_mean;
+
+    PathSegment()
+        : delay_mean(0.0) {}
+    PathSegment(const std::string& in, const std::string& inst, const std::string& out, double delay)
+        : input_node(in)
+        , instance_name(inst)
+        , output_node(out)
+        , delay_mean(delay) {}
+};
+
+// Critical path (complete path from input to output)
+struct CriticalPath {
+    std::vector<std::string> node_names;      // Signal node names (e.g., A, N1, Y)
+    std::vector<std::string> instance_names;  // Gate instance names (e.g., gate1:0, gate2:1)
+    double delay_mean;                        // Total path delay (mean)
+
+    CriticalPath()
+        : delay_mean(0.0) {}
+    CriticalPath(const std::vector<std::string>& nodes, const std::vector<std::string>& instances, double delay)
+        : node_names(nodes)
+        , instance_names(instances)
+        , delay_mean(delay) {}
+};
+
+// Collection of critical paths (top N paths)
+typedef std::vector<CriticalPath> CriticalPaths;
+
 }  // namespace Nh
 
 #endif  // NH_SSTA_RESULTS__H

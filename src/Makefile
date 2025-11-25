@@ -57,7 +57,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_architecture_documentation.cpp ../test/test_profiling.cpp \
 	../test/test_map_to_unordered_map.cpp ../test/test_exception_type_preservation.cpp \
 	../test/test_main_exception_handling.cpp ../test/test_ssta_io_separation.cpp \
-	../test/test_main_output_format.cpp ../test/test_directory_structure.cpp
+	../test/test_main_output_format.cpp ../test/test_directory_structure.cpp \
+	../test/test_critical_path.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 
