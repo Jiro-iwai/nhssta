@@ -16,28 +16,12 @@ using namespace Nh;
 using RandomVar = ::RandomVariable::RandomVariable;
 using Normal = ::RandomVariable::Normal;
 
-class SstaResultsTest : public ::testing::Test {
-   protected:
-    void SetUp() override {
-        ssta_ = new Ssta();
-    }
-
-    void TearDown() override {
-        delete ssta_;
-    }
-
-    Ssta* ssta_;
-};
-
-// Test getLatResults with empty signals
-TEST_F(SstaResultsTest, EmptyLatResults) {
-    LatResults results = ssta_->getLatResults();
+// Test getLatResults and getCorrelationMatrix with empty signals
+TEST(SstaResultsTest, EmptyLatAndCorrelationResults) {
+    Ssta ssta;
+    LatResults results = ssta.getLatResults();
     EXPECT_EQ(results.size(), 0);
-}
-
-// Test getCorrelationMatrix with empty signals
-TEST_F(SstaResultsTest, EmptyCorrelationMatrix) {
-    CorrelationMatrix matrix = ssta_->getCorrelationMatrix();
+    CorrelationMatrix matrix = ssta.getCorrelationMatrix();
     EXPECT_EQ(matrix.node_names.size(), 0);
     EXPECT_EQ(matrix.correlations.size(), 0);
 }

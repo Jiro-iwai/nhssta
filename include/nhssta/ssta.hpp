@@ -44,6 +44,7 @@ class Ssta {
     [[nodiscard]] bool is_line_ready(const NetLine& line) const;
     void set_instance_input(const Instance& inst, const NetLineIns& ins);
     void check_signal(const std::string& signal_name) const;
+    void track_path(const std::string& signal_name, const Instance& inst, const NetLineIns& ins, const std::string& gate_type);
 
     void node_error(const std::string& head, const std::string& signal_name) const;
 
@@ -58,11 +59,19 @@ class Ssta {
     std::string bench_;
     bool is_lat_ = false;
     bool is_correlation_ = false;
+    bool is_critical_path_ = false;
+    size_t critical_path_count_ = 5;
     Gates gates_;
     Signals signals_;
     Net net_;
     Pins inputs_;
     Pins outputs_;
+    Pins dff_outputs_;
+    // Path tracking data structures
+    std::unordered_map<std::string, std::string> signal_to_instance_;  // signal name -> instance name
+    std::unordered_map<std::string, std::vector<std::string>> instance_to_inputs_;  // instance name -> input signal names
+    std::unordered_map<std::string, std::string> instance_to_gate_type_;  // instance name -> gate type name
+    std::unordered_map<std::string, std::unordered_map<std::string, Normal>> instance_to_delays_;  // instance name -> (pin_name -> delay)
 
    public:
     void set_lat() {
@@ -71,12 +80,19 @@ class Ssta {
     void set_correlation() {
         is_correlation_ = true;
     }
+    void set_critical_path(size_t top_n = 5) {
+        is_critical_path_ = true;
+        critical_path_count_ = top_n;
+    }
 
     [[nodiscard]] bool is_lat() const {
         return is_lat_;
     }
     [[nodiscard]] bool is_correlation() const {
         return is_correlation_;
+    }
+    [[nodiscard]] bool is_critical_path() const {
+        return is_critical_path_;
     }
 
     void set_dlib(const std::string& dlib) {
@@ -89,6 +105,10 @@ class Ssta {
     // Pure logic functions (Phase 2: I/O separation)
     [[nodiscard]] LatResults getLatResults() const;
     [[nodiscard]] CorrelationMatrix getCorrelationMatrix() const;
+    [[nodiscard]] CriticalPaths getCriticalPaths(size_t top_n) const;
+    [[nodiscard]] CriticalPaths getCriticalPaths() const {
+        return getCriticalPaths(critical_path_count_);
+    }
 };
 }  // namespace Nh
 

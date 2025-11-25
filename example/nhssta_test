@@ -156,11 +156,13 @@ run_test() {
 
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     echo "Test ${TOTAL_TESTS}: ${TEST_NAME} (${OPTIONS})"
+    CMD_PREVIEW="${NHSSTA} ${OPTIONS} -d ${DLIB_FILE} -b ${BENCH_FILE}"
+    echo "  Command: ${CMD_PREVIEW}"
 
     rm -f "${TEMP_RESULT_FILE}"
 
     # Run nhssta, filter comments, version, timestamp, and OK line, and save output
-    if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "nhssta 0.1" | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
+    if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "^nhssta " | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
         print_failure "  ✗ FAILED (nhssta execution failed)"
         FAILED_TESTS=$((FAILED_TESTS + 1))
         return 1
@@ -205,14 +207,14 @@ run_test() {
 print_section "Running nhssta integration tests"
 
 # Test cases
-run_test "my.dlib + my.bench" "my.dlib" "my.bench" "-l -c" "result1"
-run_test "ex4_gauss.dlib + ex4.bench" "ex4_gauss.dlib" "ex4.bench" "-l -c" "result2"
-run_test "ex4_gauss.dlib + s27.bench" "ex4_gauss.dlib" "s27.bench" "-l -c" "result3"
-run_test "gaussdelay.dlib + s298.bench" "gaussdelay.dlib" "s298.bench" "-l" "result4"
-run_test "gaussdelay.dlib + s344.bench" "gaussdelay.dlib" "s344.bench" "-l" "result5"
-run_test "gaussdelay.dlib + s820.bench" "gaussdelay.dlib" "s820.bench" "-l" "result6"
-run_test "ex4_gauss.dlib + ex3.bench" "ex4_gauss.dlib" "ex3.bench" "-l -c" "result7"
-run_test "dos.dlib + dos.bench" "dos.dlib" "dos.bench" "-l -c" "result8"
+run_test "my.dlib + my.bench" "my.dlib" "my.bench" "-l -c -p" "result1"
+run_test "ex4_gauss.dlib + ex4.bench" "ex4_gauss.dlib" "ex4.bench" "-l -c -p" "result2"
+run_test "ex4_gauss.dlib + s27.bench" "ex4_gauss.dlib" "s27.bench" "-l -c -p" "result3"
+run_test "gaussdelay.dlib + s298.bench" "gaussdelay.dlib" "s298.bench" "-l -p" "result4"
+run_test "gaussdelay.dlib + s344.bench" "gaussdelay.dlib" "s344.bench" "-l -p" "result5"
+run_test "gaussdelay.dlib + s820.bench" "gaussdelay.dlib" "s820.bench" "-l -p" "result6"
+run_test "ex4_gauss.dlib + ex3.bench" "ex4_gauss.dlib" "ex3.bench" "-l -c -p" "result7"
+run_test "dos.dlib + dos.bench" "dos.dlib" "dos.bench" "-l -c -p" "result8"
 
 print_section "Test Summary"
 echo "Total tests: ${TOTAL_TESTS}"

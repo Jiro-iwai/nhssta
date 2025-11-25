@@ -18,11 +18,21 @@
 class CommandLineTest : public ::testing::Test {
    protected:
     void SetUp() override {
-        // Set up test environment
+        example_dir_ = find_example_dir();
     }
 
     void TearDown() override {
         // Cleanup
+    }
+    
+    std::string example_path(const std::string& filename) const {
+        if (example_dir_.empty()) {
+            return filename;
+        }
+        if (!filename.empty() && filename[0] == '/') {
+            return filename;
+        }
+        return example_dir_ + "/" + filename;
     }
 
     // Helper to create argc/argv from vector of strings
@@ -75,6 +85,8 @@ class CommandLineTest : public ::testing::Test {
 
         return result;
     }
+
+    std::string example_dir_;
 };
 
 // Test: help option (-h)
@@ -196,4 +208,46 @@ TEST_F(CommandLineTest, TestEmptyArguments) {
                      (output.find("usage") != std::string::npos);
     EXPECT_TRUE(has_error) << "Should show error or usage when no arguments provided. Got: "
                            << output.substr(0, 200);
+}
+
+// Test: critical path option (-p) without explicit count uses default and prints header
+TEST_F(CommandLineTest, TestCriticalPathShortOptionDefault) {
+    std::string output =
+        run_nhssta({"-p", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    EXPECT_EQ(output.find("usage"), std::string::npos)
+        << "Should not show usage when -p is provided without explicit count";
+    EXPECT_NE(output.find("critical paths"), std::string::npos)
+        << "Critical path header should be printed when -p is enabled";
+    EXPECT_NE(output.find("#node"), std::string::npos)
+        << "Critical path output should include LAT-style table header";
+}
+
+// Test: critical path option (-p N) respects explicit count argument
+TEST_F(CommandLineTest, TestCriticalPathShortOptionWithCount) {
+    std::string output =
+        run_nhssta({"-p", "2", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    EXPECT_EQ(output.find("usage"), std::string::npos)
+        << "Should not show usage when -p has a numeric argument";
+    EXPECT_NE(output.find("critical paths"), std::string::npos)
+        << "Critical path header should be present when -p count is provided";
+    EXPECT_NE(output.find("Path 1"), std::string::npos)
+        << "At least one critical path should be printed";
+    EXPECT_NE(output.find("#node"), std::string::npos)
+        << "Critical path output should include LAT-style table header";
+}
+
+// Test: critical path option (--path invalid) falls back to default count
+TEST_F(CommandLineTest, TestCriticalPathLongOptionInvalidArgument) {
+    std::string output = run_nhssta(
+        {"--path", "invalid", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    EXPECT_NE(output.find("usage"), std::string::npos)
+        << "Invalid numeric argument should currently be treated as an error";
+}
+
+// Test: critical path option with negative count should trigger usage (treated as invalid flag)
+TEST_F(CommandLineTest, TestCriticalPathNegativeCountShowsUsage) {
+    std::string output = run_nhssta(
+        {"-p", "-5", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    EXPECT_NE(output.find("usage"), std::string::npos)
+        << "Negative count should be treated as invalid flag and show usage";
 }
