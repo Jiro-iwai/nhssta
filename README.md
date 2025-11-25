@@ -58,6 +58,11 @@ nhsstaは以下の機能を持ちます。
                /*.dlib       サンプル.dlibデータ
                /nhssta_test  統合テストスクリプト
                /result*      テストスクリプト実行結果
+       /scripts/             開発・解析用スクリプト
+               /dev-setup.sh       開発環境セットアップ
+               /run-all-checks.sh  全チェック実行
+               /generate_coverage.sh カバレッジ生成
+               /visualize_bench.py 回路可視化ツール
        /docs/                 開発ドキュメント
        /build/                ビルド成果物（`make`実行後に生成、`.gitignore`で無視）
                /src/          オブジェクトファイル（.o）と依存関係ファイル（.d）
@@ -308,13 +313,31 @@ make GTEST_DIR=/usr/local/opt/googletest test
 # 環境変数とmake引数の両方が指定された場合、make引数が優先されます
 ```
 
-### 4.3 コントリビューション
+### 4.3 回路可視化ツール
+
+`.bench` 形式の回路ファイルを可視化するためのPythonスクリプト（`scripts/visualize_bench.py`）が用意されています。
+
+```bash
+# 依存パッケージのインストール
+pip install networkx matplotlib
+
+# 回路全体図の生成
+python scripts/visualize_bench.py example/s27.bench output
+
+# クリティカルパスの強調表示
+./build/bin/nhssta -p 3 -d example/gaussdelay.dlib -b example/s298.bench > critical.txt
+python scripts/visualize_bench.py example/s298.bench output --highlight-path critical.txt
+```
+
+詳細は `docs/visualization.md` を参照してください。
+
+### 4.4 コントリビューション
 
 - 新しい機能やバグ修正は、ブランチを作成してプルリクエストとして提出してください
 - すべてのテストがパスし、CIのチェックが通ることを確認してください
 - 詳細は `CONTRIBUTING.md` を参照してください
 
-### 4.4 メモリ管理ポリシー
+### 4.5 メモリ管理ポリシー
 
 - `RandomVariable` / `Expression` / `Gate` / `Instance` など、実行時グラフを表す主要コンポーネントは **`std::shared_ptr` ベースの薄いハンドル型**を使用しています
 - `CovarianceMatrix` は確率変数間の共分散値を保持するデータ構造で、`std::shared_ptr` を使用して複数の場所から安全に共有・参照できます
