@@ -102,8 +102,8 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 351 tests from 38 test suites.
-[  PASSED  ] 351 tests.
+[==========] Running 383 tests from 40 test suites.
+[  PASSED  ] 383 tests.
 ==========================================
 Running integration tests...
 ==========================================
@@ -184,7 +184,7 @@ nhsstaは以下のexit codeを返します：
 # exampleディレクトリから実行する場合
 $ cd example
 $ ../build/bin/nhssta -l -c -p -d ex4_gauss.dlib -b ex4.bench
-nhssta 0.1.1
+nhssta 0.2.1
 
 #
 # LAT
