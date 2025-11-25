@@ -66,6 +66,7 @@ class Ssta {
     Net net_;
     Pins inputs_;
     Pins outputs_;
+    Pins dff_outputs_;
     // Path tracking data structures
     std::unordered_map<std::string, std::string> signal_to_instance_;  // signal name -> instance name
     std::unordered_map<std::string, std::vector<std::string>> instance_to_inputs_;  // instance name -> input signal names
@@ -104,7 +105,10 @@ class Ssta {
     // Pure logic functions (Phase 2: I/O separation)
     [[nodiscard]] LatResults getLatResults() const;
     [[nodiscard]] CorrelationMatrix getCorrelationMatrix() const;
-    [[nodiscard]] CriticalPaths getCriticalPaths(size_t top_n = 5) const;
+    [[nodiscard]] CriticalPaths getCriticalPaths(size_t top_n) const;
+    [[nodiscard]] CriticalPaths getCriticalPaths() const {
+        return getCriticalPaths(critical_path_count_);
+    }
 };
 }  // namespace Nh
 

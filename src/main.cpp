@@ -218,22 +218,27 @@ std::string formatCriticalPaths(const Nh::CriticalPaths& paths) {
     for (size_t i = 0; i < paths.size(); i++) {
         const auto& path = paths[i];
         oss << "# Path " << (i + 1) << " (delay: " << std::fixed << std::setprecision(3) << path.delay_mean << ")" << std::endl;
-        oss << "#   Nodes: ";
-        for (size_t j = 0; j < path.node_names.size(); j++) {
-            oss << path.node_names[j];
-            if (j < path.node_names.size() - 1) {
-                oss << " -> ";
+        oss << std::left << std::setw(15) << "#node" << std::right << std::setw(10) << "mu" << std::setw(9) << "std" << std::endl;
+        oss << "#---------------------------------" << std::endl;
+
+        if (!path.node_stats.empty()) {
+            for (const auto& entry : path.node_stats) {
+                oss << std::left << std::setw(15) << entry.node_name;
+                oss << std::right << std::setw(10) << std::fixed << std::setprecision(3) << entry.mean;
+                oss << std::right << std::setw(9) << std::fixed << std::setprecision(3) << entry.std_dev << std::endl;
+            }
+        } else {
+            for (const auto& node_name : path.node_names) {
+                oss << std::left << std::setw(15) << node_name;
+                oss << std::right << std::setw(10) << std::fixed << std::setprecision(3) << 0.0;
+                oss << std::right << std::setw(9) << std::fixed << std::setprecision(3) << 0.0 << std::endl;
             }
         }
-        oss << std::endl;
-        oss << "#   Instances: ";
-        for (size_t j = 0; j < path.instance_names.size(); j++) {
-            oss << path.instance_names[j];
-            if (j < path.instance_names.size() - 1) {
-                oss << " -> ";
-            }
+
+        oss << "#---------------------------------" << std::endl;
+        if (i + 1 < paths.size()) {
+            oss << std::endl;
         }
-        oss << std::endl;
     }
     
     oss << "#" << std::endl;

@@ -213,6 +213,33 @@ TEST_F(CriticalPathTest, PathIncludesNodeAndInstanceNames) {
     deleteTestFile("path_names.bench");
 }
 
+// Test: Critical path includes LAT-style stats for each node
+TEST_F(CriticalPathTest, PathIncludesLatStyleStats) {
+    std::string dlib_content = "gate1 0 y gauss (10.0, 2.0)\n";
+    std::string bench_content = "INPUT(A)\nOUTPUT(Y)\nY = gate1(A)\n";
+    std::string dlib_path = createTestFile("path_stats.dlib", dlib_content);
+    std::string bench_path = createTestFile("path_stats.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(5);
+    ASSERT_FALSE(paths.empty());
+    const auto& stats = paths[0].node_stats;
+    ASSERT_EQ(stats.size(), paths[0].node_names.size());
+    EXPECT_EQ(stats.front().node_name, "A");
+    EXPECT_EQ(stats.back().node_name, "Y");
+    EXPECT_NEAR(stats.back().mean, 10.0, 0.1);
+    EXPECT_GT(stats.back().std_dev, 0.0);
+
+    deleteTestFile("path_stats.dlib");
+    deleteTestFile("path_stats.bench");
+}
+
 // Test: Default top_n is 5
 TEST_F(CriticalPathTest, DefaultTopNIsFive) {
     std::string dlib_content = "gate1 0 y gauss (10.0, 2.0)\n";
@@ -232,6 +259,62 @@ TEST_F(CriticalPathTest, DefaultTopNIsFive) {
 
     deleteTestFile("default_topn.dlib");
     deleteTestFile("default_topn.bench");
+}
+
+// Test: DFF outputs act as path boundaries (sequential circuit support)
+TEST_F(CriticalPathTest, DffOutputsServeAsPathSources) {
+    std::string dlib_path = example_dir + "/gaussdelay.dlib";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "OUTPUT(Y)\n"
+        "N1 = DFF(A)\n"
+        "Y = inv(N1)\n";
+    std::string bench_path = createTestFile("dff_boundary.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(3);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(3);
+    ASSERT_FALSE(paths.empty());
+    const auto& nodes = paths[0].node_names;
+    ASSERT_GE(nodes.size(), 2u);
+    EXPECT_EQ(nodes.front(), "N1");  // DFF output acts as pseudo-input boundary
+    EXPECT_EQ(nodes.back(), "Y");
+
+    deleteTestFile("dff_boundary.bench");
+}
+
+// Test: Zero-argument getCriticalPaths uses stored top_n
+TEST_F(CriticalPathTest, StoredTopNUsedWithoutExplicitArgument) {
+    std::string dlib_content =
+        "gate1 0 y gauss (10.0, 2.0)\n"
+        "gate2 0 y gauss (20.0, 3.0)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "INPUT(B)\n"
+        "OUTPUT(Y1)\n"
+        "OUTPUT(Y2)\n"
+        "Y1 = gate1(A)\n"
+        "Y2 = gate2(B)\n";
+    std::string dlib_path = createTestFile("stored_topn.dlib", dlib_content);
+    std::string bench_path = createTestFile("stored_topn.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(1);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths();
+    EXPECT_LE(paths.size(), 1);
+
+    deleteTestFile("stored_topn.dlib");
+    deleteTestFile("stored_topn.bench");
 }
 
 // Integration test: Critical path with actual circuit (ex4.bench)
@@ -347,5 +430,181 @@ TEST_F(CriticalPathTest, IntegrationComplexCircuit) {
 
     deleteTestFile("complex.dlib");
     deleteTestFile("complex.bench");
+}
+
+// Test: Unconnected gates should not influence critical path extraction
+TEST_F(CriticalPathTest, DisconnectedGateIsIgnored) {
+    std::string dlib_content =
+        "gate1 0 y gauss (12.0, 2.0)\n"
+        "gate2 0 y gauss (30.0, 4.0)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "INPUT(B)\n"
+        "OUTPUT(Y)\n"
+        "Y = gate1(A)\n"
+        "Z = gate2(B)\n";  // Z is never observed
+
+    std::string dlib_path = createTestFile("disconnected.dlib", dlib_content);
+    std::string bench_path = createTestFile("disconnected.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(5);
+    ASSERT_FALSE(paths.empty());
+    EXPECT_EQ(paths[0].node_names.front(), "A");
+    EXPECT_EQ(paths[0].node_names.back(), "Y");
+    EXPECT_LE(paths.size(), 1);  // Only Y should appear
+
+    deleteTestFile("disconnected.dlib");
+    deleteTestFile("disconnected.bench");
+}
+
+// Test: Circuits without OUTPUT statements return no paths
+TEST_F(CriticalPathTest, NoOutputsReturnsEmptyPaths) {
+    std::string dlib_content = "gate1 0 y gauss (5.0, 1.0)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "N1 = gate1(A)\n";  // No OUTPUT directive
+
+    std::string dlib_path = createTestFile("no_output.dlib", dlib_content);
+    std::string bench_path = createTestFile("no_output.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(5);
+    EXPECT_TRUE(paths.empty());
+
+    deleteTestFile("no_output.dlib");
+    deleteTestFile("no_output.bench");
+}
+
+// Test: Loops in circuit description should raise an exception during parsing
+TEST_F(CriticalPathTest, LoopingCircuitRaisesException) {
+    std::string dlib_content =
+        "gate1 0 y gauss (5.0, 1.0)\n"
+        "gate2 0 y gauss (5.0, 1.0)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "OUTPUT(Y)\n"
+        "N1 = gate1(Y)\n"
+        "Y = gate2(N1)\n";  // Forms a loop via Y -> N1 -> Y
+
+    std::string dlib_path = createTestFile("loop.dlib", dlib_content);
+    std::string bench_path = createTestFile("loop.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+
+    EXPECT_THROW(ssta_->read_bench(), Nh::RuntimeException);
+
+    deleteTestFile("loop.dlib");
+    deleteTestFile("loop.bench");
+}
+
+// Test: When multiple inputs contribute equally, the first input is selected consistently
+TEST_F(CriticalPathTest, EqualDelayInputsSelectFirstSignal) {
+    std::string dlib_content =
+        "gatex 0 y gauss (10.0, 1.0)\n"
+        "gatex 1 y gauss (10.0, 1.0)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "INPUT(B)\n"
+        "OUTPUT(Y)\n"
+        "Y = gatex(A, B)\n";
+
+    std::string dlib_path = createTestFile("equal_delay.dlib", dlib_content);
+    std::string bench_path = createTestFile("equal_delay.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(5);
+    ASSERT_FALSE(paths.empty());
+    const auto& nodes = paths[0].node_names;
+    ASSERT_GE(nodes.size(), 2u);
+    EXPECT_EQ(nodes.front(), "A");  // First input should be selected
+    EXPECT_EQ(nodes.back(), "Y");
+
+    deleteTestFile("equal_delay.dlib");
+    deleteTestFile("equal_delay.bench");
+}
+
+// Test: Zero-delay gates still produce valid (zero) critical path delay
+TEST_F(CriticalPathTest, ZeroDelayGateProducesZeroDelayPath) {
+    std::string dlib_content = "gate1 0 y gauss (0.0, 0.1)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "OUTPUT(Y)\n"
+        "Y = gate1(A)\n";
+
+    std::string dlib_path = createTestFile("zero_delay.dlib", dlib_content);
+    std::string bench_path = createTestFile("zero_delay.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(5);
+    ASSERT_FALSE(paths.empty());
+    EXPECT_NEAR(paths[0].delay_mean, 0.0, 1e-6);
+
+    deleteTestFile("zero_delay.dlib");
+    deleteTestFile("zero_delay.bench");
+}
+
+// Test: Calling getCriticalPaths() without prior analysis returns empty results
+TEST_F(CriticalPathTest, GetCriticalPathsWithoutAnalysisIsSafe) {
+    Ssta local_ssta;
+    local_ssta.set_critical_path(5);
+    CriticalPaths paths = local_ssta.getCriticalPaths(5);
+    EXPECT_TRUE(paths.empty());
+}
+
+// Test: Requesting top 0 critical paths returns an empty result even if paths exist
+TEST_F(CriticalPathTest, RequestingZeroTopNReturnsEmpty) {
+    std::string dlib_content = "gate1 0 y gauss (10.0, 2.0)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "OUTPUT(Y)\n"
+        "Y = gate1(A)\n";
+
+    std::string dlib_path = createTestFile("zero_topn.dlib", dlib_content);
+    std::string bench_path = createTestFile("zero_topn.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths non_empty = ssta_->getCriticalPaths(5);
+    ASSERT_FALSE(non_empty.empty());
+
+    CriticalPaths empty_paths = ssta_->getCriticalPaths(0);
+    EXPECT_TRUE(empty_paths.empty());
+
+    deleteTestFile("zero_topn.dlib");
+    deleteTestFile("zero_topn.bench");
 }
 

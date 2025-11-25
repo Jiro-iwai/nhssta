@@ -86,7 +86,7 @@ class IntegrationTest : public ::testing::Test {
 
 // Test case 1: my.dlib + my.bench
 TEST_F(IntegrationTest, TestMyDlibMyBench) {
-    std::string output = run_nhssta("my.dlib", "my.bench", "-l -c");
+    std::string output = run_nhssta("my.dlib", "my.bench", "-l -c -p");
     std::string filtered = filter_comments(output);
 
     // Basic sanity check: output should contain some data
@@ -102,7 +102,7 @@ TEST_F(IntegrationTest, TestMyDlibMyBench) {
 
 // Test case 2: ex4_gauss.dlib + ex4.bench
 TEST_F(IntegrationTest, TestEx4GaussDlibEx4Bench) {
-    std::string output = run_nhssta("ex4_gauss.dlib", "ex4.bench", "-l -c");
+    std::string output = run_nhssta("ex4_gauss.dlib", "ex4.bench", "-l -c -p");
     std::string filtered = filter_comments(output);
 
     EXPECT_FALSE(filtered.empty()) << "Output should not be empty";
@@ -123,11 +123,32 @@ TEST_F(IntegrationTest, TestEx4GaussDlibEx4Bench) {
 
 // Test case 3: ex4_gauss.dlib + s27.bench
 TEST_F(IntegrationTest, TestEx4GaussDlibS27Bench) {
-    std::string output = run_nhssta("ex4_gauss.dlib", "s27.bench", "-l -c");
+    std::string output = run_nhssta("ex4_gauss.dlib", "s27.bench", "-l -c -p");
     std::string filtered = filter_comments(output);
 
     EXPECT_FALSE(filtered.empty());
     EXPECT_GT(filtered.length(), 0);
+}
+
+// Test: critical path output format resembles LAT table
+TEST_F(IntegrationTest, TestCriticalPathOutputFormatEx3Bench) {
+    std::string output = run_nhssta("ex4_gauss.dlib", "ex3.bench", "-p 3");
+
+    EXPECT_NE(output.find("# critical paths"), std::string::npos);
+    EXPECT_NE(output.find("#node"), std::string::npos);
+    EXPECT_NE(output.find("Path 1"), std::string::npos);
+    EXPECT_NE(output.find("Path 3"), std::string::npos);
+    EXPECT_NE(output.find("Y"), std::string::npos);
+    EXPECT_NE(output.find("300.000"), std::string::npos);
+}
+
+// Test: specifying top-N limits number of reported paths
+TEST_F(IntegrationTest, TestCriticalPathTopNLimit) {
+    std::string output = run_nhssta("ex4_gauss.dlib", "ex3.bench", "-p 2");
+
+    EXPECT_NE(output.find("Path 1"), std::string::npos);
+    EXPECT_NE(output.find("Path 2"), std::string::npos);
+    EXPECT_EQ(output.find("Path 3"), std::string::npos);
 }
 
 // Test case 4: gaussdelay.dlib + s298.bench (LAT only)
