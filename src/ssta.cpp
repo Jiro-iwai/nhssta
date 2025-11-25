@@ -664,10 +664,17 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
         build_path(endpoint, node_path, instance_path, endpoint_lat);
     }
     
-    // Sort paths by delay (descending) and take top N
+    // Sort paths by delay (descending), then by endpoint name (ascending) for stability
     std::sort(paths.begin(), paths.end(), 
               [](const CriticalPath& a, const CriticalPath& b) {
-                  return a.delay_mean > b.delay_mean;
+                  if (a.delay_mean != b.delay_mean) {
+                      return a.delay_mean > b.delay_mean;
+                  }
+                  // Same delay: sort by endpoint name for deterministic ordering
+                  if (!a.node_names.empty() && !b.node_names.empty()) {
+                      return a.node_names.back() < b.node_names.back();
+                  }
+                  return false;
               });
     
     if (paths.size() > top_n) {
