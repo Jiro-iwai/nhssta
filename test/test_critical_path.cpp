@@ -608,3 +608,117 @@ TEST_F(CriticalPathTest, RequestingZeroTopNReturnsEmpty) {
     deleteTestFile("zero_topn.bench");
 }
 
+// Test: DFF inputs (D terminals) are treated as path endpoints
+TEST_F(CriticalPathTest, DffInputsServeAsPathEndpoints) {
+    std::string dlib_path = example_dir + "/gaussdelay.dlib";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "OUTPUT(Y)\n"
+        "N1 = inv(A)\n"
+        "N2 = DFF(N1)\n"
+        "Y = inv(N2)\n";
+    std::string bench_path = createTestFile("dff_input_endpoint.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(5);
+    ASSERT_GE(paths.size(), 2u);  // At least 2 paths: to Y and to DFF input (N1)
+    
+    // Check that one path ends at DFF input (N1)
+    bool found_dff_input_path = false;
+    for (const auto& path : paths) {
+        if (!path.node_names.empty() && path.node_names.back() == "N1") {
+            found_dff_input_path = true;
+            // Path should start from input A
+            EXPECT_EQ(path.node_names.front(), "A");
+            break;
+        }
+    }
+    EXPECT_TRUE(found_dff_input_path) << "Expected a path ending at DFF input N1";
+
+    deleteTestFile("dff_input_endpoint.bench");
+}
+
+// Test: DFF-to-DFF path (Q output to D input)
+TEST_F(CriticalPathTest, DffToDffPath) {
+    std::string dlib_path = example_dir + "/gaussdelay.dlib";
+    std::string bench_content =
+        "INPUT(CLK)\n"
+        "OUTPUT(Y)\n"
+        "Q1 = DFF(CLK)\n"        // DFF with Q output Q1
+        "N1 = inv(Q1)\n"         // Combinational logic
+        "N2 = inv(N1)\n"
+        "Q2 = DFF(N2)\n"         // Another DFF with D input N2
+        "Y = inv(Q2)\n";
+    std::string bench_path = createTestFile("dff_to_dff.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(10);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(10);
+    ASSERT_FALSE(paths.empty());
+    
+    // Check that one path is Q1 -> N1 -> N2 (DFF-to-DFF path)
+    bool found_dff_to_dff_path = false;
+    for (const auto& path : paths) {
+        if (path.node_names.size() >= 3 && 
+            path.node_names.front() == "Q1" && 
+            path.node_names.back() == "N2") {
+            found_dff_to_dff_path = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(found_dff_to_dff_path) << "Expected a DFF-to-DFF path (Q1 -> ... -> N2)";
+
+    deleteTestFile("dff_to_dff.bench");
+}
+
+// Test: DFF input paths are mixed with output paths and sorted by delay
+TEST_F(CriticalPathTest, DffInputPathsMixedWithOutputPaths) {
+    std::string dlib_content =
+        "gate1 0 y gauss (10.0, 2.0)\n"
+        "gate2 0 y gauss (30.0, 3.0)\n"
+        "dff ck q gauss (5.0, 1.0)\n";
+    std::string bench_content =
+        "INPUT(A)\n"
+        "INPUT(B)\n"
+        "OUTPUT(Y)\n"
+        "N1 = gate1(A)\n"        // Delay 10.0 to N1
+        "Q1 = DFF(N1)\n"         // DFF input path ends at N1
+        "N2 = gate2(B)\n"        // Delay 30.0 to N2
+        "Y = gate1(N2)\n";       // Delay 40.0 to Y
+    std::string dlib_path = createTestFile("mixed_paths.dlib", dlib_content);
+    std::string bench_path = createTestFile("mixed_paths.bench", bench_content);
+
+    ssta_->set_dlib(dlib_path);
+    ssta_->set_bench(bench_path);
+    ssta_->set_critical_path(5);
+    ssta_->check();
+    ssta_->read_dlib();
+    ssta_->read_bench();
+
+    CriticalPaths paths = ssta_->getCriticalPaths(5);
+    ASSERT_GE(paths.size(), 2u);
+    
+    // Paths should be sorted by delay (descending)
+    for (size_t i = 1; i < paths.size(); ++i) {
+        EXPECT_GE(paths[i-1].delay_mean, paths[i].delay_mean);
+    }
+    
+    // First path should be to Y (delay ~40.0)
+    EXPECT_EQ(paths[0].node_names.back(), "Y");
+    EXPECT_NEAR(paths[0].delay_mean, 40.0, 0.5);
+
+    deleteTestFile("mixed_paths.dlib");
+    deleteTestFile("mixed_paths.bench");
+}
+
