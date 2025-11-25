@@ -346,6 +346,10 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
 
     if (gate_name == "dff") {
         set_dff_out(out_signal_name);
+        // DFF入力（D端子）を記録
+        if (!ins.empty()) {
+            dff_inputs_.insert(ins[0]);
+        }
     } else {
         net_.push_back(l);
     }
@@ -639,20 +643,25 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
         node_path.pop_back();
     };
     
-    // Build paths from each output
-    for (const auto& output_signal : outputs_) {
-        // Check if output signal exists in signals_
-        auto output_sig_it = signals_.find(output_signal);
-        if (output_sig_it == signals_.end()) {
+    // Build paths from each output and DFF input
+    // Collect all path endpoints: outputs and DFF inputs (D terminals)
+    std::set<std::string> path_endpoints;
+    path_endpoints.insert(outputs_.begin(), outputs_.end());
+    path_endpoints.insert(dff_inputs_.begin(), dff_inputs_.end());
+    
+    for (const auto& endpoint : path_endpoints) {
+        // Check if endpoint signal exists in signals_
+        auto sig_it = signals_.find(endpoint);
+        if (sig_it == signals_.end()) {
             continue;
         }
         
-        // Get output LAT value
-        double output_lat = output_sig_it->second->mean();
+        // Get endpoint LAT value
+        double endpoint_lat = sig_it->second->mean();
         
         std::vector<std::string> node_path;
         std::vector<std::string> instance_path;
-        build_path(output_signal, node_path, instance_path, output_lat);
+        build_path(endpoint, node_path, instance_path, endpoint_lat);
     }
     
     // Sort paths by delay (descending) and take top N

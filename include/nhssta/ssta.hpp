@@ -67,6 +67,7 @@ class Ssta {
     Pins inputs_;
     Pins outputs_;
     Pins dff_outputs_;
+    Pins dff_inputs_;  // DFF入力（D端子）信号名
     // Path tracking data structures
     std::unordered_map<std::string, std::string> signal_to_instance_;  // signal name -> instance name
     std::unordered_map<std::string, std::vector<std::string>> instance_to_inputs_;  // instance name -> input signal names
