@@ -16,6 +16,12 @@
 
 namespace Nh {
 
+// DFF gate name constant
+static const std::string DFF_GATE_NAME = "dff";
+
+// DFF clock input is treated as arriving at time 0 (start of clock cycle)
+static constexpr double DFF_CLOCK_ARRIVAL_TIME = 0.0;
+
 Ssta::Ssta() = default;
 
 Ssta::~Ssta() = default;
@@ -278,15 +284,19 @@ void Ssta::connect_instances() {
     }
 }
 
-// treat ck of dff as input
+// Treat clock input of DFF as arriving at time 0 (start of clock cycle)
+// This models the Q output timing after the clock edge
 void Ssta::set_dff_out(const std::string& out_signal_name) {
-    Normal in(0.0, ::RandomVariable::MINIMUM_VARIANCE);  //////
-    auto gi = gates_.find("dff");
+    // Clock arrival time is 0 (reference point for the clock cycle)
+    Normal clock_arrival(DFF_CLOCK_ARRIVAL_TIME, ::RandomVariable::MINIMUM_VARIANCE);
+    
+    auto gi = gates_.find(DFF_GATE_NAME);
     Gate dff = gi->second;
 
+    // Calculate Q output timing: clock arrival + ck->q propagation delay
     Normal delay = dff->delay("ck", "q");
     Normal dff_delay = delay.clone();
-    RandomVariable out = in + dff_delay;  /////
+    RandomVariable out = clock_arrival + dff_delay;
 
     check_signal(out_signal_name);
     signals_[out_signal_name] = out;
@@ -344,9 +354,9 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
 
     parser.checkEnd();
 
-    if (gate_name == "dff") {
+    if (gate_name == DFF_GATE_NAME) {
         set_dff_out(out_signal_name);
-        // DFF入力（D端子）を記録
+        // Record DFF data input (D terminal) for critical path analysis
         if (!ins.empty()) {
             dff_inputs_.insert(ins[0]);
         }
