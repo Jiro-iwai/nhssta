@@ -65,7 +65,7 @@ class Parser {
     }
 
    public:
-    void checkSepalator(char sepalator);
+    void checkSeparator(char separator);
     void checkEnd();
     void unexpectedToken();
     const std::string& getFileName() const {

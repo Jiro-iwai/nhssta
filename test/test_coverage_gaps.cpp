@@ -80,7 +80,7 @@ TEST_F(CoverageGapsTest, ParserUnexpectedTokenException) {
 
     // Try to check separator that doesn't match
     try {
-        parser.checkSepalator('(');  // Should fail if next token is not '('
+        parser.checkSeparator('(');  // Should fail if next token is not '('
         FAIL() << "Expected ParseException was not thrown";
     } catch (const ParseException& e) {
         std::string msg = e.what();

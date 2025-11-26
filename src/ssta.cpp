@@ -99,7 +99,7 @@ void Ssta::read_dlib_line(Parser& parser) {
         parser.unexpectedToken();
     }
 
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
 
     double mean = 0.0;
     parser.getToken(mean);
@@ -109,7 +109,7 @@ void Ssta::read_dlib_line(Parser& parser) {
 
     double variance = 0.0;
     if (type == "gauss") {  // gaussian
-        parser.checkSepalator(',');
+        parser.checkSeparator(',');
 
         double sigma = 0.0;
         parser.getToken(sigma);
@@ -125,7 +125,7 @@ void Ssta::read_dlib_line(Parser& parser) {
     Normal delay(mean, variance);
     g->set_delay(in, out, delay);
 
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 }
 
@@ -154,7 +154,7 @@ void Ssta::read_bench() {
 }
 
 void Ssta::read_bench_input(Parser& parser) {
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
 
     std::string signal_name;
     parser.getToken(signal_name);
@@ -168,12 +168,12 @@ void Ssta::read_bench_input(Parser& parser) {
     in->set_name(signal_name);
     signals_[signal_name] = in;
 
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 }
 
 void Ssta::read_bench_output(Parser& parser) {
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
 
     std::string signal_name;
     parser.getToken(signal_name);
@@ -183,7 +183,7 @@ void Ssta::read_bench_output(Parser& parser) {
     }
     outputs_.insert(signal_name);
 
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 }
 
@@ -308,7 +308,7 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
     NetLine l;
     l->set_out(out_signal_name);
 
-    parser.checkSepalator('=');
+    parser.checkSeparator('=');
 
     std::string gate_name;
     parser.getToken(gate_name);
@@ -330,7 +330,7 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
 
     l->set_gate(gate_name);
 
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
 
     NetLineIns& ins = l->ins();
     // Reserve space for input signals (typical gates have 2-4 inputs)

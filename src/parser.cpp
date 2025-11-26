@@ -48,9 +48,9 @@ void Parser::checkFile() {
     }
 }
 
-void Parser::checkSepalator(char sepalator) {
+void Parser::checkSeparator(char separator) {
     checkTermination();
-    if ((*token_)[0] != sepalator) {
+    if ((*token_)[0] != separator) {
         unexpectedToken_(*token_);
     }
     pre_ = *token_++;
