@@ -11,7 +11,14 @@
 
 namespace RandomVariable {
 
-const double MINIMUM_VARIANCE = 1.0e-6;
+// Minimum variance threshold to avoid division by zero in statistical calculations.
+// Values smaller than this are clamped to this minimum.
+constexpr double MINIMUM_VARIANCE = 1.0e-6;
+
+// Threshold for coefficient of variation calculation.
+// Mean values with absolute value smaller than this are treated as zero,
+// resulting in infinite coefficient of variation.
+constexpr double CV_ZERO_THRESHOLD = 1.0e-10;
 
 
 class _RandomVariable_;

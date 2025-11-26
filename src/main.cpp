@@ -46,15 +46,15 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
                         i++;  // Skip the number argument
                     } catch (...) {
                         // If conversion fails, use default
-                        ssta->set_critical_path(5);
+                        ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
                     }
                 } else {
                     // No number provided, use default
-                    ssta->set_critical_path(5);
+                    ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
                 }
             } else {
                 // No more arguments, use default
-                ssta->set_critical_path(5);
+                ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
             }
         } else if (arg == "--dlib") {
             if (i + 1 < argc) {
@@ -93,15 +93,15 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
                                 i++;  // Skip the number argument
                             } catch (...) {
                                 // If conversion fails, use default
-                                ssta->set_critical_path(5);
+                                ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
                             }
                         } else {
                             // No number provided, use default
-                            ssta->set_critical_path(5);
+                            ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
                         }
                     } else {
                         // No more arguments, use default
-                        ssta->set_critical_path(5);
+                        ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
                     }
                     break;
                 case 'd':
