@@ -200,13 +200,13 @@ TEST_F(ParserTest, CheckSeparatorSuccess) {
     parser.checkFile();
     parser.getLine();
 
-    EXPECT_NO_THROW(parser.checkSepalator('('));
+    EXPECT_NO_THROW(parser.checkSeparator('('));
 
     std::string token;
     parser.getToken(token);
     EXPECT_EQ(token, "token");
 
-    EXPECT_NO_THROW(parser.checkSepalator(')'));
+    EXPECT_NO_THROW(parser.checkSeparator(')'));
 
     deleteTestFile("test8.txt");
 }
@@ -220,7 +220,7 @@ TEST_F(ParserTest, CheckSeparatorFailure) {
     parser.checkFile();
     parser.getLine();
 
-    EXPECT_THROW(parser.checkSepalator('['), Nh::ParseException);
+    EXPECT_THROW(parser.checkSeparator('['), Nh::ParseException);
 
     deleteTestFile("test9.txt");
 }
@@ -296,11 +296,11 @@ TEST_F(ParserTest, ParseDlibFormat) {
     parser.getToken(pin);
     parser.getToken(y);
     parser.getToken(delay_type);
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     parser.getToken(param1);
-    parser.checkSepalator(',');
+    parser.checkSeparator(',');
     parser.getToken(param2);
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 
     EXPECT_EQ(gate_name, "gate_name");
@@ -316,11 +316,11 @@ TEST_F(ParserTest, ParseDlibFormat) {
     parser.getToken(pin);
     parser.getToken(y);
     parser.getToken(delay_type);
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     parser.getToken(param1);
-    parser.checkSepalator(',');
+    parser.checkSeparator(',');
     parser.getToken(param2);
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 
     EXPECT_EQ(gate_name, "gate_name2");
@@ -347,32 +347,32 @@ TEST_F(ParserTest, ParseBenchFormat) {
     std::string keyword, signal;
     parser.getToken(keyword);
     EXPECT_EQ(keyword, "INPUT");
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     parser.getToken(signal);
     EXPECT_EQ(signal, "signal1");
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 
     // Parse OUTPUT line
     parser.getLine();
     parser.getToken(keyword);
     EXPECT_EQ(keyword, "OUTPUT");
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     parser.getToken(signal);
     EXPECT_EQ(signal, "signal2");
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 
     // Parse NET line
     parser.getLine();
     parser.getToken(keyword);  // N1
-    parser.checkSepalator('=');
+    parser.checkSeparator('=');
     parser.getToken(keyword);  // GATE
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     parser.getToken(signal);  // signal1
-    parser.checkSepalator(',');
+    parser.checkSeparator(',');
     parser.getToken(signal);  // signal3
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
     parser.checkEnd();
 
     deleteTestFile("test_bench.txt");

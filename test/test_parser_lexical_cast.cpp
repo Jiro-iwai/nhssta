@@ -178,11 +178,11 @@ TEST_F(ParserLexicalCastTest, ParseMixedTypes) {
     parser.getToken(pin);
     parser.getToken(y);
     parser.getToken(delay_type);
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     parser.getToken(param1);
-    parser.checkSepalator(',');
+    parser.checkSeparator(',');
     parser.getToken(param2);
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
 
     EXPECT_EQ(gate_name, "gate_name");
     EXPECT_EQ(pin, 0);

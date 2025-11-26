@@ -132,12 +132,12 @@ TEST_F(ParserTokenizerTest, MixedSeparatorsDlibFormat) {
     parser.getToken(in);
     parser.getToken(out);
     parser.getToken(type);
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     double param1, param2;
     parser.getToken(param1);
-    parser.checkSepalator(',');
+    parser.checkSeparator(',');
     parser.getToken(param2);
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
 
     EXPECT_EQ(gate_name, "gate_name");
     EXPECT_EQ(in, "0");
@@ -191,9 +191,9 @@ TEST_F(ParserTokenizerTest, EmptyTokensBetweenSeparators) {
 
     std::string gate_name;
     parser.getToken(gate_name);
-    parser.checkSepalator('(');
-    parser.checkSepalator(',');
-    parser.checkSepalator(')');
+    parser.checkSeparator('(');
+    parser.checkSeparator(',');
+    parser.checkSeparator(')');
 
     EXPECT_EQ(gate_name, "gate_name");
 
@@ -249,10 +249,10 @@ TEST_F(ParserTokenizerTest, SeparatorsAtStartEnd) {
     parser.checkFile();
     parser.getLine();
 
-    parser.checkSepalator('(');
+    parser.checkSeparator('(');
     std::string token;
     parser.getToken(token);
-    parser.checkSepalator(')');
+    parser.checkSeparator(')');
 
     EXPECT_EQ(token, "token");
 
