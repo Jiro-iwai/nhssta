@@ -482,3 +482,59 @@ TEST_F(ParserTest, EmptyAndCommentLines) {
 
     deleteTestFile("test_empty_comments.txt");
 }
+
+// Test: File ending with comment lines (PR #142 review feedback)
+// This ensures files ending with comments/empty lines are handled correctly
+// without causing ParseException in callers like Ssta::read_dlib()
+TEST_F(ParserTest, FileEndingWithComments) {
+    std::string content =
+        "data1 value1\n"
+        "data2 value2\n"
+        "# trailing comment 1\n"
+        "# trailing comment 2\n";
+
+    std::string filepath = createTestFile("test_trailing_comments.txt", content);
+    Parser parser(filepath, '#', "", " \t\r");
+    parser.checkFile();
+
+    // First data line
+    EXPECT_TRUE(parser.getLine().good());
+    std::string token;
+    parser.getToken(token);
+    EXPECT_EQ(token, "data1");
+
+    // Second data line
+    EXPECT_TRUE(parser.getLine().good());
+    parser.getToken(token);
+    EXPECT_EQ(token, "data2");
+
+    // Third call should return EOF (trailing comments are skipped)
+    std::istream& result = parser.getLine();
+    EXPECT_TRUE(result.eof() || result.fail());
+
+    deleteTestFile("test_trailing_comments.txt");
+}
+
+// Test: File with only trailing content being comments
+TEST_F(ParserTest, DataFollowedByManyComments) {
+    std::string content = "single_data\n";
+    for (int i = 0; i < 100; i++) {
+        content += "# comment " + std::to_string(i) + "\n";
+    }
+
+    std::string filepath = createTestFile("test_data_then_comments.txt", content);
+    Parser parser(filepath, '#', "", " \t\r");
+    parser.checkFile();
+
+    // Should get the single data line
+    EXPECT_TRUE(parser.getLine().good());
+    std::string token;
+    parser.getToken(token);
+    EXPECT_EQ(token, "single_data");
+
+    // Next call should return EOF (all trailing comments skipped)
+    std::istream& result = parser.getLine();
+    EXPECT_TRUE(result.eof() || result.fail());
+
+    deleteTestFile("test_data_then_comments.txt");
+}

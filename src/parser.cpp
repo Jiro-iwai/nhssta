@@ -18,21 +18,32 @@ std::istream& Parser::getLine() {
     // stack overflow with files containing thousands of comment lines.
     while (true) {
         tokenizer_.reset();
-        std::getline(infile_, line_);  // not support Mac. "\r"
+
+        // Use getline return value for EOF detection (PR #142 review feedback)
+        // This ensures we don't try to process a line that couldn't be read,
+        // and properly handles files ending with comment/empty lines.
+        if (!std::getline(infile_, line_)) {
+            // Read failed (including EOF) - create empty tokenizer for consistency
+            // This ensures tokenizer_ is never null when callers access end()
+            line_ = "";
+            tokenizer_ = std::make_unique<Tokenizer>(line_, drop_separator_, keep_separator_);
+            token_ = tokenizer_->begin();
+            return infile_;
+        }
+
         line_number_++;
         tokenizer_ = std::make_unique<Tokenizer>(line_, drop_separator_, keep_separator_);
 
-        // Check if we should return (EOF or valid non-comment line)
-        // Note: We check the tokenizer state locally to avoid leaving token_
-        // pointing to a tokenizer that might be reset in the next iteration.
+        // Check if this is a valid non-comment, non-empty line
+        // Note: We use local iterators to avoid leaving token_ pointing to
+        // a tokenizer that might be reset in the next iteration (dangling iterator fix)
         auto it_begin = tokenizer_->begin();
         auto it_end = tokenizer_->end();
-        bool is_empty_or_comment = (it_begin == it_end) || 
+        bool is_empty_or_comment = (it_begin == it_end) ||
                                     (it_begin != it_end && (*it_begin)[0] == begin_comment_);
 
-        if (infile_.eof() || !is_empty_or_comment) {
-            // Set token_ only when we're about to return, ensuring it points
-            // to the current (and final) tokenizer.
+        if (!is_empty_or_comment) {
+            // Found a valid line - set token_ and return
             token_ = it_begin;
             return infile_;
         }
