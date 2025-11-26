@@ -106,8 +106,8 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
     // Compute correlation coefficient ρ = Cov(D0,D1) / (σ0 * σ1)
     // Clamp to [-1, 1] for numerical stability
     double rho = covD / (sigma0 * sigma1);
-    if (rho > 1.0) rho = 1.0;
-    if (rho < -1.0) rho = -1.0;
+    rho = std::min(rho, 1.0);
+    rho = std::max(rho, -1.0);
 
     // E[D0⁺] and E[D1⁺]
     double E0pos = expected_positive_part(mu0, sigma0);
@@ -117,7 +117,7 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
     double Eprod = expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
 
     // Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] * E[D1⁺]
-    double cov = Eprod - E0pos * E1pos;
+    double cov = Eprod - (E0pos * E1pos);
 
     if (std::isnan(cov)) {
         throw Nh::RuntimeException("covariance_max0_max0: result is NaN");

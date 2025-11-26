@@ -221,7 +221,7 @@ double expected_positive_part(double mu, double sigma) {
     // E[max(0, D)] where D ~ N(μ, σ²)
     // Formula: E[max(0,D)] = σφ(μ/σ) + μΦ(μ/σ)
     double t = mu / sigma;
-    return sigma * normal_pdf(t) + mu * normal_cdf(t);
+    return (sigma * normal_pdf(t)) + (mu * normal_cdf(t));
 }
 
 // ============================================================================
@@ -267,8 +267,12 @@ static const double wphi[GH_N] = {
 
 // Helper: Clamp value to [min, max]
 static double clamp(double val, double min_val, double max_val) {
-    if (val < min_val) return min_val;
-    if (val > max_val) return max_val;
+    if (val < min_val) {
+        return min_val;
+    }
+    if (val > max_val) {
+        return max_val;
+    }
     return val;
 }
 
@@ -293,7 +297,7 @@ double expected_prod_pos(double mu0, double sigma0,
     // Clamp rho to [-1, 1] for numerical stability
     rho = clamp(rho, -1.0, 1.0);
 
-    double one_minus_rho2 = std::max(0.0, 1.0 - rho * rho);
+    double one_minus_rho2 = std::max(0.0, 1.0 - (rho * rho));
     double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
 
     double sum = 0.0;
@@ -302,7 +306,7 @@ double expected_prod_pos(double mu0, double sigma0,
         double w = wphi[i];
 
         // D0 value at this quadrature point
-        double d0 = mu0 + sigma0 * z;
+        double d0 = mu0 + (sigma0 * z);
 
         // D0⁺ = max(0, d0)
         if (d0 <= 0.0) {
@@ -312,14 +316,14 @@ double expected_prod_pos(double mu0, double sigma0,
         double D0plus = d0;
 
         // Conditional mean of D1 given Z=z
-        double m1z = mu1 + rho * sigma1 * z;
+        double m1z = mu1 + (rho * sigma1 * z);
 
         // E[D1⁺ | Z=z]
-        double E_D1pos_givenZ;
+        double E_D1pos_givenZ = 0.0;
         if (s1_cond > 1e-12) {
             // Normal case: use expected_positive_part formula
             double t = m1z / s1_cond;
-            E_D1pos_givenZ = s1_cond * normal_pdf(t) + m1z * normal_cdf(t);
+            E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
         } else {
             // ρ = ±1 limit: D1 is deterministic given Z
             E_D1pos_givenZ = std::max(0.0, m1z);
