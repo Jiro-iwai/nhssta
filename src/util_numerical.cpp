@@ -7,6 +7,7 @@
 #include <cctype>
 #include <cmath>
 #include <ctime>
+#include <nhssta/exception.hpp>
 
 namespace RandomVariable {
 
@@ -220,6 +221,10 @@ double normal_cdf(double x) {
 double expected_positive_part(double mu, double sigma) {
     // E[max(0, D)] where D ~ N(μ, σ²)
     // Formula: E[max(0,D)] = σφ(μ/σ) + μΦ(μ/σ)
+    // Precondition: sigma > 0
+    if (sigma <= 0.0) {
+        throw Nh::RuntimeException("expected_positive_part: sigma must be positive");
+    }
     double t = mu / sigma;
     return (sigma * normal_pdf(t)) + (mu * normal_cdf(t));
 }
@@ -280,6 +285,10 @@ double expected_prod_pos(double mu0, double sigma0,
                          double mu1, double sigma1,
                          double rho) {
     // E[D0⁺ D1⁺] where D0, D1 are bivariate normal with correlation ρ
+    // Precondition: sigma0 > 0, sigma1 > 0
+    if (sigma0 <= 0.0 || sigma1 <= 0.0) {
+        throw Nh::RuntimeException("expected_prod_pos: sigma0 and sigma1 must be positive");
+    }
     //
     // Decomposition:
     //   D0 = μ0 + σ0 * Z
@@ -294,7 +303,7 @@ double expected_prod_pos(double mu0, double sigma0,
     //
     // E[D1⁺ | Z=z] = s*φ(m(z)/s) + m(z)*Φ(m(z)/s)
 
-    // Clamp rho to [-1, 1] for numerical stability
+    // Clamp rho to [-1, 1] for numerical stability (also clamped by caller)
     rho = clamp(rho, -1.0, 1.0);
 
     double one_minus_rho2 = std::max(0.0, 1.0 - (rho * rho));

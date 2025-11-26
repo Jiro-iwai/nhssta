@@ -102,9 +102,12 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
 
     // Get covariance between D0 and D1 (recursive call)
     double covD = covariance(d0, d1);
+    if (std::isnan(covD) || std::isinf(covD)) {
+        throw Nh::RuntimeException("covariance_max0_max0: covariance(d0, d1) is NaN or Inf");
+    }
 
     // Compute correlation coefficient ρ = Cov(D0,D1) / (σ0 * σ1)
-    // Clamp to [-1, 1] for numerical stability
+    // Clamp to [-1, 1] for numerical stability (also clamped in expected_prod_pos)
     double rho = covD / (sigma0 * sigma1);
     rho = std::min(rho, 1.0);
     rho = std::max(rho, -1.0);

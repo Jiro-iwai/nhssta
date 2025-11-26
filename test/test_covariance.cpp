@@ -274,6 +274,18 @@ TEST_F(NumericalHelpersTest, ExpectedProdPosNonNegative) {
     EXPECT_GE(result, 0.0);
 }
 
+// Edge case tests for defensive programming
+TEST_F(NumericalHelpersTest, ExpectedPositivePartZeroSigmaThrows) {
+    EXPECT_THROW(RandomVariable::expected_positive_part(1.0, 0.0), Nh::RuntimeException);
+    EXPECT_THROW(RandomVariable::expected_positive_part(1.0, -1.0), Nh::RuntimeException);
+}
+
+TEST_F(NumericalHelpersTest, ExpectedProdPosZeroSigmaThrows) {
+    EXPECT_THROW(RandomVariable::expected_prod_pos(1.0, 0.0, 1.0, 1.0, 0.5), Nh::RuntimeException);
+    EXPECT_THROW(RandomVariable::expected_prod_pos(1.0, 1.0, 1.0, 0.0, 0.5), Nh::RuntimeException);
+    EXPECT_THROW(RandomVariable::expected_prod_pos(1.0, -1.0, 1.0, 1.0, 0.5), Nh::RuntimeException);
+}
+
 // ============================================================================
 // Tests for Cov(max0, max0) - covariance between two OpMAX0 random variables
 // ============================================================================
