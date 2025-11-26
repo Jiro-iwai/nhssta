@@ -7,6 +7,7 @@
 #include <cctype>
 #include <cmath>
 #include <ctime>
+#include <nhssta/exception.hpp>
 
 namespace RandomVariable {
 
@@ -199,4 +200,148 @@ double MeanMax2(double a) {
     double r = (mean_max2_tab[l] + mean_max2_tab[u]) * 0.5;
     return r;
 }
+
+// ============================================================================
+// Standard normal distribution functions for Cov(max, max) calculation
+// ============================================================================
+
+static constexpr double SQRT_2PI = 2.5066282746310005024;  // √(2π)
+static constexpr double SQRT_2 = 1.4142135623730950488;    // √2
+
+double normal_pdf(double x) {
+    // φ(x) = exp(-x²/2) / √(2π)
+    return std::exp(-0.5 * x * x) / SQRT_2PI;
+}
+
+double normal_cdf(double x) {
+    // Φ(x) = 0.5 * erfc(-x/√2)
+    return 0.5 * std::erfc(-x / SQRT_2);
+}
+
+double expected_positive_part(double mu, double sigma) {
+    // E[max(0, D)] where D ~ N(μ, σ²)
+    // Formula: E[max(0,D)] = σφ(μ/σ) + μΦ(μ/σ)
+    // Precondition: sigma > 0
+    if (sigma <= 0.0) {
+        throw Nh::RuntimeException("expected_positive_part: sigma must be positive");
+    }
+    double t = mu / sigma;
+    return (sigma * normal_pdf(t)) + (mu * normal_cdf(t));
+}
+
+// ============================================================================
+// Gauss-Hermite 10-point quadrature for standard normal integration
+// ∫_{-∞}^{∞} φ(z) f(z) dz ≒ Σ wphi[i] * f(zphi[i])
+//
+// Conversion from standard Gauss-Hermite (with exp(-x²) weight):
+//   z = √2 * x_GH, w_phi = w_GH / √π
+// ============================================================================
+
+static constexpr int GH_N = 10;
+
+// Converted nodes and weights for standard normal integration
+// Original Gauss-Hermite nodes x_i for exp(-x²) weight are converted to
+// z_i = √2 * x_i for N(0,1) integration, and weights w_i are divided by √π
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+static const double zphi[GH_N] = {
+    -4.859462828332311,
+    -3.581823483551719,
+    -2.484325841638954,
+    -1.465989094391158,
+    -0.484935721616248,
+     0.484935721616248,
+     1.465989094391158,
+     2.484325841638954,
+     3.581823483551719,
+     4.859462828332311
+};
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+static const double wphi[GH_N] = {
+    4.31065263071830e-06,
+    7.58070934312218e-04,
+    1.91115805007703e-02,
+    1.35483702980267e-01,
+    3.44642334932019e-01,
+    3.44642334932019e-01,
+    1.35483702980267e-01,
+    1.91115805007703e-02,
+    7.58070934312218e-04,
+    4.31065263071830e-06
+};
+
+// Helper: Clamp value to [min, max]
+static double clamp(double val, double min_val, double max_val) {
+    if (val < min_val) {
+        return min_val;
+    }
+    if (val > max_val) {
+        return max_val;
+    }
+    return val;
+}
+
+double expected_prod_pos(double mu0, double sigma0,
+                         double mu1, double sigma1,
+                         double rho) {
+    // E[D0⁺ D1⁺] where D0, D1 are bivariate normal with correlation ρ
+    // Precondition: sigma0 > 0, sigma1 > 0
+    if (sigma0 <= 0.0 || sigma1 <= 0.0) {
+        throw Nh::RuntimeException("expected_prod_pos: sigma0 and sigma1 must be positive");
+    }
+    //
+    // Decomposition:
+    //   D0 = μ0 + σ0 * Z
+    //   D1 = μ1 + σ1 * (ρ*Z + √(1-ρ²)*Z1)
+    // where Z, Z1 are independent standard normals.
+    //
+    // E[D0⁺ D1⁺] = E_Z[ (μ0 + σ0*Z)⁺ * E[D1⁺ | Z] ]
+    //
+    // Conditional distribution: D1|Z=z ~ N(m(z), s²)
+    //   m(z) = μ1 + ρ*σ1*z
+    //   s = σ1 * √(1-ρ²)
+    //
+    // E[D1⁺ | Z=z] = s*φ(m(z)/s) + m(z)*Φ(m(z)/s)
+
+    // Clamp rho to [-1, 1] for numerical stability (also clamped by caller)
+    rho = clamp(rho, -1.0, 1.0);
+
+    double one_minus_rho2 = std::max(0.0, 1.0 - (rho * rho));
+    double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
+
+    double sum = 0.0;
+    for (int i = 0; i < GH_N; ++i) {
+        double z = zphi[i];
+        double w = wphi[i];
+
+        // D0 value at this quadrature point
+        double d0 = mu0 + (sigma0 * z);
+
+        // D0⁺ = max(0, d0)
+        if (d0 <= 0.0) {
+            // D0⁺ = 0, so contribution is 0
+            continue;
+        }
+        double D0plus = d0;
+
+        // Conditional mean of D1 given Z=z
+        double m1z = mu1 + (rho * sigma1 * z);
+
+        // E[D1⁺ | Z=z]
+        double E_D1pos_givenZ = 0.0;
+        if (s1_cond > 1e-12) {
+            // Normal case: use expected_positive_part formula
+            double t = m1z / s1_cond;
+            E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
+        } else {
+            // ρ = ±1 limit: D1 is deterministic given Z
+            E_D1pos_givenZ = std::max(0.0, m1z);
+        }
+
+        sum += w * D0plus * E_D1pos_givenZ;
+    }
+
+    return sum;
+}
+
 }  // namespace RandomVariable

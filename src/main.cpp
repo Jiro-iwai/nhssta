@@ -140,7 +140,7 @@ std::string get_version_string() {
 #endif
     
     std::ostringstream oss;
-    oss << "nhssta 0.2.1 (";
+    oss << "nhssta 0.2.2 (";
     oss << std::put_time(&timeinfo, "%a %b %d %H:%M:%S %Y");
     oss << ")";
     return oss.str();
