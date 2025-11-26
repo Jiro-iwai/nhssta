@@ -22,8 +22,18 @@ std::istream& Parser::getLine() {
         line_number_++;
         tokenizer_ = std::make_unique<Tokenizer>(line_, drop_separator_, keep_separator_);
 
-        // If we reached EOF or found a non-empty, non-comment line, return
-        if (infile_.eof() || (begin() != end() && (*begin())[0] != begin_comment_)) {
+        // Check if we should return (EOF or valid non-comment line)
+        // Note: We check the tokenizer state locally to avoid leaving token_
+        // pointing to a tokenizer that might be reset in the next iteration.
+        auto it_begin = tokenizer_->begin();
+        auto it_end = tokenizer_->end();
+        bool is_empty_or_comment = (it_begin == it_end) || 
+                                    (it_begin != it_end && (*it_begin)[0] == begin_comment_);
+
+        if (infile_.eof() || !is_empty_or_comment) {
+            // Set token_ only when we're about to return, ensuring it points
+            // to the current (and final) tokenizer.
+            token_ = it_begin;
             return infile_;
         }
         // Otherwise, continue to the next line (skip comment/empty lines)
