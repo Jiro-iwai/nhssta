@@ -53,8 +53,7 @@ std::istream& Parser::getLine() {
 
 void Parser::checkTermination() {
     if (token_ == end()) {
-        std::string what = "unexpected termination";
-        throw Nh::ParseException(getFileName(), getNumLine(), what);
+        throw Nh::ParseException(getFileName(), getNumLine(), "unexpected termination");
     }
 }
 
@@ -64,16 +63,13 @@ void Parser::unexpectedToken() {
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void Parser::unexpectedToken_(const std::string& token) {
-    std::string what = "unexpected token \"";
-    what += token;
-    what += "\"";
-    throw Nh::ParseException(getFileName(), getNumLine(), what);
+    throw Nh::ParseException(getFileName(), getNumLine(),
+                             "unexpected token \"" + token + "\"");
 }
 
 void Parser::checkFile() {
     if (fail()) {
-        std::string what = "failed to open file";
-        throw Nh::FileException(getFileName(), what);
+        throw Nh::FileException(getFileName(), "failed to open file");
     }
 }
 
