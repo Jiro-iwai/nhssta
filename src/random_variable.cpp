@@ -113,7 +113,7 @@ double _RandomVariable_::standard_deviation() {
 
 double _RandomVariable_::coefficient_of_variation() {
     double m = mean();
-    if (std::abs(m) < 1.0e-10) {
+    if (std::abs(m) < CV_ZERO_THRESHOLD) {
         // For very small means, return a large value to indicate high relative error
         return std::numeric_limits<double>::infinity();
     }

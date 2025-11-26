@@ -24,6 +24,10 @@ class Parser;
 
 namespace Nh {
 
+// Default number of critical paths to report when -p/--path option
+// is specified without an explicit count.
+constexpr size_t DEFAULT_CRITICAL_PATH_COUNT = 5;
+
 class Ssta {
    public:
 
@@ -60,7 +64,7 @@ class Ssta {
     bool is_lat_ = false;
     bool is_correlation_ = false;
     bool is_critical_path_ = false;
-    size_t critical_path_count_ = 5;
+    size_t critical_path_count_ = DEFAULT_CRITICAL_PATH_COUNT;
     Gates gates_;
     Signals signals_;
     Net net_;
@@ -81,7 +85,7 @@ class Ssta {
     void set_correlation() {
         is_correlation_ = true;
     }
-    void set_critical_path(size_t top_n = 5) {
+    void set_critical_path(size_t top_n = DEFAULT_CRITICAL_PATH_COUNT) {
         is_critical_path_ = true;
         critical_path_count_ = top_n;
     }
