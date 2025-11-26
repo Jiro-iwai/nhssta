@@ -4,6 +4,7 @@
 #include "normal.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <nhssta/exception.hpp>
 
 namespace RandomVariable {
@@ -12,6 +13,20 @@ _Normal_::_Normal_() = default;
 
 _Normal_::_Normal_(double mean, double variance)
     : _RandomVariable_(mean, variance) {
+    // Input validation: catch invalid numeric values at the boundary
+    // to prevent silent propagation through calculations (Issue #136)
+    if (std::isnan(mean)) {
+        throw Nh::RuntimeException("Normal: mean is NaN");
+    }
+    if (std::isnan(variance)) {
+        throw Nh::RuntimeException("Normal: variance is NaN");
+    }
+    if (std::isinf(mean)) {
+        throw Nh::RuntimeException("Normal: mean is infinite");
+    }
+    if (std::isinf(variance)) {
+        throw Nh::RuntimeException("Normal: variance is infinite");
+    }
     if (variance < 0.0) {
         throw Nh::RuntimeException("Normal: negative variance");
     }
