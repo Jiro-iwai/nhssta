@@ -400,3 +400,85 @@ TEST_F(ParserTest, FileNameAndLineNumber) {
 
     deleteTestFile("test13.txt");
 }
+
+// Test: Many consecutive comment lines (regression test for #137)
+// This test verifies that the parser can handle many consecutive comment lines
+// without stack overflow. The original implementation used recursion which
+// could cause stack overflow with many comment lines.
+TEST_F(ParserTest, ManyConsecutiveCommentLines) {
+    // Generate content with many consecutive comment lines
+    // Using 1000 lines which is enough to verify the fix without being too slow
+    std::string content;
+    for (int i = 0; i < 1000; i++) {
+        content += "# comment line " + std::to_string(i) + "\n";
+    }
+    content += "actual_data value\n";
+    content += "# trailing comment\n";
+
+    std::string filepath = createTestFile("test_many_comments.txt", content);
+    // Use standard dlib-style separators (no keep separator for this test)
+    Parser parser(filepath, '#', "", " \t\r");
+    parser.checkFile();
+
+    // getLine() should skip all comment lines and return the actual data line
+    EXPECT_TRUE(parser.getLine().good());
+
+    std::string token;
+    parser.getToken(token);
+    EXPECT_EQ(token, "actual_data");
+
+    parser.getToken(token);
+    EXPECT_EQ(token, "value");
+
+    // Line number should be 1001 (1000 comment lines + 1 data line)
+    EXPECT_EQ(parser.getNumLine(), 1001);
+
+    deleteTestFile("test_many_comments.txt");
+}
+
+// Test: File with only comment lines
+TEST_F(ParserTest, OnlyCommentLines) {
+    std::string content;
+    for (int i = 0; i < 100; i++) {
+        content += "# comment line " + std::to_string(i) + "\n";
+    }
+
+    std::string filepath = createTestFile("test_only_comments.txt", content);
+    Parser parser(filepath, '#', "", " \t\r");
+    parser.checkFile();
+
+    // getLine() should return EOF when all lines are comments
+    std::istream& result = parser.getLine();
+    EXPECT_TRUE(result.eof());
+
+    deleteTestFile("test_only_comments.txt");
+}
+
+// Test: Empty lines mixed with comment lines
+TEST_F(ParserTest, EmptyAndCommentLines) {
+    std::string content =
+        "# comment 1\n"
+        "\n"
+        "# comment 2\n"
+        "\n"
+        "\n"
+        "data1 data2\n"
+        "\n"
+        "# comment 3\n";
+
+    std::string filepath = createTestFile("test_empty_comments.txt", content);
+    Parser parser(filepath, '#', "", " \t\r");
+    parser.checkFile();
+
+    // Should skip comments and empty lines
+    EXPECT_TRUE(parser.getLine().good());
+
+    std::string token;
+    parser.getToken(token);
+    EXPECT_EQ(token, "data1");
+
+    // Line number should be 6 (the line with actual data)
+    EXPECT_EQ(parser.getNumLine(), 6);
+
+    deleteTestFile("test_empty_comments.txt");
+}
