@@ -315,15 +315,6 @@ void Ssta::read_bench_net(Parser& parser, const std::string& out_signal_name) {
     tolower_string(gate_name);
     auto gi = gates_.find(gate_name);
     if (gi == gates_.end()) {
-        std::string what = "unknown gate \"";
-        what += gate_name;
-        what += "\"";
-        what += " at line ";
-        int line = parser.getNumLine();
-        what += std::to_string(line);
-        what += " of file \"";
-        what += parser.getFileName();
-        what += "\"";
         throw Nh::ParseException(parser.getFileName(), parser.getNumLine(),
                                  "unknown gate \"" + gate_name + "\"");
     }
