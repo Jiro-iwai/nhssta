@@ -12,14 +12,22 @@ Parser::Parser(const std::string& file, const char begin_comment, const char* ke
     , begin_comment_(begin_comment) {}
 
 std::istream& Parser::getLine() {
-    tokenizer_.reset();
-    std::istream& r = std::getline(infile_, line_);  // not support Mac. "\r"
-    line_number_++;
-    tokenizer_ = std::make_unique<Tokenizer>(line_, drop_separator_, keep_separator_);
-    if ((begin() == end() || (*begin())[0] == begin_comment_) && !r.eof()) {
-        return getLine();
+    // Use a loop instead of recursion to avoid stack overflow
+    // when there are many consecutive comment or empty lines.
+    // Issue #137: The original recursive implementation could cause
+    // stack overflow with files containing thousands of comment lines.
+    while (true) {
+        tokenizer_.reset();
+        std::getline(infile_, line_);  // not support Mac. "\r"
+        line_number_++;
+        tokenizer_ = std::make_unique<Tokenizer>(line_, drop_separator_, keep_separator_);
+
+        // If we reached EOF or found a non-empty, non-comment line, return
+        if (infile_.eof() || (begin() != end() && (*begin())[0] != begin_comment_)) {
+            return infile_;
+        }
+        // Otherwise, continue to the next line (skip comment/empty lines)
     }
-    return (r);
 }
 
 void Parser::checkTermination() {
