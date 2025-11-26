@@ -48,6 +48,10 @@ bool _CovarianceMatrix_::lookup(const RandomVariable& a, const RandomVariable& b
     return false;
 }
 
+// covariance_x_max0_y(x, y):
+// y must be OpMAX0 (y = max(0, Z)), and (x, Z) must be joint Gaussian.
+// Computes Cov(x, max(0, Z)) = Cov(x, Z) * Φ(-μ_Z/σ_Z)
+// WARNING: Do not use when x is OpMAX or OpMAX0 (non-Gaussian).
 static double covariance_x_max0_y(const RandomVariable& x, const RandomVariable& y) {
     const auto* y_max0 = dynamic_cast<const OpMAX0*>(y.get());
     if (y_max0 == nullptr) {
@@ -69,6 +73,57 @@ static double covariance_x_max0_y(const RandomVariable& x, const RandomVariable&
         throw Nh::RuntimeException("covariance_x_max0_y: covariance calculation resulted in NaN");
     }
     return (cov);
+}
+
+// covariance_max0_max0(a, b):
+// Both a and b must be OpMAX0: a = max(0, D0), b = max(0, D1)
+// Uses 1D Gauss-Hermite quadrature to compute Cov(max(0,D0), max(0,D1))
+// where D0, D1 are assumed to be jointly Gaussian.
+static double covariance_max0_max0(const RandomVariable& a, const RandomVariable& b) {
+    // Get the underlying random variables D0 and D1
+    const RandomVariable& d0 = a->left();
+    const RandomVariable& d1 = b->left();
+
+    // Get statistics for D0
+    double mu0 = d0->mean();
+    double v0 = d0->variance();
+    if (v0 <= 0.0) {
+        throw Nh::RuntimeException("covariance_max0_max0: D0 variance must be positive");
+    }
+    double sigma0 = sqrt(v0);
+
+    // Get statistics for D1
+    double mu1 = d1->mean();
+    double v1 = d1->variance();
+    if (v1 <= 0.0) {
+        throw Nh::RuntimeException("covariance_max0_max0: D1 variance must be positive");
+    }
+    double sigma1 = sqrt(v1);
+
+    // Get covariance between D0 and D1 (recursive call)
+    double covD = covariance(d0, d1);
+
+    // Compute correlation coefficient ρ = Cov(D0,D1) / (σ0 * σ1)
+    // Clamp to [-1, 1] for numerical stability
+    double rho = covD / (sigma0 * sigma1);
+    if (rho > 1.0) rho = 1.0;
+    if (rho < -1.0) rho = -1.0;
+
+    // E[D0⁺] and E[D1⁺]
+    double E0pos = expected_positive_part(mu0, sigma0);
+    double E1pos = expected_positive_part(mu1, sigma1);
+
+    // E[D0⁺ D1⁺] via Gauss-Hermite quadrature
+    double Eprod = expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
+
+    // Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] * E[D1⁺]
+    double cov = Eprod - E0pos * E1pos;
+
+    if (std::isnan(cov)) {
+        throw Nh::RuntimeException("covariance_max0_max0: result is NaN");
+    }
+
+    return cov;
 }
 
 static void check_covariance(double& cov, const RandomVariable& a, const RandomVariable& b) {
@@ -150,19 +205,13 @@ double covariance(const RandomVariable& a, const RandomVariable& b) {
 
         } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
                    dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
+            // Both a and b are OpMAX0: use dedicated covariance_max0_max0
+            // which uses Gauss-Hermite quadrature for correct bivariate normal handling
             if (a->left() == b->left()) {
-                cov = a->variance();  // maybe here is not reachable
-
-            } else if (a->level() < b->level()) {
-                cov = covariance_x_max0_y(a, b);
-
-            } else if (b->level() < a->level()) {
-                cov = covariance_x_max0_y(b, a);
-
+                // max(0,D) with itself: Cov = Var(max(0,D))
+                cov = a->variance();
             } else {
-                double cov0 = covariance_x_max0_y(a, b);
-                double cov1 = covariance_x_max0_y(b, a);
-                cov = (cov0 + cov1) * 0.5;
+                cov = covariance_max0_max0(a, b);
             }
 
         } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr) {
