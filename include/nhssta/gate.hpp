@@ -19,13 +19,13 @@
 
 namespace Nh {
 
-typedef ::RandomVariable::Normal Normal;
-typedef ::RandomVariable::RandomVariable RandomVariable;
+using Normal = ::RandomVariable::Normal;
+using RandomVariable = ::RandomVariable::RandomVariable;
 
 class InstanceImpl;
 class InstanceHandle;
 // Use unordered_map for better performance (O(1) average vs O(log n) for map)
-typedef std::unordered_map<std::string, RandomVariable> Signals;
+using Signals = std::unordered_map<std::string, RandomVariable>;
 
 /////
 
@@ -51,7 +51,7 @@ class GateImpl {
 
     [[nodiscard]] const Normal& delay(const std::string& in, const std::string& out = "y") const;
 
-    typedef std::pair<std::string, std::string> IO;
+    using IO = std::pair<std::string, std::string>;
     // Custom hash function for IO (std::pair<std::string, std::string>)
     struct IOHash {
         std::size_t operator()(const IO& io) const {
@@ -63,7 +63,7 @@ class GateImpl {
     // Use unordered_map for better performance (O(1) average vs O(log n) for map)
     // Note: MAX operation is commutative, so iteration order doesn't affect the final result
     // Small floating-point rounding differences due to different calculation order are acceptable
-    typedef std::unordered_map<IO, Normal, IOHash> Delays;
+    using Delays = std::unordered_map<IO, Normal, IOHash>;
     const Delays& delays() {
         return delays_;
     }

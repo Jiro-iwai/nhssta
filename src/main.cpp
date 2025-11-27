@@ -50,7 +50,7 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
 
         // Handle long options
         if (arg == "--help") {
-            usage(0, 0);
+            usage(nullptr, nullptr);
         } else if (arg == "--lat") {
             ssta->set_lat();
         } else if (arg == "--correlation") {
@@ -61,20 +61,20 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
             if (i + 1 < argc) {
                 ssta->set_dlib(std::string(argv[++i]));
             } else {
-                usage(0, 0);
+                usage(nullptr, nullptr);
             }
         } else if (arg == "--bench") {
             if (i + 1 < argc) {
                 ssta->set_bench(std::string(argv[++i]));
             } else {
-                usage(0, 0);
+                usage(nullptr, nullptr);
             }
         }
         // Handle short options
         else if (arg.length() == 2 && arg[0] == '-') {
             switch (arg[1]) {
                 case 'h':
-                    usage(0, 0);
+                    usage(nullptr, nullptr);
                     break;
                 case 'l':
                     ssta->set_lat();
@@ -89,23 +89,23 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
                     if (i + 1 < argc) {
                         ssta->set_dlib(std::string(argv[++i]));
                     } else {
-                        usage(0, 0);
+                        usage(nullptr, nullptr);
                     }
                     break;
                 case 'b':
                     if (i + 1 < argc) {
                         ssta->set_bench(std::string(argv[++i]));
                     } else {
-                        usage(0, 0);
+                        usage(nullptr, nullptr);
                     }
                     break;
                 default:
-                    usage(0, 0);
+                    usage(nullptr, nullptr);
                     break;
             }
         } else {
             // Invalid option
-            usage(0, 0);
+            usage(nullptr, nullptr);
         }
     }
 }
