@@ -577,52 +577,6 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
             pin_index++;
         }
         
-        // If no critical input found with tolerance check, find input with maximum LAT + gate_delay
-        // This handles cases where MAX operation causes slight differences
-        if (critical_input.empty() && !input_signals.empty()) {
-            pin_index = 0;
-            for (const auto& input_signal : input_signals) {
-                auto input_sig_it = signals_.find(input_signal);
-                if (input_sig_it != signals_.end()) {
-                    double input_lat = input_sig_it->second->mean();
-                    std::string pin_name = std::to_string(pin_index);
-                    
-                    auto delay_it2 = delays_map.find(pin_name);
-                    if (delay_it2 != delays_map.end()) {
-                        const Normal& gate_delay = delay_it2->second;
-                        double contribution = input_lat + gate_delay->mean();
-                        if (contribution > max_contribution) {
-                            max_contribution = contribution;
-                            critical_input = input_signal;
-                        }
-                    } else {
-                        // Delay not found, just use LAT
-                        if (input_lat > max_contribution) {
-                            max_contribution = input_lat;
-                            critical_input = input_signal;
-                        }
-                    }
-                }
-                pin_index++;
-            }
-        }
-        
-        // If still no critical input found, use the input with maximum LAT
-        // This is a fallback for edge cases
-        if (critical_input.empty() && !input_signals.empty()) {
-            double max_lat = std::numeric_limits<double>::lowest();
-            for (const auto& input_signal : input_signals) {
-                auto input_sig_it = signals_.find(input_signal);
-                if (input_sig_it != signals_.end()) {
-                    double input_lat = input_sig_it->second->mean();
-                    if (input_lat > max_lat) {
-                        max_lat = input_lat;
-                        critical_input = input_signal;
-                    }
-                }
-            }
-        }
-        
         // Add instance to path
         instance_path.push_back(instance_name);
         
