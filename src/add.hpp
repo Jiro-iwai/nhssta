@@ -8,7 +8,7 @@
 
 namespace RandomVariable {
 
-class OpADD : public _RandomVariable_ {
+class OpADD : public RandomVariableImpl {
    public:
     OpADD(const RandomVariable& left, const RandomVariable& right);
     ~OpADD() override;

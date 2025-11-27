@@ -8,7 +8,7 @@
 
 namespace RandomVariable {
 
-class OpSUB : public _RandomVariable_ {
+class OpSUB : public RandomVariableImpl {
    public:
     OpSUB(const RandomVariable& left, const RandomVariable& right);
     ~OpSUB() override;

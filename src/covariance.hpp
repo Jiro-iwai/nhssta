@@ -26,13 +26,13 @@ struct PairHash {
     }
 };
 
-class _CovarianceMatrix_ {
+class CovarianceMatrixImpl {
    public:
     using RowCol = std::pair<RandomVariable, RandomVariable>;
     using Matrix = std::unordered_map<RowCol, double, PairHash>;
 
-    _CovarianceMatrix_() = default;
-    virtual ~_CovarianceMatrix_() = default;
+    CovarianceMatrixImpl() = default;
+    virtual ~CovarianceMatrixImpl() = default;
 
     bool lookup(const RandomVariable& a, const RandomVariable& b, double& cov) const;
 
@@ -48,22 +48,22 @@ class _CovarianceMatrix_ {
 class CovarianceMatrix {
    public:
     CovarianceMatrix()
-        : body_(std::make_shared<_CovarianceMatrix_>()) {}
-    explicit CovarianceMatrix(std::shared_ptr<_CovarianceMatrix_> body)
+        : body_(std::make_shared<CovarianceMatrixImpl>()) {}
+    explicit CovarianceMatrix(std::shared_ptr<CovarianceMatrixImpl> body)
         : body_(std::move(body)) {}
 
-    _CovarianceMatrix_* operator->() const {
+    CovarianceMatrixImpl* operator->() const {
         return body_.get();
     }
-    _CovarianceMatrix_& operator*() const {
+    CovarianceMatrixImpl& operator*() const {
         return *body_;
     }
-    [[nodiscard]] std::shared_ptr<_CovarianceMatrix_> shared() const {
+    [[nodiscard]] std::shared_ptr<CovarianceMatrixImpl> shared() const {
         return body_;
     }
 
    private:
-    std::shared_ptr<_CovarianceMatrix_> body_;
+    std::shared_ptr<CovarianceMatrixImpl> body_;
 };
 
 double covariance(const Normal& a, const Normal& b);

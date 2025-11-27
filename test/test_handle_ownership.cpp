@@ -250,7 +250,7 @@ TEST_F(HandleOwnershipTest, HandleInContainerSharesOwnership) {
     // and clearing the container doesn't affect the original Handle
 }
 
-// Test: Verify that member variables of _RandomVariable_ own their children
+// Test: Verify that member variables of RandomVariableImpl own their children
 // This documents ownership relationships in the object graph
 TEST_F(HandleOwnershipTest, RandomVariableMemberOwnership) {
     Normal n1(10.0, 2.0);

@@ -16,9 +16,9 @@
 namespace Nh {
 
 Gate::Gate()
-    : body_(std::make_shared<_Gate_>()) {}
+    : body_(std::make_shared<GateImpl>()) {}
 
-Gate::Gate(std::shared_ptr<_Gate_> body)
+Gate::Gate(std::shared_ptr<GateImpl> body)
     : body_(std::move(body)) {
     if (!body_) {
         throw Nh::RuntimeException("Gate: null body");
@@ -26,7 +26,7 @@ Gate::Gate(std::shared_ptr<_Gate_> body)
 }
 
 Instance Gate::create_instance() const {
-    auto inst_body = std::make_shared<_Instance_>(*this);
+    auto inst_body = std::make_shared<InstanceImpl>(*this);
     Instance inst(inst_body);
     inst->set_name((*this)->allocate_instance_name());
     return inst;
@@ -34,12 +34,12 @@ Instance Gate::create_instance() const {
 
 ////
 
-void _Gate_::set_delay(const std::string& in, const std::string& out, const Normal& delay) {
+void GateImpl::set_delay(const std::string& in, const std::string& out, const Normal& delay) {
     IO io(in, out);
     delays_[io] = delay;
 }
 
-const Normal& _Gate_::delay(const std::string& in, const std::string& out) const {
+const Normal& GateImpl::delay(const std::string& in, const std::string& out) const {
     IO io(in, out);
 
     auto i = delays_.find(io);
@@ -59,12 +59,12 @@ const Normal& _Gate_::delay(const std::string& in, const std::string& out) const
 
 /////
 
-void _Instance_::set_input(const std::string& in_name, const RandomVariable& signal) {
+void InstanceImpl::set_input(const std::string& in_name, const RandomVariable& signal) {
     (void)gate_->delay(in_name);  // error check
     inputs_[in_name] = signal;
 }
 
-RandomVariable _Instance_::output(const std::string& out_name) {
+RandomVariable InstanceImpl::output(const std::string& out_name) {
     auto i = outputs_.find(out_name);
 
     if (i != outputs_.end()) {

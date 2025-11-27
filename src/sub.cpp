@@ -10,7 +10,7 @@
 namespace RandomVariable {
 
 OpSUB::OpSUB(const RandomVariable& left, const RandomVariable& right)
-    : _RandomVariable_(left, right) {
+    : RandomVariableImpl(left, right) {
     level_ = std::max(left->level(), right->level());
 }
 
@@ -27,7 +27,7 @@ double OpSUB::calc_variance() const {
     double rv = right()->variance();
     double cov = covariance(left(), right());
     double r = lv - (2.0 * cov) + rv;
-    _RandomVariable_::check_variance(r);
+    RandomVariableImpl::check_variance(r);
     return (r);
 }
 

@@ -31,7 +31,7 @@ TEST_F(GateTest, DefaultConstructor) {
 
 // Test: Gate creation with type name
 TEST_F(GateTest, ConstructorWithTypeName) {
-    auto body = std::make_shared<_Gate_>("and2");
+    auto body = std::make_shared<GateImpl>("and2");
     Gate gate(body);
     EXPECT_EQ(gate->type_name(), "and2");
 }
@@ -245,7 +245,7 @@ TEST_F(GateTest, GetDelaysMap) {
     gate->set_delay("a", "y", delay1);
     gate->set_delay("b", "y", delay2);
 
-    const _Gate_::Delays& delays = gate->delays();
+    const GateImpl::Delays& delays = gate->delays();
     EXPECT_EQ(delays.size(), 2);
 }
 

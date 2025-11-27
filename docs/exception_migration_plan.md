@@ -37,11 +37,11 @@
 
 ### Phase 2: Gate::exception → Nh::RuntimeException ✅
 - `_Gate_::delay()` → `Nh::RuntimeException`
-- `_Instance_::output()` → `Nh::RuntimeException`
+- `InstanceImpl::output()` → `Nh::RuntimeException`
 - `Ssta::read_bench()`のキャッチ節を更新
 
 ### Phase 3: RandomVariable::Exception → Nh::RuntimeException ✅
-- `_RandomVariable_::check_variance()` → `Nh::RuntimeException`
+- `RandomVariableImpl::check_variance()` → `Nh::RuntimeException`
 - `_Normal_`コンストラクタ → `Nh::RuntimeException`
 - `Ssta::read_bench()`と`Ssta::report()`のキャッチ節を更新
 

@@ -13,13 +13,13 @@ namespace RandomVariable {
 class Normal;
 
 // Normal Random Variable
-class _Normal_ : public _RandomVariable_ {
+class NormalImpl : public RandomVariableImpl {
    public:
-    _Normal_();
+    NormalImpl();
 
-    _Normal_(double mean, double variance);
+    NormalImpl(double mean, double variance);
 
-    ~_Normal_() override;
+    ~NormalImpl() override;
 
     [[nodiscard]] Normal clone() const;
 
@@ -32,7 +32,7 @@ class Normal : public RandomVariable {
    public:
     Normal() = default;
     Normal(double mean, double variance)
-        : RandomVariable(std::make_shared<_Normal_>(mean, variance)) {}
+        : RandomVariable(std::make_shared<NormalImpl>(mean, variance)) {}
 
     [[nodiscard]] Normal clone() const;
 };

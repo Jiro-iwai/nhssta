@@ -11,15 +11,15 @@
 #include <memory>
 #include <sstream>
 
-int Expression_::current_id_ = 0;
-Expression_::Expressions Expression_::eTbl_;
+int ExpressionImpl::current_id_ = 0;
+ExpressionImpl::Expressions ExpressionImpl::eTbl_;
 
 static Expression null(nullptr);
 static const Const zero(0.0);
 static const Const one(1.0);
 static const Const minus_one(-1.0);
 
-Expression_::Expression_()
+ExpressionImpl::ExpressionImpl()
     : id_(current_id_++)
     , is_set_value_(false)
     , value_(0.0)
@@ -29,7 +29,7 @@ Expression_::Expression_()
     eTbl_.insert(this);
 }
 
-Expression_::Expression_(double value)
+ExpressionImpl::ExpressionImpl(double value)
     : id_(current_id_++)
     , is_set_value_(true)
     , value_(value)
@@ -39,7 +39,7 @@ Expression_::Expression_(double value)
     eTbl_.insert(this);
 }
 
-Expression_::Expression_(const Op& op, const Expression& left, const Expression& right)
+ExpressionImpl::ExpressionImpl(const Op& op, const Expression& left, const Expression& right)
     : id_(current_id_++)
     , is_set_value_(false)
     , value_(0.0)
@@ -55,7 +55,7 @@ Expression_::Expression_(const Op& op, const Expression& left, const Expression&
     }
 }
 
-Expression_::~Expression_() {
+ExpressionImpl::~ExpressionImpl() {
     eTbl_.erase(this);
     if (left() != null) {
         left()->remove_root(this);
@@ -65,7 +65,7 @@ Expression_::~Expression_() {
     }
 }
 
-double Expression_::value() {
+double ExpressionImpl::value() {
     if (!is_set_value()) {
         if (left() != null && right() != null) {
             double l = left()->value();
@@ -108,7 +108,7 @@ double Expression_::value() {
     return (value_);
 }
 
-Expression Expression_::d(const Expression& y) {
+Expression ExpressionImpl::d(const Expression& y) {
     Expression x(shared_from_this());
     Expression dx;
 
@@ -153,17 +153,17 @@ Expression Expression_::d(const Expression& y) {
     return dx;
 }
 
-void Expression_::set_value(double value) {
+void ExpressionImpl::set_value(double value) {
     unset_root_value();
     _set_value(value);
 }
 
-void Expression_::_set_value(double value) {
+void ExpressionImpl::_set_value(double value) {
     value_ = value;
     is_set_value_ = true;
 }
 
-void Expression_::unset_value() {
+void ExpressionImpl::unset_value() {
     if (!is_set_value()) {
         return;
     }
@@ -173,19 +173,19 @@ void Expression_::unset_value() {
     is_set_value_ = false;
 }
 
-void Expression_::unset_root_value() {
-    for_each(roots_.begin(), roots_.end(), std::mem_fn(&Expression_::unset_value));
+void ExpressionImpl::unset_root_value() {
+    for_each(roots_.begin(), roots_.end(), std::mem_fn(&ExpressionImpl::unset_value));
 }
 
-void Expression_::add_root(Expression_* root) {
+void ExpressionImpl::add_root(ExpressionImpl* root) {
     roots_.insert(root);
 }
 
-void Expression_::remove_root(Expression_* root) {
+void ExpressionImpl::remove_root(ExpressionImpl* root) {
     roots_.erase(root);
 }
 
-void Expression_::print() {
+void ExpressionImpl::print() {
     std::cout << std::setw(5) << id_;
 
     if (is_set_value()) {
@@ -249,33 +249,33 @@ void Expression_::print() {
     std::cout << std::endl;
 }
 
-void Expression_::print_all() {
-    for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&Expression_::print));
+void ExpressionImpl::print_all() {
+    for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&ExpressionImpl::print));
 }
 
 void print_all() {
-    Expression_::print_all();
+    ExpressionImpl::print_all();
 }
 
 //////////////////////////
 
 Const::Const(double value)
-    : Expression(std::make_shared<Const_>(value)) {}
+    : Expression(std::make_shared<ConstImpl>(value)) {}
 
-Expression Const_::d(const Expression& y) {
+Expression ConstImpl::d(const Expression& y) {
     return zero;
 }
 
 //////////////////////////
 
-Expression Variable_::d(const Expression& y) {
+Expression VariableImpl::d(const Expression& y) {
     if (Expression(shared_from_this()) == y) {
         return one;
     }
     return zero;
 }
 
-double Variable_::value() {
+double VariableImpl::value() {
     if (!is_set_value()) {
         throw Nh::RuntimeException("Expression: variable value not set");
     }
@@ -283,7 +283,7 @@ double Variable_::value() {
 }
 
 Variable::Variable()
-    : Expression(std::make_shared<Variable_>()) {}
+    : Expression(std::make_shared<VariableImpl>()) {}
 
 Variable& Variable::operator=(double value) {
     (*this)->set_value(value);
@@ -299,7 +299,7 @@ Expression operator+(const Expression& a, const Expression& b) {
     if (b == zero) {
         return a;
     }
-    return Expression(std::make_shared<Expression_>(Expression_::PLUS, a, b));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PLUS, a, b));
 }
 
 Expression operator+(double a, const Expression& b) {
@@ -326,7 +326,7 @@ Expression operator-(const Expression& a, const Expression& b) {
     if (b == zero) {
         return a;
     }
-    return Expression(std::make_shared<Expression_>(Expression_::MINUS, a, b));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::MINUS, a, b));
 }
 
 Expression operator-(double a, const Expression& b) {
@@ -344,7 +344,7 @@ Expression operator-(const Expression& a) {
     if (a == minus_one) {
         return one;
     }
-    return Expression(std::make_shared<Expression_>(Expression_::MUL, minus_one, a));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::MUL, minus_one, a));
 }
 
 //////////////////////////
@@ -359,7 +359,7 @@ Expression operator*(const Expression& a, const Expression& b) {
     if (b == one) {
         return a;
     }
-    return Expression(std::make_shared<Expression_>(Expression_::MUL, a, b));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::MUL, a, b));
 }
 
 Expression operator*(double a, const Expression& b) {
@@ -388,7 +388,7 @@ Expression operator/(const Expression& a, const Expression& b) {
     if (a == b) {
         return one;
     }
-    return Expression(std::make_shared<Expression_>(Expression_::DIV, a, b));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::DIV, a, b));
 }
 
 Expression operator/(const Expression& a, double b) {
@@ -414,7 +414,7 @@ Expression operator^(const Expression& a, const Expression& b) {
     if (a == zero) {
         return zero;
     }
-    return Expression(std::make_shared<Expression_>(Expression_::POWER, a, b));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::POWER, a, b));
 }
 
 Expression operator^(const Expression& a, double b) {
@@ -428,11 +428,11 @@ Expression operator^(double a, const Expression& b) {
 //////////////////////////
 
 Expression exp(const Expression& a) {
-    return Expression(std::make_shared<Expression_>(Expression_::EXP, a, null));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::EXP, a, null));
 }
 
 Expression log(const Expression& a) {
-    return Expression(std::make_shared<Expression_>(Expression_::LOG, a, null));
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::LOG, a, null));
 }
 
 //////////////////////////

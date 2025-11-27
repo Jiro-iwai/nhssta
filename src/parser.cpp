@@ -3,6 +3,8 @@
 
 #include "parser.hpp"
 
+namespace Nh {
+
 Parser::Parser(const std::string& file, const char begin_comment, const char* keep_separator,
                const char* drop_separator)
     : file_(file)
@@ -86,3 +88,5 @@ void Parser::checkEnd() {
         unexpectedToken_(*token_);
     }
 }
+
+}  // namespace Nh

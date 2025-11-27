@@ -12,7 +12,7 @@ namespace RandomVariable {
 
 class OpMAX0;
 
-class OpMAX : public _RandomVariable_ {
+class OpMAX : public RandomVariableImpl {
    public:
     OpMAX(const RandomVariable& left, const RandomVariable& right);
     ~OpMAX() override;
@@ -32,7 +32,7 @@ RandomVariable MAX(const RandomVariable& a, const RandomVariable& b);
 
 //////
 
-class OpMAX0 : public _RandomVariable_ {
+class OpMAX0 : public RandomVariableImpl {
    public:
     OpMAX0(const RandomVariable& left);
     ~OpMAX0() override;

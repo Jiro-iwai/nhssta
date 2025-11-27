@@ -19,7 +19,7 @@ CovarianceMatrix& get_covariance_matrix() {
     return covariance_matrix;
 }
 
-bool _CovarianceMatrix_::lookup(const RandomVariable& a, const RandomVariable& b,
+bool CovarianceMatrixImpl::lookup(const RandomVariable& a, const RandomVariable& b,
                                 double& cov) const {
     RowCol rowcol0(a, b);
     auto i = cmat.find(rowcol0);
@@ -35,8 +35,8 @@ bool _CovarianceMatrix_::lookup(const RandomVariable& a, const RandomVariable& b
         return true;
     }
 
-    const auto* a_normal = dynamic_cast<const _Normal_*>(a.get());
-    const auto* b_normal = dynamic_cast<const _Normal_*>(b.get());
+    const auto* a_normal = dynamic_cast<const NormalImpl*>(a.get());
+    const auto* b_normal = dynamic_cast<const NormalImpl*>(b.get());
     if (a_normal != nullptr && b_normal != nullptr) {
         if (a == b) {
             cov = a->variance();
@@ -223,8 +223,8 @@ double covariance(const RandomVariable& a, const RandomVariable& b) {
         } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
             cov = covariance_x_max0_y(a, b);
 
-        } else if (dynamic_cast<const _Normal_*>(a.get()) != nullptr &&
-                   dynamic_cast<const _Normal_*>(b.get()) != nullptr) {
+        } else if (dynamic_cast<const NormalImpl*>(a.get()) != nullptr &&
+                   dynamic_cast<const NormalImpl*>(b.get()) != nullptr) {
             cov = 0.0;
 
         } else {

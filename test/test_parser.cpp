@@ -11,6 +11,8 @@
 
 #include "parser.hpp"
 
+using Nh::Parser;
+
 class ParserTest : public ::testing::Test {
    protected:
     void SetUp() override {

@@ -21,7 +21,7 @@ constexpr double MINIMUM_VARIANCE = 1.0e-6;
 constexpr double CV_ZERO_THRESHOLD = 1.0e-10;
 
 
-class _RandomVariable_;
+class RandomVariableImpl;
 
 // Handle pattern for RandomVariable: thin wrapper around std::shared_ptr
 //
@@ -37,38 +37,38 @@ class _RandomVariable_;
 // - Use const reference for read-only access when ownership is not needed
 class RandomVariableHandle {
    public:
-    using element_type = _RandomVariable_;
+    using element_type = RandomVariableImpl;
 
     RandomVariableHandle() = default;
     RandomVariableHandle(std::nullptr_t)
         : body_(nullptr) {}
 
     // Takes ownership of the raw pointer (creates new shared_ptr)
-    explicit RandomVariableHandle(_RandomVariable_* body)
-        : body_(body != nullptr ? std::shared_ptr<_RandomVariable_>(body) : nullptr) {}
+    explicit RandomVariableHandle(RandomVariableImpl* body)
+        : body_(body != nullptr ? std::shared_ptr<RandomVariableImpl>(body) : nullptr) {}
 
     // Takes ownership via move (transfers shared_ptr ownership)
-    explicit RandomVariableHandle(std::shared_ptr<_RandomVariable_> body)
+    explicit RandomVariableHandle(std::shared_ptr<RandomVariableImpl> body)
         : body_(std::move(body)) {}
 
     // Takes ownership via copy (shares shared_ptr ownership)
-    template <class Derived, class = std::enable_if_t<std::is_base_of_v<_RandomVariable_, Derived>>>
+    template <class Derived, class = std::enable_if_t<std::is_base_of_v<RandomVariableImpl, Derived>>>
     explicit RandomVariableHandle(const std::shared_ptr<Derived>& body)
-        : body_(std::static_pointer_cast<_RandomVariable_>(body)) {}
+        : body_(std::static_pointer_cast<RandomVariableImpl>(body)) {}
 
     // Non-owning access: returns raw pointer (no ownership transfer)
-    _RandomVariable_* operator->() const {
+    RandomVariableImpl* operator->() const {
         return body_.get();
     }
-    _RandomVariable_& operator*() const {
+    RandomVariableImpl& operator*() const {
         return *body_;
     }
-    [[nodiscard]] _RandomVariable_* get() const {
+    [[nodiscard]] RandomVariableImpl* get() const {
         return body_.get();
     }
 
     // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<_RandomVariable_> shared() const {
+    [[nodiscard]] std::shared_ptr<RandomVariableImpl> shared() const {
         return body_;
     }
     explicit operator bool() const {
@@ -100,7 +100,7 @@ class RandomVariableHandle {
    private:
     // Owned shared_ptr: this Handle owns the underlying object
     // Copying the Handle shares this ownership (lightweight copy)
-    std::shared_ptr<_RandomVariable_> body_;
+    std::shared_ptr<RandomVariableImpl> body_;
 };
 
 // Type alias: RandomVariable is a Handle (thin wrapper around std::shared_ptr)
@@ -110,10 +110,10 @@ class RandomVariableHandle {
 // - Store as member variable to create ownership: RandomVariable left_;
 using RandomVariable = RandomVariableHandle;
 
-class _RandomVariable_ {
+class RandomVariableImpl {
    public:
-    _RandomVariable_();
-    virtual ~_RandomVariable_();
+    RandomVariableImpl();
+    virtual ~RandomVariableImpl();
 
     [[nodiscard]] const std::string& name() const;
     void set_name(const std::string& name);
@@ -134,9 +134,9 @@ class _RandomVariable_ {
     }
 
    protected:
-    _RandomVariable_(double mean, double variance, const std::string& name = "");
+    RandomVariableImpl(double mean, double variance, const std::string& name = "");
 
-    _RandomVariable_(const RandomVariable& left, const RandomVariable& right,
+    RandomVariableImpl(const RandomVariable& left, const RandomVariable& right,
                      const std::string& name = "");
 
    protected:

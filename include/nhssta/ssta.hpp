@@ -18,11 +18,11 @@
 #include <nhssta/gate.hpp>
 #include <nhssta/net_line.hpp>
 
-// Forward declaration for Parser (internal implementation detail)
-// Parser is defined in global namespace in src/parser.hpp
-class Parser;
-
 namespace Nh {
+
+// Forward declaration for Parser (internal implementation detail)
+// Parser is defined in src/parser.hpp within the Nh namespace
+class Parser;
 
 // Default number of critical paths to report when -p/--path option
 // is specified without an explicit count.

@@ -18,7 +18,7 @@
 ### 命名規則
 
 - **クラス名**: PascalCase（例: `Ssta`, `RandomVariable`, `OpADD`）
-  - 内部実装クラス（Handleパターンの実体クラス）はアンダースコアで始まる/終わる命名も可（例: `_RandomVariable_`, `_Gate_`, `Expression_`）
+  - 内部実装クラス（Handleパターンの実体クラス）はアンダースコアで始まる/終わる命名も可（例: `RandomVariableImpl`, `GateImpl`, `ExpressionImpl`）
 - **関数名**: snake_case（例: `read_dlib()`, `read_bench()`, `set_instance_input()`）
   - 数学関数などはPascalCaseも可（例: `MeanMax()`, `MeanPhiMax()`）
 - **メンバ変数**: snake_case with trailing underscore（例: `is_lat_`, `signals_`, `dlib_`）
@@ -181,7 +181,7 @@
 
 **悪い例:**
 ```cpp
-class OpADD : public _RandomVariable_ {
+class OpADD : public RandomVariableImpl {
 public:
     virtual ~OpADD() {}
 };
@@ -189,7 +189,7 @@ public:
 
 **良い例:**
 ```cpp
-class OpADD : public _RandomVariable_ {
+class OpADD : public RandomVariableImpl {
 public:
     ~OpADD() override = default;
 };
@@ -255,12 +255,12 @@ if( !is_set_value() ) {
 
 **悪い例:**
 ```cpp
-return Expression( new Expression_(Expression_::PLUS, a, b) );
+return Expression( new ExpressionImpl(ExpressionImpl::PLUS, a, b) );
 ```
 
 **良い例:**
 ```cpp
-return Expression{ new Expression_(Expression_::PLUS, a, b) };
+return Expression{ new ExpressionImpl(ExpressionImpl::PLUS, a, b) };
 ```
 
 **理由**: C++17では、braced initializer listを使用することで、型の推論が明確になり、コードが読みやすくなります。
