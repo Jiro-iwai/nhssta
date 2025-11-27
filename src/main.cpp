@@ -22,6 +22,27 @@ void usage(const char* first, const char* last) {
     throw Nh::RuntimeException("Invalid command-line arguments");
 }
 
+// Helper function to parse optional numeric argument for -p/--path options
+// Returns the parsed count, or default if no valid number is available
+// Updates index i if a number argument was consumed
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+size_t parse_path_count(int argc, char* argv[], int& i) {
+    if (i + 1 < argc) {
+        std::string next_arg = argv[i + 1];
+        // Check if it's a number (not another option starting with '-')
+        if (!next_arg.empty() && next_arg[0] != '-') {
+            try {
+                auto count = static_cast<size_t>(std::stoul(next_arg));
+                i++;  // Consume the number argument
+                return count;
+            } catch (...) {
+                // Conversion failed, use default
+            }
+        }
+    }
+    return Nh::DEFAULT_CRITICAL_PATH_COUNT;
+}
+
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
 void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
     for (int i = 1; i < argc; i++) {
@@ -35,27 +56,7 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
         } else if (arg == "--correlation") {
             ssta->set_correlation();
         } else if (arg == "--path") {
-            // Check if next argument is a number
-            if (i + 1 < argc) {
-                std::string next_arg = argv[i + 1];
-                // Check if it's a number (not another option)
-                if (next_arg[0] != '-') {
-                    try {
-                        auto top_n = static_cast<size_t>(std::stoul(next_arg));
-                        ssta->set_critical_path(top_n);
-                        i++;  // Skip the number argument
-                    } catch (...) {
-                        // If conversion fails, use default
-                        ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
-                    }
-                } else {
-                    // No number provided, use default
-                    ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
-                }
-            } else {
-                // No more arguments, use default
-                ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
-            }
+            ssta->set_critical_path(parse_path_count(argc, argv, i));
         } else if (arg == "--dlib") {
             if (i + 1 < argc) {
                 ssta->set_dlib(std::string(argv[++i]));
@@ -82,27 +83,7 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
                     ssta->set_correlation();
                     break;
                 case 'p':
-                    // Check if next argument is a number
-                    if (i + 1 < argc) {
-                        std::string next_arg = argv[i + 1];
-                        // Check if it's a number (not another option)
-                        if (next_arg[0] != '-') {
-                            try {
-                                auto top_n = static_cast<size_t>(std::stoul(next_arg));
-                                ssta->set_critical_path(top_n);
-                                i++;  // Skip the number argument
-                            } catch (...) {
-                                // If conversion fails, use default
-                                ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
-                            }
-                        } else {
-                            // No number provided, use default
-                            ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
-                        }
-                    } else {
-                        // No more arguments, use default
-                        ssta->set_critical_path(Nh::DEFAULT_CRITICAL_PATH_COUNT);
-                    }
+                    ssta->set_critical_path(parse_path_count(argc, argv, i));
                     break;
                 case 'd':
                     if (i + 1 < argc) {

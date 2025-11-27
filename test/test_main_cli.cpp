@@ -251,3 +251,50 @@ TEST_F(CommandLineTest, TestCriticalPathNegativeCountShowsUsage) {
     EXPECT_NE(output.find("usage"), std::string::npos)
         << "Negative count should be treated as invalid flag and show usage";
 }
+
+// Test: critical path long option (--path) without explicit count uses default
+TEST_F(CommandLineTest, TestCriticalPathLongOptionDefault) {
+    std::string output =
+        run_nhssta({"--path", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    EXPECT_EQ(output.find("usage"), std::string::npos)
+        << "Should not show usage when --path is provided without explicit count";
+    EXPECT_NE(output.find("critical paths"), std::string::npos)
+        << "Critical path header should be printed when --path is enabled";
+}
+
+// Test: critical path long option (--path N) respects explicit count argument
+TEST_F(CommandLineTest, TestCriticalPathLongOptionWithCount) {
+    std::string output =
+        run_nhssta({"--path", "3", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    EXPECT_EQ(output.find("usage"), std::string::npos)
+        << "Should not show usage when --path has a numeric argument";
+    EXPECT_NE(output.find("critical paths"), std::string::npos)
+        << "Critical path header should be present";
+    EXPECT_NE(output.find("Path 1"), std::string::npos)
+        << "At least one critical path should be printed";
+}
+
+// Test: -p and --path produce identical output for the same count
+TEST_F(CommandLineTest, TestShortAndLongPathOptionsEquivalent) {
+    std::string output_short =
+        run_nhssta({"-p", "2", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    std::string output_long =
+        run_nhssta({"--path", "2", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Both should contain critical paths section
+    EXPECT_NE(output_short.find("critical paths"), std::string::npos);
+    EXPECT_NE(output_long.find("critical paths"), std::string::npos);
+    
+    // Count the number of "Path" occurrences to verify same number of paths
+    auto count_paths = [](const std::string& s) {
+        size_t count = 0;
+        size_t pos = 0;
+        while ((pos = s.find("Path ", pos)) != std::string::npos) {
+            count++;
+            pos += 5;
+        }
+        return count;
+    };
+    EXPECT_EQ(count_paths(output_short), count_paths(output_long))
+        << "-p and --path should produce same number of paths for same count";
+}
