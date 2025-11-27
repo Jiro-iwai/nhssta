@@ -306,6 +306,18 @@ double expected_prod_pos(double mu0, double sigma0,
     // Clamp rho to [-1, 1] for numerical stability (also clamped by caller)
     rho = clamp(rho, -1.0, 1.0);
 
+    // Fix for Issue #156: Handle independent variables (rho ≈ 0) correctly
+    // When |rho| is very small, D0 and D1 are effectively independent, so:
+    //   E[D0⁺ D1⁺] = E[D0⁺] * E[D1⁺]
+    // This is mathematically exact when rho=0, and avoids Gauss-Hermite precision issues
+    // that can cause E[D0⁺ D1⁺] < E[D0⁺] * E[D1⁺] (which is impossible for independent vars)
+    constexpr double RHO_THRESHOLD = 1e-10;
+    if (std::abs(rho) < RHO_THRESHOLD) {
+        double E0pos = expected_positive_part(mu0, sigma0);
+        double E1pos = expected_positive_part(mu1, sigma1);
+        return E0pos * E1pos;
+    }
+
     double one_minus_rho2 = std::max(0.0, 1.0 - (rho * rho));
     double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
 
