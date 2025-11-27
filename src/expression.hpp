@@ -3,58 +3,71 @@
 
 /**
  * @file expression.hpp
- * @brief 自動微分による感度解析のための式木クラス（未完成・将来用に保持）
+ * @brief 自動微分（Reverse-mode AD）による感度解析のための式木クラス
  *
  * ## 概要
  *
  * このクラスは、SSTA における感度解析機能のために設計された式木（Expression Tree）
- * の実装です。自動微分（Automatic Differentiation）を用いて、各ゲート遅延が
- * クリティカルパスに与える影響を計算することを目的としていました。
+ * の実装です。逆伝播（Reverse-mode Automatic Differentiation）を用いて、
+ * 偏微分 ∂f/∂x を効率的に計算します。
  *
  * ## 現在の状態
  *
- * - **ステータス**: 未完成（凍結）
- * - **SSTA コア機能**: 使用していません
- * - **テスト**: 基本的な算術演算のテストは存在します
+ * - **ステータス**: 基本機能実装済み
+ * - **SSTA コア機能**: 統合は将来の課題
+ * - **テスト**: 全演算の勾配テストあり
  *
  * ## 実装済み機能
  *
  * - 式木の構築（Const, Variable, 算術演算）
  * - 式の値の評価（value()）
+ * - **逆伝播による勾配計算（backward(), gradient()）**
+ * - 勾配のリセット（zero_grad(), zero_all_grad()）
  * - デバッグ用の式木表示（print(), print_all()）
  *
- * ## 未実装機能（将来の TODO）
+ * ## 対応演算と勾配
  *
- * - 偏微分の計算 (∂f/∂x)
- * - RandomVariable との統合
- * - クリティカルパスへの感度計算
- * - 逆伝播（バックプロパゲーション）アルゴリズム
+ * | 演算 | 順方向 | ∂/∂left | ∂/∂right |
+ * |------|--------|---------|----------|
+ * | +    | l + r  | 1       | 1        |
+ * | -    | l - r  | 1       | -1       |
+ * | *    | l * r  | r       | l        |
+ * | /    | l / r  | 1/r     | -l/r²    |
+ * | ^    | l^r    | r*l^(r-1) | l^r*log(l) |
+ * | exp  | exp(l) | exp(l)  | -        |
+ * | log  | log(l) | 1/l     | -        |
  *
- * ## 使用例（将来の想定）
+ * ## 使用例
  *
  * @code
- * // ゲート遅延は RandomVariable として定義（現行通り）
- * RandomVariable d1 = Normal(10.0, 1.0);
- * RandomVariable d2 = Normal(8.0, 0.5);
+ * // 変数を定義
+ * Variable x, y;
+ * x = 2.0;
+ * y = 3.0;
  *
- * // パス遅延の計算
- * RandomVariable path = d1 + MAX(d2, d3);
+ * // 式を構築: f = x * y + x²
+ * Expression f = x * y + (x ^ 2.0);  // f = 6 + 4 = 10
  *
- * // mean, variance を Expression の Variable として表現
- * Variable mu_d1, sigma_d1, mu_d2, sigma_d2;
- * Expression path_mean = mu_d1 + f_max_mean(mu_d2, sigma_d2, ...);
- * Expression path_var  = sigma_d1^2 + f_max_var(...);
+ * // 勾配を計算
+ * f->backward();
  *
- * // 感度を計算（未実装）
- * // ∂(path_mean) / ∂(mu_d1) など
- * double sensitivity = path_mean.derivative(mu_d1);
+ * // ∂f/∂x = y + 2x = 3 + 4 = 7
+ * double df_dx = x->gradient();  // 7.0
+ *
+ * // ∂f/∂y = x = 2
+ * double df_dy = y->gradient();  // 2.0
+ *
+ * // 次の計算の前に勾配をリセット
+ * zero_all_grad();
  * @endcode
  *
- * @note このファイルは将来の感度解析機能のために保持されています。
- *       削除しないでください。
+ * ## 将来の TODO
  *
- * @see test/test_expression_print.cpp - Expression のテスト
- * @see test/test_expression_assert_migration.cpp - 算術演算のテスト
+ * - RandomVariable との統合（mean/variance の感度計算）
+ * - クリティカルパスへの寄与度計算
+ *
+ * @see test/test_expression_derivative.cpp - 勾配計算のテスト
+ * @see test/test_expression_print.cpp - 式木表示のテスト
  * @see Issue #163 - 感度解析機能の検討
  */
 
@@ -165,6 +178,15 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
         return id_;
     }
 
+    // Automatic differentiation (reverse-mode)
+    void backward(double upstream = 1.0);
+    [[nodiscard]] double gradient() const { return gradient_; }
+    void zero_grad();
+    static void zero_all_grad();
+
+    // Value computation
+    virtual double value();
+
    protected:
     [[nodiscard]] const Expression& left() const {
         return left_;
@@ -172,8 +194,6 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     [[nodiscard]] const Expression& right() const {
         return right_;
     }
-
-    virtual double value();
     void set_value(double value);
     void _set_value(double value);
     void unset_value();
@@ -191,6 +211,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     int id_;
     bool is_set_value_;
     double value_;
+
+    // Gradient for automatic differentiation (reverse-mode)
+    double gradient_;        // Accumulated gradient ∂L/∂this
+    bool is_gradient_set_;   // Whether gradient has been computed
 
     const Op op_;  // NOLINT(cppcoreguidelines-avoid-const-or-ref-data-members) - Op is a handle
                    // type, const is intentional
@@ -269,5 +293,8 @@ Expression log(const Expression& a);
 
 // assignment to (double)
 double& operator<<(double& a, const Expression& b);
+
+// Automatic differentiation utilities
+void zero_all_grad();
 
 #endif  // EXPRESSION__H

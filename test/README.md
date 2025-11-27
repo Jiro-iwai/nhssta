@@ -14,12 +14,13 @@ This directory contains the test suite for nhssta, using Google Test framework.
 - `test_order_dependency.cpp` - Tests for covariance computation order independence
 - `test_small_rho.cpp` - Tests for small correlation coefficient behavior
 
-### Unit Tests - Expression (将来の感度解析用)
+### Unit Tests - Expression (自動微分・感度解析用)
 - `test_expression_print.cpp` - Expression の表示機能テスト
 - `test_expression_assert_migration.cpp` - Expression の算術演算テスト
+- `test_expression_derivative.cpp` - 逆伝播による勾配計算テスト
 
-> **Note**: Expression クラスは将来の感度解析機能のために保持されていますが、
-> 現在の SSTA コア機能では使用されていません。詳細は `src/expression.hpp` を参照。
+> **Note**: Expression クラスは逆伝播（Reverse-mode AD）による自動微分を実装しています。
+> SSTA コアとの統合は将来の課題です。詳細は `src/expression.hpp` を参照。
 
 ### Integration Tests
 - `test_integration.cpp` - Integration tests based on example/nhssta_test
@@ -66,7 +67,7 @@ Tests are compiled into a single test binary:
 
 ## Current Test Coverage
 
-- **467 tests** across **49 test suites**
+- **485 tests** across **50 test suites**
 - Unit tests for core components (RandomVariable, Gate, Parser, Ssta)
 - Expression tests (将来の感度解析機能用)
 - Integration tests for end-to-end functionality
