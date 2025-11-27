@@ -199,7 +199,7 @@ outputs_ = {"y", ...}
 signals_ = {
     "a" -> Normal(0.0, 1e-6),
     "b" -> Normal(0.0, 1e-6),
-    "y" -> OpADD(Normal(0.0, 1e-6), Normal(10.0, 1.0)),  // 計算済み
+    "y" -> AddImpl(Normal(0.0, 1e-6), Normal(10.0, 1.0)),  // 計算済み
     ...
 }
 net_ = []  // 空

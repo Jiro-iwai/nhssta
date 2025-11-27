@@ -1,6 +1,6 @@
-# 統計的PERT法 nhssta 0.2.2
+# 統計的PERT法 nhssta 0.2.3
 
-本ドキュメントには統計的PERT法 nhssta 0.2.2 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
+本ドキュメントには統計的PERT法 nhssta 0.2.3 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
 
 ## 1. 概要
 
@@ -102,8 +102,8 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 419 tests from 43 test suites.
-[  PASSED  ] 419 tests.
+[==========] Running 448 tests from 45 test suites.
+[  PASSED  ] 448 tests.
 ==========================================
 Running integration tests...
 ==========================================
@@ -184,7 +184,7 @@ nhsstaは以下のexit codeを返します：
 # exampleディレクトリから実行する場合
 $ cd example
 $ ../build/bin/nhssta -l -c -p -d ex4_gauss.dlib -b ex4.bench
-nhssta 0.2.2
+nhssta 0.2.3
 
 #
 # LAT

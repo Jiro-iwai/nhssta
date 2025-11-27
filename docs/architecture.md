@@ -11,7 +11,7 @@
 1. **RandomVariable**: 確率変数を表現するクラス階層
    - `RandomVariableImpl`: 基底クラス（平均、分散、標準偏差などを保持）
    - `Normal`: 正規分布を表現
-   - `OpADD`, `OpSUB`, `OpMAX`, `OpMAX0`: 確率変数間の演算を表現
+   - `AddImpl`, `SubImpl`, `MaxImpl`, `Max0Impl`: 確率変数間の演算を表現
    - Handleパターンを使用して所有権を管理（`std::shared_ptr`ベース）
 
 2. **Gate**: ゲート（論理素子）を表現

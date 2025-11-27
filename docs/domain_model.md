@@ -14,11 +14,11 @@
 
 ```
 RandomVariableImpl (基底クラス)
-├── _Normal_          (正規分布)
-├── OpADD             (加算演算)
-├── OpSUB             (減算演算)
-├── OpMAX             (最大値演算)
-└── OpMAX0            (最大値演算、ゼロ分散チェック付き)
+├── NormalImpl        (正規分布)
+├── AddImpl           (加算演算)
+├── SubImpl           (減算演算)
+├── MaxImpl           (最大値演算)
+└── Max0Impl          (最大値演算、ゼロ分散チェック付き)
 ```
 
 #### 主要メソッド
@@ -188,7 +188,7 @@ class CovarianceMatrixImpl {
 
 - 1つの`Gate`から複数の`Instance`を作成可能
 - `Instance`は`Gate`への参照を持つ
-- `Instance::create_instance()`で`Gate`から`Instance`を作成
+- `Gate::create_instance()`で`Gate`から`Instance`を作成
 
 ### Instance ↔ RandomVariable
 
