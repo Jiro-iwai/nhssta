@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <nhssta/exception.hpp>
+#include <nhssta/net_line.hpp>
 #include <nhssta/ssta.hpp>
 
 #include "../src/covariance.hpp"
@@ -170,6 +171,16 @@ TEST_F(NamespaceConsistencyTest, HandleSuffixNamingConvention) {
     static_assert(std::is_same<RandomVariable::CovarianceMatrix,
                                RandomVariable::CovarianceMatrixHandle>::value,
                   "CovarianceMatrix should be alias of CovarianceMatrixHandle");
+
+    // NetLineHandle is aliased as NetLine
+    static_assert(std::is_class<Nh::NetLineHandle>::value,
+                  "NetLineHandle should exist in Nh namespace");
+    static_assert(std::is_same<Nh::NetLine, Nh::NetLineHandle>::value,
+                  "NetLine should be alias of NetLineHandle");
+
+    // NetLineImpl should exist (implementation class)
+    static_assert(std::is_class<Nh::NetLineImpl>::value,
+                  "NetLineImpl should exist in Nh namespace");
 
     EXPECT_TRUE(true);
 }

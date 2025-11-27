@@ -1,7 +1,7 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro
 //
-// NetLine and NetLineBody classes for representing netlist lines
+// NetLine and NetLineImpl classes for representing netlist lines
 // Extracted from Ssta class to improve separation of concerns
 
 #ifndef NET_LINE__H
@@ -14,13 +14,14 @@
 
 namespace Nh {
 
-// Type alias for input signal names
-typedef std::vector<std::string> NetLineIns;
+// Type alias for input signal names (modern C++ using syntax)
+using NetLineIns = std::vector<std::string>;
 
-class NetLineBody {
+// Implementation class for NetLine (Impl suffix naming convention)
+class NetLineImpl {
    public:
-    NetLineBody() = default;
-    virtual ~NetLineBody() = default;
+    NetLineImpl() = default;
+    virtual ~NetLineImpl() = default;
 
     void set_out(const std::string& out) {
         out_ = out;
@@ -49,50 +50,59 @@ class NetLineBody {
     NetLineIns ins_;
 };
 
-class NetLine {
+// Handle pattern for NetLine: thin wrapper around std::shared_ptr
+//
+// Ownership semantics:
+// - Copying a NetLine is lightweight: it shares ownership via std::shared_ptr
+// - Passing by value (NetLine) transfers/shares ownership
+// - Passing by const reference (const NetLine&) is a non-owning reference
+class NetLineHandle {
    public:
-    NetLine()
-        : body_(std::make_shared<NetLineBody>()) {}
-    explicit NetLine(std::shared_ptr<NetLineBody> body)
+    NetLineHandle()
+        : body_(std::make_shared<NetLineImpl>()) {}
+    explicit NetLineHandle(std::shared_ptr<NetLineImpl> body)
         : body_(std::move(body)) {
         if (!body_) {
             throw RuntimeException("NetLine: null body");
         }
     }
 
-    NetLine(const NetLine&) = default;
-    NetLine(NetLine&&) noexcept = default;
-    NetLine& operator=(const NetLine&) = default;
-    NetLine& operator=(NetLine&&) noexcept = default;
-    ~NetLine() = default;
+    NetLineHandle(const NetLineHandle&) = default;
+    NetLineHandle(NetLineHandle&&) noexcept = default;
+    NetLineHandle& operator=(const NetLineHandle&) = default;
+    NetLineHandle& operator=(NetLineHandle&&) noexcept = default;
+    ~NetLineHandle() = default;
 
-    NetLineBody* operator->() const {
+    NetLineImpl* operator->() const {
         return body_.get();
     }
-    NetLineBody& operator*() const {
+    NetLineImpl& operator*() const {
         return *body_;
     }
 
-    bool operator==(const NetLine& rhs) const {
+    bool operator==(const NetLineHandle& rhs) const {
         return body_.get() == rhs.body_.get();
     }
-    bool operator!=(const NetLine& rhs) const {
+    bool operator!=(const NetLineHandle& rhs) const {
         return !(*this == rhs);
     }
-    bool operator<(const NetLine& rhs) const {
+    bool operator<(const NetLineHandle& rhs) const {
         return body_.get() < rhs.body_.get();
     }
-    bool operator>(const NetLine& rhs) const {
+    bool operator>(const NetLineHandle& rhs) const {
         return body_.get() > rhs.body_.get();
     }
 
-    [[nodiscard]] std::shared_ptr<NetLineBody> get() const {
+    [[nodiscard]] std::shared_ptr<NetLineImpl> get() const {
         return body_;
     }
 
    private:
-    std::shared_ptr<NetLineBody> body_;
+    std::shared_ptr<NetLineImpl> body_;
 };
+
+// Type alias: NetLine is a Handle (thin wrapper around std::shared_ptr)
+using NetLine = NetLineHandle;
 
 }  // namespace Nh
 

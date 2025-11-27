@@ -11,7 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-// smart_ptr.hpp no longer needed - NetLineBody uses std::shared_ptr directly
+// smart_ptr.hpp no longer needed - NetLineImpl uses std::shared_ptr directly
 #include <nhssta/exception.hpp>
 #include <nhssta/ssta_results.hpp>
 
