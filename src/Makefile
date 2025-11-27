@@ -59,7 +59,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_main_exception_handling.cpp ../test/test_ssta_io_separation.cpp \
 	../test/test_main_output_format.cpp ../test/test_directory_structure.cpp \
 	../test/test_critical_path.cpp ../test/test_namespace_consistency.cpp \
-	../test/test_handle_base.cpp
+	../test/test_handle_base.cpp ../test/test_covariance_order.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 

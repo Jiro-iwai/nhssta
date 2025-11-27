@@ -110,10 +110,15 @@ class Ssta {
     // Pure logic functions (Phase 2: I/O separation)
     [[nodiscard]] LatResults getLatResults() const;
     [[nodiscard]] CorrelationMatrix getCorrelationMatrix() const;
+    [[nodiscard]] CorrelationMatrix getPathEndpointCorrelationMatrix(const CriticalPaths& paths) const;
     [[nodiscard]] CriticalPaths getCriticalPaths(size_t top_n) const;
     [[nodiscard]] CriticalPaths getCriticalPaths() const {
         return getCriticalPaths(critical_path_count_);
     }
+
+   private:
+    // Ensure covariance cache is fully populated for all signal pairs
+    void ensureCovarianceCachePopulated() const;
 };
 }  // namespace Nh
 
