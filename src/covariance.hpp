@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "handle.hpp"
 #include "normal.hpp"
 #include "random_variable.hpp"
 
@@ -45,25 +46,15 @@ class CovarianceMatrixImpl {
     Matrix cmat;
 };
 
-class CovarianceMatrixHandle {
+// CovarianceMatrixHandle: Handle for CovarianceMatrix using HandleBase template
+class CovarianceMatrixHandle : public HandleBase<CovarianceMatrixImpl> {
    public:
+    // Default constructor creates a new CovarianceMatrixImpl
     CovarianceMatrixHandle()
-        : body_(std::make_shared<CovarianceMatrixImpl>()) {}
-    explicit CovarianceMatrixHandle(std::shared_ptr<CovarianceMatrixImpl> body)
-        : body_(std::move(body)) {}
+        : HandleBase(std::make_shared<CovarianceMatrixImpl>()) {}
 
-    CovarianceMatrixImpl* operator->() const {
-        return body_.get();
-    }
-    CovarianceMatrixImpl& operator*() const {
-        return *body_;
-    }
-    [[nodiscard]] std::shared_ptr<CovarianceMatrixImpl> shared() const {
-        return body_;
-    }
-
-   private:
-    std::shared_ptr<CovarianceMatrixImpl> body_;
+    // Inherit other constructors from HandleBase
+    using HandleBase<CovarianceMatrixImpl>::HandleBase;
 };
 
 // Type alias: CovarianceMatrix is a Handle (thin wrapper around std::shared_ptr)

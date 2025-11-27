@@ -108,51 +108,6 @@ double ExpressionImpl::value() {
     return (value_);
 }
 
-Expression ExpressionImpl::d(const Expression& y) {
-    Expression x(shared_from_this());
-    Expression dx;
-
-    auto i = dfrntls_.find(y);
-    if (i != dfrntls_.end()) {
-        dx = i->second;
-        return dx;
-    }
-    if (x == y) {
-        dx = one;
-        return dx;
-    }
-    if (left() != null && right() != null) {
-        Expression dl = left()->d(y);
-        Expression dr = right()->d(y);
-
-        if (op_ == PLUS) {
-            dx = dl + dr;
-        } else if (op_ == MINUS) {
-            dx = dl - dr;
-        } else if (op_ == MUL) {
-            dx = dl * right() + left() * dr;
-        } else if (op_ == DIV) {
-            dx = (dl - x * dr) / right();
-        } else if (op_ == POWER) {
-            dx = x * (dl / left() * right() + dr * log(left()));
-        } else {
-            throw Nh::RuntimeException("Expression: invalid operation in derivative calculation");
-        }
-
-    } else if (left() != null) {
-        Expression dl = left()->d(y);
-
-        if (op_ == EXP) {
-            dx = x * dl;
-        } else if (op_ == LOG) {
-            dx = dl / left();
-        }
-    }
-
-    dfrntls_[y] = dx;
-    return dx;
-}
-
 void ExpressionImpl::set_value(double value) {
     unset_root_value();
     _set_value(value);
@@ -262,18 +217,7 @@ void print_all() {
 Const::Const(double value)
     : Expression(std::make_shared<ConstImpl>(value)) {}
 
-Expression ConstImpl::d(const Expression& y) {
-    return zero;
-}
-
 //////////////////////////
-
-Expression VariableImpl::d(const Expression& y) {
-    if (Expression(shared_from_this()) == y) {
-        return one;
-    }
-    return zero;
-}
 
 double VariableImpl::value() {
     if (!is_set_value()) {

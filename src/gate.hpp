@@ -10,6 +10,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "handle.hpp"
 #include "statistics.hpp"
 
 namespace Nh {
@@ -76,37 +77,20 @@ class GateImpl {
     Delays delays_;
 };
 
-// Handle pattern for Gate: thin wrapper around std::shared_ptr
+// Handle pattern for Gate using HandleBase template
 //
 // Ownership semantics:
 // - Copying a Gate is lightweight: it shares ownership via std::shared_ptr
 // - Passing by value (Gate) transfers/shares ownership
 // - Passing by const reference (const Gate&) is a non-owning reference
 // - Storing as member variable creates ownership relationship
-class GateHandle {
+class GateHandle : public HandleBase<GateImpl> {
    public:
     GateHandle();
     explicit GateHandle(std::shared_ptr<GateImpl> body);
 
-    // Non-owning access: returns raw pointer (no ownership transfer)
-    GateImpl* operator->() const {
-        return body_.get();
-    }
-    GateImpl& operator*() const {
-        return *body_;
-    }
-
-    // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<GateImpl> get() const {
-        return body_;
-    }
-
+    // Custom method: create an Instance from this Gate
     [[nodiscard]] InstanceHandle create_instance() const;
-
-   private:
-    // Owned shared_ptr: this GateHandle owns the underlying object
-    // Copying the GateHandle shares this ownership (lightweight copy)
-    std::shared_ptr<GateImpl> body_;
 };
 
 // Type alias: Gate is a Handle (thin wrapper around std::shared_ptr)
@@ -137,42 +121,16 @@ class InstanceImpl {
     Signals outputs_;
 };
 
-// Handle pattern for Instance: thin wrapper around std::shared_ptr
+// Handle pattern for Instance using HandleBase template
 //
 // Ownership semantics:
 // - Copying an Instance is lightweight: it shares ownership via std::shared_ptr
 // - Passing by value (Instance) transfers/shares ownership
 // - Passing by const reference (const Instance&) is a non-owning reference
-class InstanceHandle {
+class InstanceHandle : public HandleBase<InstanceImpl> {
    public:
-    InstanceHandle() = default;
-    explicit InstanceHandle(std::shared_ptr<InstanceImpl> body)
-        : body_(std::move(body)) {}
-
-    // Non-owning access: returns raw pointer (no ownership transfer)
-    InstanceImpl* operator->() const {
-        return body_.get();
-    }
-    InstanceImpl& operator*() const {
-        return *body_;
-    }
-
-    // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<InstanceImpl> get() const {
-        return body_;
-    }
-
-    bool operator==(const InstanceHandle& rhs) const {
-        return body_.get() == rhs.body_.get();
-    }
-    bool operator!=(const InstanceHandle& rhs) const {
-        return !(*this == rhs);
-    }
-
-   private:
-    // Owned shared_ptr: this InstanceHandle owns the underlying object
-    // Copying the InstanceHandle shares this ownership (lightweight copy)
-    std::shared_ptr<InstanceImpl> body_;
+    // Inherit all constructors from HandleBase
+    using HandleBase<InstanceImpl>::HandleBase;
 };
 
 // Type alias: Instance is a Handle (thin wrapper around std::shared_ptr)

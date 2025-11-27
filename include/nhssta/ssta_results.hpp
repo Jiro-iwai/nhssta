@@ -41,7 +41,7 @@ struct LatResult {
 };
 
 // Collection of LAT results
-typedef std::vector<LatResult> LatResults;
+using LatResults = std::vector<LatResult>;
 
 // Correlation matrix result
 struct CorrelationMatrix {
@@ -89,7 +89,7 @@ struct CriticalPath {
 };
 
 // Collection of critical paths (top N paths)
-typedef std::vector<CriticalPath> CriticalPaths;
+using CriticalPaths = std::vector<CriticalPath>;
 
 }  // namespace Nh
 

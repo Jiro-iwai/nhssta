@@ -55,9 +55,9 @@ class Ssta {
     ////
 
     // Use unordered_map for better performance (O(1) average vs O(log n) for map)
-    typedef std::unordered_map<std::string, Gate> Gates;
-    typedef std::list<NetLine> Net;
-    typedef std::set<std::string> Pins;
+    using Gates = std::unordered_map<std::string, Gate>;
+    using Net = std::list<NetLine>;
+    using Pins = std::set<std::string>;
 
     std::string dlib_;
     std::string bench_;
