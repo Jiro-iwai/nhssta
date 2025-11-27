@@ -306,13 +306,15 @@ double expected_prod_pos(double mu0, double sigma0,
     // Clamp rho to [-1, 1] for numerical stability (also clamped by caller)
     rho = clamp(rho, -1.0, 1.0);
 
-    // For independent variables (rho = 0), E[D1⁺ | Z=z] = E[D1⁺] (independent of Z)
-    // Therefore: E[D0⁺ D1⁺] = E[D1⁺] * E[D0⁺]
-    // This is mathematically exact, not a special case approximation
-    constexpr double RHO_THRESHOLD = 1e-10;
+    // For effectively independent variables (|rho| ≈ 0), E[D1⁺ | Z=z] ≈ E[D1⁺] (independent of Z)
+    // Therefore: E[D0⁺ D1⁺] ≈ E[D1⁺] * E[D0⁺]
+    // For very small |rho|, Gauss-Hermite quadrature may have precision issues,
+    // so we use the independent formula which is mathematically exact when rho = 0
+    // and a good approximation when |rho| is very small
+    constexpr double RHO_THRESHOLD = 1e-5;  // Increased from 1e-10 to handle very small correlations
     if (std::abs(rho) < RHO_THRESHOLD) {
-        // When rho = 0, D0 and D1 are independent
-        // E[D0⁺ D1⁺] = E[D0⁺] * E[D1⁺] (exact formula for independent variables)
+        // When |rho| is very small, D0 and D1 are effectively independent
+        // E[D0⁺ D1⁺] = E[D0⁺] * E[D1⁺] (exact when rho=0, good approximation when |rho| << 1)
         double E0pos = expected_positive_part(mu0, sigma0);
         double E1pos = expected_positive_part(mu1, sigma1);
         return E0pos * E1pos;
