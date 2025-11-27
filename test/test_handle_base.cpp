@@ -147,7 +147,7 @@ TEST_F(HandleBaseTest, DynamicPointerCastFailureThrows) {
     auto sp = std::make_shared<TestImpl>(42);  // Base type, not derived
     TestHandle h(sp);
 
-    EXPECT_THROW(h.dynamic_pointer_cast<DerivedTestImpl>(), Nh::RuntimeException);
+    EXPECT_THROW((void)h.dynamic_pointer_cast<DerivedTestImpl>(), Nh::RuntimeException);
 }
 
 // Test: Constructor from derived shared_ptr
