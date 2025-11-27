@@ -1,6 +1,56 @@
 // -*- c++ -*-
 // Author: Jiro Iwai
 
+/**
+ * @file expression.hpp
+ * @brief 自動微分による感度解析のための式木クラス（未完成・将来用に保持）
+ *
+ * ## 概要
+ *
+ * このクラスは、SSTA における感度解析機能のために設計された式木（Expression Tree）
+ * の実装です。自動微分（Automatic Differentiation）を用いて、各ゲート遅延が
+ * クリティカルパスに与える影響を計算することを目的としていました。
+ *
+ * ## 現在の状態
+ *
+ * - **ステータス**: 未完成（凍結）
+ * - **SSTA コア機能**: 使用していません
+ * - **テスト**: 基本的な算術演算のテストは存在します
+ *
+ * ## 実装済み機能
+ *
+ * - 式木の構築（Const, Variable, 算術演算）
+ * - 式の値の評価（value()）
+ * - デバッグ用の式木表示（print(), print_all()）
+ *
+ * ## 未実装機能（将来の TODO）
+ *
+ * - 偏微分の計算 (∂f/∂x)
+ * - RandomVariable との統合
+ * - クリティカルパスへの感度計算
+ * - 逆伝播（バックプロパゲーション）アルゴリズム
+ *
+ * ## 使用例（将来の想定）
+ *
+ * @code
+ * // ゲート遅延を Variable として定義
+ * Variable delay_g1, delay_g2, delay_g3;
+ *
+ * // パス遅延を式として構築
+ * Expression path_delay = delay_g1 + MAX(delay_g2, delay_g3);
+ *
+ * // 感度を計算（未実装）
+ * double sensitivity_g1 = path_delay.derivative(delay_g1);
+ * @endcode
+ *
+ * @note このファイルは将来の感度解析機能のために保持されています。
+ *       削除しないでください。
+ *
+ * @see test/test_expression_print.cpp - Expression のテスト
+ * @see test/test_expression_assert_migration.cpp - 算術演算のテスト
+ * @see Issue #163 - 感度解析機能の検討
+ */
+
 #ifndef EXPRESSION__H
 #define EXPRESSION__H
 
