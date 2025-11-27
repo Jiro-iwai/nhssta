@@ -4,12 +4,22 @@ This directory contains the test suite for nhssta, using Google Test framework.
 
 ## Test Structure
 
-### Unit Tests
+### Unit Tests - Core SSTA
 - `test_randomvariable.cpp` - Tests for RandomVariable base class
 - `test_normal.cpp` - Tests for Normal distribution class
 - `test_add.cpp` - Tests for addition operation (ADD)
 - `test_max.cpp` - Tests for maximum operation (MAX)
+- `test_max_order.cpp` - Tests for MAX operation order independence
 - `test_covariance.cpp` - Tests for covariance calculations
+- `test_order_dependency.cpp` - Tests for covariance computation order independence
+- `test_small_rho.cpp` - Tests for small correlation coefficient behavior
+
+### Unit Tests - Expression (将来の感度解析用)
+- `test_expression_print.cpp` - Expression の表示機能テスト
+- `test_expression_assert_migration.cpp` - Expression の算術演算テスト
+
+> **Note**: Expression クラスは将来の感度解析機能のために保持されていますが、
+> 現在の SSTA コア機能では使用されていません。詳細は `src/expression.hpp` を参照。
 
 ### Integration Tests
 - `test_integration.cpp` - Integration tests based on example/nhssta_test
@@ -56,8 +66,9 @@ Tests are compiled into a single test binary:
 
 ## Current Test Coverage
 
-- **351 tests** across **38 test suites**
-- Unit tests for core components (RandomVariable, Expression, Gate, Parser, Ssta)
+- **467 tests** across **49 test suites**
+- Unit tests for core components (RandomVariable, Gate, Parser, Ssta)
+- Expression tests (将来の感度解析機能用)
 - Integration tests for end-to-end functionality
 - Performance benchmarks
 - Code coverage measurement support

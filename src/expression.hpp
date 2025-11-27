@@ -1,6 +1,63 @@
 // -*- c++ -*-
 // Author: Jiro Iwai
 
+/**
+ * @file expression.hpp
+ * @brief 自動微分による感度解析のための式木クラス（未完成・将来用に保持）
+ *
+ * ## 概要
+ *
+ * このクラスは、SSTA における感度解析機能のために設計された式木（Expression Tree）
+ * の実装です。自動微分（Automatic Differentiation）を用いて、各ゲート遅延が
+ * クリティカルパスに与える影響を計算することを目的としていました。
+ *
+ * ## 現在の状態
+ *
+ * - **ステータス**: 未完成（凍結）
+ * - **SSTA コア機能**: 使用していません
+ * - **テスト**: 基本的な算術演算のテストは存在します
+ *
+ * ## 実装済み機能
+ *
+ * - 式木の構築（Const, Variable, 算術演算）
+ * - 式の値の評価（value()）
+ * - デバッグ用の式木表示（print(), print_all()）
+ *
+ * ## 未実装機能（将来の TODO）
+ *
+ * - 偏微分の計算 (∂f/∂x)
+ * - RandomVariable との統合
+ * - クリティカルパスへの感度計算
+ * - 逆伝播（バックプロパゲーション）アルゴリズム
+ *
+ * ## 使用例（将来の想定）
+ *
+ * @code
+ * // ゲート遅延は RandomVariable として定義（現行通り）
+ * RandomVariable d1 = Normal(10.0, 1.0);
+ * RandomVariable d2 = Normal(8.0, 0.5);
+ *
+ * // パス遅延の計算
+ * RandomVariable path = d1 + MAX(d2, d3);
+ *
+ * // mean, variance を Expression の Variable として表現
+ * Variable mu_d1, sigma_d1, mu_d2, sigma_d2;
+ * Expression path_mean = mu_d1 + f_max_mean(mu_d2, sigma_d2, ...);
+ * Expression path_var  = sigma_d1^2 + f_max_var(...);
+ *
+ * // 感度を計算（未実装）
+ * // ∂(path_mean) / ∂(mu_d1) など
+ * double sensitivity = path_mean.derivative(mu_d1);
+ * @endcode
+ *
+ * @note このファイルは将来の感度解析機能のために保持されています。
+ *       削除しないでください。
+ *
+ * @see test/test_expression_print.cpp - Expression のテスト
+ * @see test/test_expression_assert_migration.cpp - 算術演算のテスト
+ * @see Issue #163 - 感度解析機能の検討
+ */
+
 #ifndef EXPRESSION__H
 #define EXPRESSION__H
 
