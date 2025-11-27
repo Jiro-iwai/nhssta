@@ -42,6 +42,10 @@ class CovarianceMatrixImpl {
         cmat[rowcol] = cov;
     }
 
+    // For testing/debugging
+    void clear() { cmat.clear(); }
+    size_t size() const { return cmat.size(); }
+
    private:
     Matrix cmat;
 };

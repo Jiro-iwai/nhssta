@@ -44,7 +44,17 @@ double OpMAX::calc_variance() const {
 }
 
 RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
-    return RandomVariable(std::make_shared<OpMAX>(a, b));
+    // Fix for Issue #158: Normalize order so that the variable with larger mean
+    // is always the left (base) argument. This ensures consistent decomposition
+    // regardless of the order the caller provides.
+    //
+    // Clark approximation: MAX(A,B) = A + MAX0(B-A)
+    // When A > B in mean, B-A has negative mean, so MAX0(B-A) ≈ 0
+    // This gives better numerical stability than the reverse case.
+    if (a->mean() >= b->mean()) {
+        return RandomVariable(std::make_shared<OpMAX>(a, b));
+    }
+    return RandomVariable(std::make_shared<OpMAX>(b, a));
 }
 
 /////
