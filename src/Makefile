@@ -60,7 +60,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_main_output_format.cpp ../test/test_directory_structure.cpp \
 	../test/test_critical_path.cpp ../test/test_namespace_consistency.cpp \
 	../test/test_handle_base.cpp ../test/test_expected_prod_pos.cpp \
-	../test/test_max_order.cpp
+	../test/test_max_order.cpp ../test/test_order_dependency.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 
