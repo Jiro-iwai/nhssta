@@ -18,7 +18,7 @@ using Normal = ::RandomVariable::Normal;
 using RandomVariable = ::RandomVariable::RandomVariable;
 
 class InstanceImpl;
-class Instance;
+class InstanceHandle;
 // Use unordered_map for better performance (O(1) average vs O(log n) for map)
 using Signals = std::unordered_map<std::string, RandomVariable>;
 
@@ -83,10 +83,10 @@ class GateImpl {
 // - Passing by value (Gate) transfers/shares ownership
 // - Passing by const reference (const Gate&) is a non-owning reference
 // - Storing as member variable creates ownership relationship
-class Gate {
+class GateHandle {
    public:
-    Gate();
-    explicit Gate(std::shared_ptr<GateImpl> body);
+    GateHandle();
+    explicit GateHandle(std::shared_ptr<GateImpl> body);
 
     // Non-owning access: returns raw pointer (no ownership transfer)
     GateImpl* operator->() const {
@@ -101,13 +101,16 @@ class Gate {
         return body_;
     }
 
-    [[nodiscard]] Instance create_instance() const;
+    [[nodiscard]] InstanceHandle create_instance() const;
 
    private:
-    // Owned shared_ptr: this Gate owns the underlying object
-    // Copying the Gate shares this ownership (lightweight copy)
+    // Owned shared_ptr: this GateHandle owns the underlying object
+    // Copying the GateHandle shares this ownership (lightweight copy)
     std::shared_ptr<GateImpl> body_;
 };
+
+// Type alias: Gate is a Handle (thin wrapper around std::shared_ptr)
+using Gate = GateHandle;
 
 /////
 
@@ -140,10 +143,10 @@ class InstanceImpl {
 // - Copying an Instance is lightweight: it shares ownership via std::shared_ptr
 // - Passing by value (Instance) transfers/shares ownership
 // - Passing by const reference (const Instance&) is a non-owning reference
-class Instance {
+class InstanceHandle {
    public:
-    Instance() = default;
-    explicit Instance(std::shared_ptr<InstanceImpl> body)
+    InstanceHandle() = default;
+    explicit InstanceHandle(std::shared_ptr<InstanceImpl> body)
         : body_(std::move(body)) {}
 
     // Non-owning access: returns raw pointer (no ownership transfer)
@@ -159,18 +162,21 @@ class Instance {
         return body_;
     }
 
-    bool operator==(const Instance& rhs) const {
+    bool operator==(const InstanceHandle& rhs) const {
         return body_.get() == rhs.body_.get();
     }
-    bool operator!=(const Instance& rhs) const {
+    bool operator!=(const InstanceHandle& rhs) const {
         return !(*this == rhs);
     }
 
    private:
-    // Owned shared_ptr: this Instance owns the underlying object
-    // Copying the Instance shares this ownership (lightweight copy)
+    // Owned shared_ptr: this InstanceHandle owns the underlying object
+    // Copying the InstanceHandle shares this ownership (lightweight copy)
     std::shared_ptr<InstanceImpl> body_;
 };
+
+// Type alias: Instance is a Handle (thin wrapper around std::shared_ptr)
+using Instance = InstanceHandle;
 }  // namespace Nh
 
 #endif  // NH_GATE__H
