@@ -11,6 +11,8 @@
 #include <set>
 #include <type_traits>
 
+#include "handle.hpp"
+
 ////////////////////
 
 
@@ -28,72 +30,24 @@ class ExpressionImpl;
 // - Copy is cheap (only copies shared_ptr, not the underlying object)
 // - Move is cheap (transfers shared_ptr ownership)
 // - Use const reference for read-only access when ownership is not needed
-class ExpressionHandle {
+// ExpressionHandle: Handle using HandleBase template
+//
+// Ownership semantics:
+// - Copying a Handle is lightweight: it shares ownership via std::shared_ptr
+// - Passing by value (Expression) transfers/shares ownership
+// - Passing by const reference (const Expression&) is a non-owning reference
+// - Storing as member variable creates ownership relationship
+//
+// Value category:
+// - Copy is cheap (only copies shared_ptr, not the underlying object)
+// - Move is cheap (transfers shared_ptr ownership)
+// - Use const reference for read-only access when ownership is not needed
+class ExpressionHandle : public HandleBase<ExpressionImpl> {
    public:
     using element_type = ExpressionImpl;
 
-    ExpressionHandle() = default;
-    ExpressionHandle(std::nullptr_t)
-        : body_(nullptr) {}
-
-    // Takes ownership of the raw pointer (creates new shared_ptr)
-    explicit ExpressionHandle(ExpressionImpl* body)
-        : body_(body != nullptr ? std::shared_ptr<ExpressionImpl>(body) : nullptr) {}
-
-    // Takes ownership via move (transfers shared_ptr ownership)
-    explicit ExpressionHandle(std::shared_ptr<ExpressionImpl> body)
-        : body_(std::move(body)) {}
-
-    // Takes ownership via copy (shares shared_ptr ownership)
-    template <class Derived, class = std::enable_if_t<std::is_base_of_v<ExpressionImpl, Derived>>>
-    explicit ExpressionHandle(const std::shared_ptr<Derived>& body)
-        : body_(std::static_pointer_cast<ExpressionImpl>(body)) {}
-
-    // Non-owning access: returns raw pointer (no ownership transfer)
-    ExpressionImpl* operator->() const {
-        return body_.get();
-    }
-    ExpressionImpl& operator*() const {
-        return *body_;
-    }
-    [[nodiscard]] ExpressionImpl* get() const {
-        return body_.get();
-    }
-
-    // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<ExpressionImpl> shared() const {
-        return body_;
-    }
-    explicit operator bool() const {
-        return static_cast<bool>(body_);
-    }
-
-    bool operator==(const ExpressionHandle& rhs) const {
-        return body_.get() == rhs.body_.get();
-    }
-    bool operator!=(const ExpressionHandle& rhs) const {
-        return !(*this == rhs);
-    }
-    bool operator<(const ExpressionHandle& rhs) const {
-        return body_.get() < rhs.body_.get();
-    }
-    bool operator>(const ExpressionHandle& rhs) const {
-        return body_.get() > rhs.body_.get();
-    }
-
-    template <class U>
-    std::shared_ptr<U> dynamic_pointer_cast() const {
-        auto ptr = std::dynamic_pointer_cast<U>(body_);
-        if (!ptr) {
-            throw Nh::RuntimeException("Expression: failed to dynamic cast");
-        }
-        return ptr;
-    }
-
-   private:
-    // Owned shared_ptr: this Handle owns the underlying object
-    // Copying the Handle shares this ownership (lightweight copy)
-    std::shared_ptr<ExpressionImpl> body_;
+    // Inherit all constructors from HandleBase
+    using HandleBase<ExpressionImpl>::HandleBase;
 };
 
 // Type alias: Expression is a Handle (thin wrapper around std::shared_ptr)

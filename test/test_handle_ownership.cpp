@@ -157,11 +157,11 @@ TEST_F(HandleOwnershipTest, ExpressionHandleConstRefIsNonOwning) {
 TEST_F(HandleOwnershipTest, GateHandleCopyIsLightweight) {
     Gate g1;
     g1->set_type_name("test_gate");
-    auto shared1 = g1.get();
+    auto shared1 = g1.shared();
     EXPECT_NE(shared1.use_count(), 0);  // Gate should have shared ownership
 
     Gate g2 = g1;
-    auto shared2 = g2.get();
+    auto shared2 = g2.shared();
     EXPECT_EQ(shared1.get(), shared2.get());  // Should point to same object
 }
 
@@ -170,11 +170,11 @@ TEST_F(HandleOwnershipTest, InstanceHandleCopyIsLightweight) {
     Gate gate;
     gate->set_type_name("test_gate");
     Instance inst1 = gate.create_instance();
-    auto shared1 = inst1.get();
+    auto shared1 = inst1.shared();
     EXPECT_NE(shared1.use_count(), 0);
 
     Instance inst2 = inst1;
-    auto shared2 = inst2.get();
+    auto shared2 = inst2.shared();
     EXPECT_EQ(shared1.get(), shared2.get());  // Should point to same object
 }
 

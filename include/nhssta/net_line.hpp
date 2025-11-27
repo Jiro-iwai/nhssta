@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "../src/handle.hpp"
+
 namespace Nh {
 
 // Type alias for input signal names (modern C++ using syntax)
@@ -50,55 +52,32 @@ class NetLineImpl {
     NetLineIns ins_;
 };
 
-// Handle pattern for NetLine: thin wrapper around std::shared_ptr
+// Handle pattern for NetLine using HandleBase template
 //
 // Ownership semantics:
 // - Copying a NetLine is lightweight: it shares ownership via std::shared_ptr
 // - Passing by value (NetLine) transfers/shares ownership
 // - Passing by const reference (const NetLine&) is a non-owning reference
-class NetLineHandle {
+class NetLineHandle : public HandleBase<NetLineImpl> {
    public:
+    // Default constructor creates a new NetLineImpl
     NetLineHandle()
-        : body_(std::make_shared<NetLineImpl>()) {}
+        : HandleBase(std::make_shared<NetLineImpl>()) {}
+
+    // Constructor from shared_ptr with null check
     explicit NetLineHandle(std::shared_ptr<NetLineImpl> body)
-        : body_(std::move(body)) {
-        if (!body_) {
+        : HandleBase(std::move(body)) {
+        if (!this->body_) {
             throw RuntimeException("NetLine: null body");
         }
     }
 
+    // Inherit other constructors and use defaults for copy/move
     NetLineHandle(const NetLineHandle&) = default;
     NetLineHandle(NetLineHandle&&) noexcept = default;
     NetLineHandle& operator=(const NetLineHandle&) = default;
     NetLineHandle& operator=(NetLineHandle&&) noexcept = default;
     ~NetLineHandle() = default;
-
-    NetLineImpl* operator->() const {
-        return body_.get();
-    }
-    NetLineImpl& operator*() const {
-        return *body_;
-    }
-
-    bool operator==(const NetLineHandle& rhs) const {
-        return body_.get() == rhs.body_.get();
-    }
-    bool operator!=(const NetLineHandle& rhs) const {
-        return !(*this == rhs);
-    }
-    bool operator<(const NetLineHandle& rhs) const {
-        return body_.get() < rhs.body_.get();
-    }
-    bool operator>(const NetLineHandle& rhs) const {
-        return body_.get() > rhs.body_.get();
-    }
-
-    [[nodiscard]] std::shared_ptr<NetLineImpl> get() const {
-        return body_;
-    }
-
-   private:
-    std::shared_ptr<NetLineImpl> body_;
 };
 
 // Type alias: NetLine is a Handle (thin wrapper around std::shared_ptr)

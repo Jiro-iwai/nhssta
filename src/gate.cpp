@@ -16,10 +16,10 @@
 namespace Nh {
 
 GateHandle::GateHandle()
-    : body_(std::make_shared<GateImpl>()) {}
+    : HandleBase(std::make_shared<GateImpl>()) {}
 
 GateHandle::GateHandle(std::shared_ptr<GateImpl> body)
-    : body_(std::move(body)) {
+    : HandleBase(std::move(body)) {
     if (!body_) {
         throw Nh::RuntimeException("Gate: null body");
     }

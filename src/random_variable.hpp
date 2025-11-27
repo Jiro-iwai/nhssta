@@ -9,6 +9,8 @@
 #include <string>
 #include <type_traits>
 
+#include "handle.hpp"
+
 namespace RandomVariable {
 
 // Minimum variance threshold to avoid division by zero in statistical calculations.
@@ -35,72 +37,24 @@ class RandomVariableImpl;
 // - Copy is cheap (only copies shared_ptr, not the underlying object)
 // - Move is cheap (transfers shared_ptr ownership)
 // - Use const reference for read-only access when ownership is not needed
-class RandomVariableHandle {
+// RandomVariableHandle: Handle using HandleBase template
+//
+// Ownership semantics:
+// - Copying a Handle is lightweight: it shares ownership via std::shared_ptr
+// - Passing by value (RandomVariable) transfers/shares ownership
+// - Passing by const reference (const RandomVariable&) is a non-owning reference
+// - Storing as member variable creates ownership relationship
+//
+// Value category:
+// - Copy is cheap (only copies shared_ptr, not the underlying object)
+// - Move is cheap (transfers shared_ptr ownership)
+// - Use const reference for read-only access when ownership is not needed
+class RandomVariableHandle : public HandleBase<RandomVariableImpl> {
    public:
     using element_type = RandomVariableImpl;
 
-    RandomVariableHandle() = default;
-    RandomVariableHandle(std::nullptr_t)
-        : body_(nullptr) {}
-
-    // Takes ownership of the raw pointer (creates new shared_ptr)
-    explicit RandomVariableHandle(RandomVariableImpl* body)
-        : body_(body != nullptr ? std::shared_ptr<RandomVariableImpl>(body) : nullptr) {}
-
-    // Takes ownership via move (transfers shared_ptr ownership)
-    explicit RandomVariableHandle(std::shared_ptr<RandomVariableImpl> body)
-        : body_(std::move(body)) {}
-
-    // Takes ownership via copy (shares shared_ptr ownership)
-    template <class Derived, class = std::enable_if_t<std::is_base_of_v<RandomVariableImpl, Derived>>>
-    explicit RandomVariableHandle(const std::shared_ptr<Derived>& body)
-        : body_(std::static_pointer_cast<RandomVariableImpl>(body)) {}
-
-    // Non-owning access: returns raw pointer (no ownership transfer)
-    RandomVariableImpl* operator->() const {
-        return body_.get();
-    }
-    RandomVariableImpl& operator*() const {
-        return *body_;
-    }
-    [[nodiscard]] RandomVariableImpl* get() const {
-        return body_.get();
-    }
-
-    // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<RandomVariableImpl> shared() const {
-        return body_;
-    }
-    explicit operator bool() const {
-        return static_cast<bool>(body_);
-    }
-
-    bool operator==(const RandomVariableHandle& rhs) const {
-        return body_.get() == rhs.body_.get();
-    }
-    bool operator!=(const RandomVariableHandle& rhs) const {
-        return !(*this == rhs);
-    }
-    bool operator<(const RandomVariableHandle& rhs) const {
-        return body_.get() < rhs.body_.get();
-    }
-    bool operator>(const RandomVariableHandle& rhs) const {
-        return body_.get() > rhs.body_.get();
-    }
-
-    template <class U>
-    [[nodiscard]] std::shared_ptr<U> dynamic_pointer_cast() const {
-        auto ptr = std::dynamic_pointer_cast<U>(body_);
-        if (!ptr) {
-            throw Nh::RuntimeException("RandomVariable: failed to dynamic cast");
-        }
-        return ptr;
-    }
-
-   private:
-    // Owned shared_ptr: this Handle owns the underlying object
-    // Copying the Handle shares this ownership (lightweight copy)
-    std::shared_ptr<RandomVariableImpl> body_;
+    // Inherit all constructors from HandleBase
+    using HandleBase<RandomVariableImpl>::HandleBase;
 };
 
 // Type alias: RandomVariable is a Handle (thin wrapper around std::shared_ptr)
