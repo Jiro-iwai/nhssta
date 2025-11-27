@@ -16,6 +16,8 @@
 
 #include "../src/expression.hpp"
 
+using Nh::Parser;
+
 // Test current exception handling behavior before unification
 // This ensures we capture the current behavior before refactoring
 

@@ -13,9 +13,11 @@
 
 #include "tokenizer.hpp"
 
+namespace Nh {
+
 class Parser {
    private:
-    typedef Tokenizer::iterator Token;
+    using Token = Tokenizer::iterator;
 
    public:
 
@@ -100,5 +102,7 @@ class Parser {
     std::string pre_;
     Token token_;
 };
+
+}  // namespace Nh
 
 #endif  // PARSER__H

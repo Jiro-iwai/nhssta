@@ -178,8 +178,8 @@ class Expression_ : public std::enable_shared_from_this<Expression_> {
     void remove_root(Expression_* root);
 
    protected:
-    typedef std::map<Expression, Expression> Dfrntls;
-    typedef std::set<Expression_*> Expressions;
+    using Dfrntls = std::map<Expression, Expression>;
+    using Expressions = std::set<Expression_*>;
 
     int id_;
     bool is_set_value_;

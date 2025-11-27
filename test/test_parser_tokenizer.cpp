@@ -8,6 +8,8 @@
 
 #include "parser.hpp"
 
+using Nh::Parser;
+
 // Test boost::tokenizer behavior before replacement
 // This test verifies the current tokenization behavior with different separators
 

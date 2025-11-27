@@ -7,6 +7,8 @@
 
 #include "parser.hpp"
 
+using Nh::Parser;
+
 // Test boost::lexical_cast behavior before replacement
 // This test verifies the current behavior of Parser::getToken with different types
 
