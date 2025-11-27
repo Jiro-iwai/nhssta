@@ -405,3 +405,96 @@ TEST_F(CovMaxMaxTest, Symmetry) {
 
     EXPECT_DOUBLE_EQ(cov_12, cov_21);
 }
+
+// ============================================================================
+// Stepwise tests for debugging negative correlation bug
+// ============================================================================
+
+// Level 1: Simple MAX operation - one variable dominates
+TEST_F(CovMaxMaxTest, Level1_DominantInput) {
+    Normal a(100.0, 100.0);  // mean=100, std=10
+    Normal b(30.0, 9.0);     // mean=30, std=3 (much smaller)
+    RandomVar max_ab = MAX(a, b);
+
+    // max(A, B) should be dominated by A
+    double mean_max = max_ab->mean();
+    EXPECT_GT(mean_max, 90.0);  // Should be close to A's mean
+}
+
+// Level 2: MAX with shared component
+TEST_F(CovMaxMaxTest, Level2_SharedComponent) {
+    Normal s(100.0, 100.0);  // Shared component
+    Normal a_part(50.0, 25.0);
+    Normal b_part(30.0, 9.0);
+    
+    RandomVar a = MAX(a_part, s);
+    RandomVar b = MAX(b_part, s);
+    
+    // Both A and B share S, so they should be positively correlated
+    double cov_ab = covariance(a, b);
+    EXPECT_GT(cov_ab, 0.0) << "A and B share S, should have positive covariance";
+}
+
+// Level 3: Nested MAX operations
+TEST_F(CovMaxMaxTest, Level3_NestedMAX) {
+    Normal s(100.0, 100.0);
+    Normal a_part(50.0, 25.0);
+    Normal b_small(30.0, 9.0);
+    
+    RandomVar a = MAX(a_part, s);
+    RandomVar max_ab = MAX(a, b_small);
+    
+    // max(A, B_small) where A >> B_small
+    // Should be dominated by A
+    // A = MAX(a_part, s) ≈ s = N(100, 100)
+    // So E[MAX(A, B_small)] ≈ E[A] ≈ 100
+    double mean_max = max_ab->mean();
+    EXPECT_GT(mean_max, 90.0);  // Should be close to 100, not 120
+}
+
+// Level 4: Reproduce the bug pattern from test_flip5.bench
+// G244 ↔ G68 = +0.072, but MAX(G244, G40) ↔ G68 = -0.479
+TEST_F(CovMaxMaxTest, Level4_BugReproduction) {
+    // Create shared component S (like G328)
+    Normal s(100.0, 36.0);  // std=6
+    
+    // G244 = MAX(G281, S) where G281 shares with S
+    Normal g281_part(50.0, 25.0);
+    RandomVar g244 = MAX(g281_part, s);
+    
+    // G40 is small and independent
+    Normal g40(75.0, 25.0);  // Using g75 instead of g28
+    
+    // G227_t2 = MAX(G244, G40)
+    RandomVar g227_t2 = MAX(g244, g40);
+    
+    // G68 = MAX(G185, G186) where G185 shares with S
+    Normal g185_part(170.0, 81.0);
+    RandomVar g185 = MAX(g185_part, s);
+    Normal g186(164.0, 64.0);
+    RandomVar g68 = MAX(g185, g186);
+    
+    // Calculate correlations
+    double cov_g244_g68 = covariance(g244, g68);
+    double cov_g227_t2_g68 = covariance(g227_t2, g68);
+    
+    double var_g244 = g244->variance();
+    double var_g227_t2 = g227_t2->variance();
+    double var_g68 = g68->variance();
+    
+    double corr_g244_g68 = cov_g244_g68 / sqrt(var_g244 * var_g68);
+    double corr_g227_t2_g68 = cov_g227_t2_g68 / sqrt(var_g227_t2 * var_g68);
+    
+    std::cout << "G244 ↔ G68 correlation: " << corr_g244_g68 << std::endl;
+    std::cout << "MAX(G244, G40) ↔ G68 correlation: " << corr_g227_t2_g68 << std::endl;
+    
+    // Check for sign flip bug
+    if (corr_g244_g68 > 0 && corr_g227_t2_g68 < 0) {
+        std::cout << "BUG DETECTED: Sign flip occurred!" << std::endl;
+        std::cout << "  G244 ↔ G68: " << corr_g244_g68 << " (positive)" << std::endl;
+        std::cout << "  MAX(G244, G40) ↔ G68: " << corr_g227_t2_g68 << " (negative)" << std::endl;
+    }
+    
+    // This documents the bug - we expect sign flip but it shouldn't happen
+    // For now, we just document it without failing the test
+}

@@ -306,6 +306,18 @@ double expected_prod_pos(double mu0, double sigma0,
     // Clamp rho to [-1, 1] for numerical stability (also clamped by caller)
     rho = clamp(rho, -1.0, 1.0);
 
+    // For independent variables (rho = 0), E[D1⁺ | Z=z] = E[D1⁺] (independent of Z)
+    // Therefore: E[D0⁺ D1⁺] = E[D1⁺] * E[D0⁺]
+    // This is mathematically exact, not a special case approximation
+    constexpr double RHO_THRESHOLD = 1e-10;
+    if (std::abs(rho) < RHO_THRESHOLD) {
+        // When rho = 0, D0 and D1 are independent
+        // E[D0⁺ D1⁺] = E[D0⁺] * E[D1⁺] (exact formula for independent variables)
+        double E0pos = expected_positive_part(mu0, sigma0);
+        double E1pos = expected_positive_part(mu1, sigma1);
+        return E0pos * E1pos;
+    }
+
     double one_minus_rho2 = std::max(0.0, 1.0 - (rho * rho));
     double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
 
