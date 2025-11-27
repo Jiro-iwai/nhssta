@@ -23,6 +23,8 @@ ExpressionImpl::ExpressionImpl()
     : id_(current_id_++)
     , is_set_value_(false)
     , value_(0.0)
+    , gradient_(0.0)
+    , is_gradient_set_(false)
     , op_(PARAM)
     , left_(null)
     , right_(null) {
@@ -33,6 +35,8 @@ ExpressionImpl::ExpressionImpl(double value)
     : id_(current_id_++)
     , is_set_value_(true)
     , value_(value)
+    , gradient_(0.0)
+    , is_gradient_set_(false)
     , op_(CONST)
     , left_(null)
     , right_(null) {
@@ -43,6 +47,8 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& left, const Expre
     : id_(current_id_++)
     , is_set_value_(false)
     , value_(0.0)
+    , gradient_(0.0)
+    , is_gradient_set_(false)
     , op_(op)
     , left_(left)
     , right_(right) {
@@ -130,6 +136,83 @@ void ExpressionImpl::unset_value() {
 
 void ExpressionImpl::unset_root_value() {
     for_each(roots_.begin(), roots_.end(), std::mem_fn(&ExpressionImpl::unset_value));
+}
+
+void ExpressionImpl::zero_grad() {
+    gradient_ = 0.0;
+    is_gradient_set_ = false;
+}
+
+void ExpressionImpl::zero_all_grad() {
+    for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&ExpressionImpl::zero_grad));
+}
+
+void ExpressionImpl::backward(double upstream) {
+    // Accumulate gradient (for nodes used multiple times in the graph)
+    gradient_ += upstream;
+    is_gradient_set_ = true;
+
+    // For leaf nodes (CONST, PARAM/Variable), stop here
+    if (op_ == CONST || op_ == PARAM) {
+        return;
+    }
+
+    // Compute local gradients and propagate to children
+    if (left() != null && right() != null) {
+        double l = left()->value();
+        double r = right()->value();
+
+        if (op_ == PLUS) {
+            // f = l + r
+            // ∂f/∂l = 1, ∂f/∂r = 1
+            left()->backward(upstream);
+            right()->backward(upstream);
+
+        } else if (op_ == MINUS) {
+            // f = l - r
+            // ∂f/∂l = 1, ∂f/∂r = -1
+            left()->backward(upstream);
+            right()->backward(-upstream);
+
+        } else if (op_ == MUL) {
+            // f = l * r
+            // ∂f/∂l = r, ∂f/∂r = l
+            left()->backward(upstream * r);
+            right()->backward(upstream * l);
+
+        } else if (op_ == DIV) {
+            // f = l / r
+            // ∂f/∂l = 1/r, ∂f/∂r = -l/r²
+            left()->backward(upstream / r);
+            right()->backward(-upstream * l / (r * r));
+
+        } else if (op_ == POWER) {
+            // f = l^r
+            // ∂f/∂l = r * l^(r-1)
+            // ∂f/∂r = l^r * log(l)
+            double f_val = value();  // l^r
+            left()->backward(upstream * r * std::pow(l, r - 1));
+            if (l > 0) {
+                right()->backward(upstream * f_val * std::log(l));
+            }
+            // Note: if l <= 0, gradient w.r.t. r is undefined
+        }
+
+    } else if (left() != null) {
+        // Unary operations
+        double l = left()->value();
+
+        if (op_ == EXP) {
+            // f = exp(l)
+            // ∂f/∂l = exp(l)
+            left()->backward(upstream * value());
+
+        } else if (op_ == LOG) {
+            // f = log(l)
+            // ∂f/∂l = 1/l
+            left()->backward(upstream / l);
+        }
+    }
 }
 
 void ExpressionImpl::add_root(ExpressionImpl* root) {
@@ -385,6 +468,13 @@ Expression log(const Expression& a) {
 double& operator<<(double& a, const Expression& b) {
     a = b->value();
     return a;
+}
+
+//////////////////////////
+// Automatic differentiation utilities
+
+void zero_all_grad() {
+    ExpressionImpl::zero_all_grad();
 }
 
 //////////////////////////
