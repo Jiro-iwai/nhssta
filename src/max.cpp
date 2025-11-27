@@ -53,11 +53,10 @@ RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
     if (mean_a >= mean_b) {
         // Use a as left: MAX(a, b) = a + MAX0(b - a)
         return RandomVariable(std::make_shared<OpMAX>(a, b));
-    } else {
-        // Use b as left: MAX(b, a) = b + MAX0(a - b)
-        // This is mathematically equivalent to MAX(a, b)
-        return RandomVariable(std::make_shared<OpMAX>(b, a));
     }
+    // Use b as left: MAX(b, a) = b + MAX0(a - b)
+    // This is mathematically equivalent to MAX(a, b)
+    return RandomVariable(std::make_shared<OpMAX>(b, a));
 }
 
 /////
