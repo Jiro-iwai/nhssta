@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdio>
 #include <memory>
 #include <nhssta/exception.hpp>
 
@@ -53,6 +54,14 @@ bool CovarianceMatrixImpl::lookup(const RandomVariable& a, const RandomVariable&
 // Computes Cov(x, max(0, Z)) = Cov(x, Z) * Φ(-μ_Z/σ_Z)
 // WARNING: Do not use when x is OpMAX or OpMAX0 (non-Gaussian).
 static double covariance_x_max0_y(const RandomVariable& x, const RandomVariable& y) {
+#ifdef DEBUG_COVARIANCE
+    std::fprintf(stderr, "[DEBUG_COV] covariance_x_max0_y: x type=%s, y type=OpMAX0\n",
+                 dynamic_cast<const OpMAX*>(x.get()) ? "OpMAX" :
+                 dynamic_cast<const OpMAX0*>(x.get()) ? "OpMAX0" :
+                 dynamic_cast<const OpADD*>(x.get()) ? "OpADD" :
+                 dynamic_cast<const OpSUB*>(x.get()) ? "OpSUB" :
+                 dynamic_cast<const NormalImpl*>(x.get()) ? "Normal" : "Unknown");
+#endif
     const auto* y_max0 = dynamic_cast<const OpMAX0*>(y.get());
     if (y_max0 == nullptr) {
         throw Nh::RuntimeException("covariance_x_max0_y: y must be OpMAX0 type");
@@ -69,6 +78,11 @@ static double covariance_x_max0_y(const RandomVariable& x, const RandomVariable&
     double ms = -mu / sz;
     double mpx = MeanPhiMax(ms);
     double cov = c * mpx;
+#ifdef DEBUG_COVARIANCE
+    std::fprintf(stderr, "[DEBUG_COV] covariance_x_max0_y: Cov(x,z)=%.6f, mu_z=%.6f, sigma_z=%.6f, "
+                         "ms=%.6f, MeanPhiMax(ms)=%.6f, result=%.6f\n",
+                 c, mu, sz, ms, mpx, cov);
+#endif
     if (std::isnan(cov)) {
         throw Nh::RuntimeException("covariance_x_max0_y: covariance calculation resulted in NaN");
     }
@@ -80,6 +94,9 @@ static double covariance_x_max0_y(const RandomVariable& x, const RandomVariable&
 // Uses 1D Gauss-Hermite quadrature to compute Cov(max(0,D0), max(0,D1))
 // where D0, D1 are assumed to be jointly Gaussian.
 static double covariance_max0_max0(const RandomVariable& a, const RandomVariable& b) {
+#ifdef DEBUG_COVARIANCE
+    std::fprintf(stderr, "[DEBUG_COV] covariance_max0_max0: computing Cov(max(0,D0), max(0,D1))\n");
+#endif
     // Get the underlying random variables D0 and D1
     const RandomVariable& d0 = a->left();
     const RandomVariable& d1 = b->left();
@@ -122,6 +139,13 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
     // Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] * E[D1⁺]
     double cov = Eprod - (E0pos * E1pos);
 
+#ifdef DEBUG_COVARIANCE
+    std::fprintf(stderr, "[DEBUG_COV] covariance_max0_max0: mu0=%.6f, sigma0=%.6f, mu1=%.6f, "
+                         "sigma1=%.6f, Cov(D0,D1)=%.6f, rho=%.6f, E[D0+]=%.6f, E[D1+]=%.6f, "
+                         "E[D0+D1+]=%.6f, result=%.6f\n",
+                 mu0, sigma0, mu1, sigma1, covD, rho, E0pos, E1pos, Eprod, cov);
+#endif
+
     if (std::isnan(cov)) {
         throw Nh::RuntimeException("covariance_max0_max0: result is NaN");
     }
@@ -155,10 +179,30 @@ double covariance(const Normal& a, const Normal& b) {
     return cov;
 }
 
+// Thread-local counter for call depth (for debugging)
+#ifdef DEBUG_COVARIANCE
+static thread_local int call_depth = 0;
+#endif
+
 double covariance(const RandomVariable& a, const RandomVariable& b) {
     double cov = 0.0;
 
     if (!covariance_matrix->lookup(a, b, cov)) {
+#ifdef DEBUG_COVARIANCE
+        call_depth++;
+        const char* a_type = dynamic_cast<const OpMAX*>(a.get()) ? "OpMAX" :
+                             dynamic_cast<const OpMAX0*>(a.get()) ? "OpMAX0" :
+                             dynamic_cast<const OpADD*>(a.get()) ? "OpADD" :
+                             dynamic_cast<const OpSUB*>(a.get()) ? "OpSUB" :
+                             dynamic_cast<const NormalImpl*>(a.get()) ? "Normal" : "Unknown";
+        const char* b_type = dynamic_cast<const OpMAX*>(b.get()) ? "OpMAX" :
+                             dynamic_cast<const OpMAX0*>(b.get()) ? "OpMAX0" :
+                             dynamic_cast<const OpADD*>(b.get()) ? "OpADD" :
+                             dynamic_cast<const OpSUB*>(b.get()) ? "OpSUB" :
+                             dynamic_cast<const NormalImpl*>(b.get()) ? "Normal" : "Unknown";
+        std::fprintf(stderr, "[DEBUG_COV] [depth=%d] covariance: computing Cov(%s, %s)\n",
+                     call_depth, a_type, b_type);
+#endif
         if (a == b) {
             cov = a->variance();
 
@@ -183,20 +227,38 @@ double covariance(const RandomVariable& a, const RandomVariable& b) {
             cov = cov0 - cov1;
 
         } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
+#ifdef DEBUG_COVARIANCE
+            std::fprintf(stderr, "[DEBUG_COV] covariance: OpMAX(a) case, a=MAX(x, right), "
+                                 "computing Cov(MAX(x,right), b)\n");
+#endif
             const RandomVariable& x = a->left();
             auto m = a.dynamic_pointer_cast<const OpMAX>();
             const RandomVariable& z = m->max0();
             double cov0 = covariance(z, b);
             double cov1 = covariance(x, b);
             cov = cov0 + cov1;
+#ifdef DEBUG_COVARIANCE
+            std::fprintf(stderr, "[DEBUG_COV] covariance: OpMAX(a) case: Cov(z,b)=%.6f, "
+                                 "Cov(x,b)=%.6f, result=%.6f\n",
+                         cov0, cov1, cov);
+#endif
 
         } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
+#ifdef DEBUG_COVARIANCE
+            std::fprintf(stderr, "[DEBUG_COV] covariance: OpMAX(b) case, b=MAX(x, right), "
+                                 "computing Cov(a, MAX(x,right))\n");
+#endif
             const RandomVariable& x = b->left();
             auto m = b.dynamic_pointer_cast<const OpMAX>();
             const RandomVariable& z = m->max0();
             double cov0 = covariance(z, a);
             double cov1 = covariance(x, a);
             cov = cov0 + cov1;
+#ifdef DEBUG_COVARIANCE
+            std::fprintf(stderr, "[DEBUG_COV] covariance: OpMAX(b) case: Cov(z,a)=%.6f, "
+                                 "Cov(x,a)=%.6f, result=%.6f\n",
+                         cov0, cov1, cov);
+#endif
 
         } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
                    dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr) {
@@ -235,6 +297,14 @@ double covariance(const RandomVariable& a, const RandomVariable& b) {
 
         check_covariance(cov, a, b);
         covariance_matrix->set(a, b, cov);
+#ifdef DEBUG_COVARIANCE
+        std::fprintf(stderr, "[DEBUG_COV] [depth=%d] covariance: final result=%.6f\n", call_depth, cov);
+        call_depth--;
+#endif
+    } else {
+#ifdef DEBUG_COVARIANCE
+        std::fprintf(stderr, "[DEBUG_COV] covariance: using cached value=%.6f\n", cov);
+#endif
     }
 
     return cov;
