@@ -121,13 +121,13 @@ class RandomVariableImpl {
     [[nodiscard]] const RandomVariable& left() const;
     [[nodiscard]] const RandomVariable& right() const;
 
-    double mean();
-    double variance();
+    [[nodiscard]] double mean() const;
+    [[nodiscard]] double variance() const;
 
     // Numerical error metrics
-    [[nodiscard]] double standard_deviation();
-    [[nodiscard]] double coefficient_of_variation();
-    [[nodiscard]] double relative_error();  // Alias for coefficient_of_variation
+    [[nodiscard]] double standard_deviation() const;
+    [[nodiscard]] double coefficient_of_variation() const;
+    [[nodiscard]] double relative_error() const;  // Alias for coefficient_of_variation
 
     [[nodiscard]] int level() const {
         return level_;
@@ -150,11 +150,14 @@ class RandomVariableImpl {
     // left_ and right_ share ownership with any external Handles that reference them
     RandomVariable left_;
     RandomVariable right_;
-    double mean_;
-    double variance_;
-
-    bool is_set_mean_;
-    bool is_set_variance_;
+    
+    // Cache variables are mutable to allow lazy evaluation in const methods
+    // These represent cached computed values, not observable state
+    mutable double mean_;
+    mutable double variance_;
+    mutable bool is_set_mean_;
+    mutable bool is_set_variance_;
+    
     int level_;
 };
 

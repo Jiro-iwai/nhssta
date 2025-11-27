@@ -88,3 +88,43 @@ TEST_F(RandomVariableTest, OperationResultSurvivesSourceScope) {
     EXPECT_DOUBLE_EQ(sum->mean(), 7.0);
     EXPECT_DOUBLE_EQ(sum->variance(), 0.5);
 }
+
+// Test const correctness: mean() and variance() should be callable on const RandomVariableImpl&
+// This tests the actual const-correctness of the implementation class methods
+TEST_F(RandomVariableTest, ConstCorrectnessImplMeanVariance) {
+    RandomVariable::Normal n(10.0, 4.0);
+    
+    // Get a const reference to the underlying implementation
+    const RandomVariable::RandomVariableImpl& const_impl = *n.get();
+    
+    // These should compile and work correctly on const reference to implementation
+    EXPECT_DOUBLE_EQ(const_impl.mean(), 10.0);
+    EXPECT_DOUBLE_EQ(const_impl.variance(), 4.0);
+}
+
+// Test that const reference works with computed values (lazy evaluation)
+TEST_F(RandomVariableTest, ConstCorrectnessWithLazyEvaluation) {
+    RandomVariable::Normal a(3.0, 1.0);
+    RandomVariable::Normal b(4.0, 1.0);
+    RandomVar sum = a + b;
+    
+    // Get a const reference to the underlying implementation
+    const RandomVariable::RandomVariableImpl& const_impl = *sum.get();
+    
+    // mean() and variance() should work on const reference even with lazy evaluation
+    EXPECT_DOUBLE_EQ(const_impl.mean(), 7.0);
+    EXPECT_DOUBLE_EQ(const_impl.variance(), 2.0);
+}
+
+// Test that standard_deviation and coefficient_of_variation are also const-correct
+TEST_F(RandomVariableTest, ConstCorrectnessStatMethods) {
+    RandomVariable::Normal n(10.0, 4.0);
+    
+    // Get a const reference to the underlying implementation
+    const RandomVariable::RandomVariableImpl& const_impl = *n.get();
+    
+    // These derived methods should also work on const references
+    EXPECT_DOUBLE_EQ(const_impl.standard_deviation(), 2.0);
+    EXPECT_NEAR(const_impl.coefficient_of_variation(), 0.2, 1e-10);
+    EXPECT_NEAR(const_impl.relative_error(), 0.2, 1e-10);
+}

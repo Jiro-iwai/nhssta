@@ -77,7 +77,7 @@ const RandomVariable& RandomVariableImpl::right() const {
     return right_;
 }
 
-double RandomVariableImpl::mean() {
+double RandomVariableImpl::mean() const {
     if (!is_set_mean_) {
         mean_ = calc_mean();
         is_set_mean_ = true;
@@ -86,7 +86,7 @@ double RandomVariableImpl::mean() {
     return mean_;
 }
 
-double RandomVariableImpl::variance() {
+double RandomVariableImpl::variance() const {
     if (!is_set_variance_) {
         variance_ = calc_variance();
         if (std::isnan(variance_)) {
@@ -106,12 +106,12 @@ double RandomVariableImpl::calc_variance() const {
     return variance_;
 }
 
-double RandomVariableImpl::standard_deviation() {
+double RandomVariableImpl::standard_deviation() const {
     double v = variance();
     return std::sqrt(v);
 }
 
-double RandomVariableImpl::coefficient_of_variation() {
+double RandomVariableImpl::coefficient_of_variation() const {
     double m = mean();
     if (std::abs(m) < CV_ZERO_THRESHOLD) {
         // For very small means, return a large value to indicate high relative error
@@ -121,7 +121,7 @@ double RandomVariableImpl::coefficient_of_variation() {
     return sd / std::abs(m);
 }
 
-double RandomVariableImpl::relative_error() {
+double RandomVariableImpl::relative_error() const {
     return coefficient_of_variation();
 }
 
