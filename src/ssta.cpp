@@ -418,6 +418,64 @@ CorrelationMatrix Ssta::getCorrelationMatrix() const {
     return matrix;
 }
 
+CorrelationMatrix Ssta::getPathEndpointCorrelationMatrix(const CriticalPaths& paths) const {
+    CorrelationMatrix matrix;
+
+    if (paths.empty()) {
+        return matrix;
+    }
+
+    // Collect unique start and end nodes from all paths
+    std::set<std::string> endpoint_set;
+    for (const auto& path : paths) {
+        if (!path.node_names.empty()) {
+            // First node is start (input/DFF output)
+            endpoint_set.insert(path.node_names.front());
+            // Last node is end (output/DFF input)
+            endpoint_set.insert(path.node_names.back());
+        }
+    }
+
+    // Convert to sorted vector
+    std::vector<std::string> endpoints(endpoint_set.begin(), endpoint_set.end());
+    std::sort(endpoints.begin(), endpoints.end());
+
+    // Collect node names for matrix
+    for (const auto& endpoint : endpoints) {
+        auto sig_it = signals_.find(endpoint);
+        if (sig_it != signals_.end()) {
+            matrix.node_names.push_back(sig_it->second->name());
+        } else {
+            matrix.node_names.push_back(endpoint);
+        }
+    }
+
+    // Calculate correlations for endpoint pairs
+    for (const auto& name_i : endpoints) {
+        auto sig_i_it = signals_.find(name_i);
+        if (sig_i_it == signals_.end()) {
+            continue;
+        }
+        const RandomVariable& sig_i = sig_i_it->second;
+        double vi = sig_i->variance();
+
+        for (const auto& name_j : endpoints) {
+            auto sig_j_it = signals_.find(name_j);
+            if (sig_j_it == signals_.end()) {
+                continue;
+            }
+            const RandomVariable& sig_j = sig_j_it->second;
+            double vj = sig_j->variance();
+            double cov = covariance(sig_i, sig_j);
+            double corr = (vi > 0.0 && vj > 0.0) ? (cov / sqrt(vi * vj)) : 0.0;
+
+            matrix.correlations[std::make_pair(sig_i->name(), sig_j->name())] = corr;
+        }
+    }
+
+    return matrix;
+}
+
 void Ssta::track_path(const std::string& signal_name, const Instance& inst, const NetLineIns& ins, const std::string& gate_type) {
     const std::string& instance_name = inst->name();
     

@@ -226,6 +226,51 @@ std::string formatCriticalPaths(const Nh::CriticalPaths& paths) {
     return oss.str();
 }
 
+// Helper function to format path endpoint correlation matrix
+std::string formatPathEndpointCorrelation(const Nh::CorrelationMatrix& matrix) {
+    if (matrix.node_names.empty()) {
+        return "";
+    }
+
+    std::ostringstream oss;
+    oss << "#" << std::endl;
+    oss << "# path endpoint correlation matrix" << std::endl;
+    oss << "#" << std::endl;
+
+    oss << "#\t";
+    for (const auto& node_name : matrix.node_names) {
+        oss << node_name << "\t";
+    }
+    oss << std::endl;
+
+    // Print separator line
+    oss << "#-------";
+    for (size_t i = 1; i < matrix.node_names.size(); i++) {
+        oss << "--------";
+    }
+    oss << "-----" << std::endl;
+
+    for (const auto& node_name : matrix.node_names) {
+        oss << node_name << "\t";
+
+        for (const auto& other_name : matrix.node_names) {
+            double corr = matrix.getCorrelation(node_name, other_name);
+            oss << std::fixed << std::setprecision(3) << std::setw(4) << corr << "\t";
+        }
+
+        oss << std::endl;
+    }
+
+    // Print separator line
+    oss << "#-------";
+    for (size_t i = 1; i < matrix.node_names.size(); i++) {
+        oss << "--------";
+    }
+    oss << "-----" << std::endl;
+
+    return oss.str();
+}
+
 int main(int argc, char* argv[]) {
     try {
         // CLI layer: Output version information
@@ -258,6 +303,10 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
             Nh::CriticalPaths paths = ssta.getCriticalPaths();
             std::cout << formatCriticalPaths(paths);
+
+            // Output endpoint correlation matrix for critical paths
+            Nh::CorrelationMatrix endpoint_matrix = ssta.getPathEndpointCorrelationMatrix(paths);
+            std::cout << formatPathEndpointCorrelation(endpoint_matrix);
         }
 
         // CLI layer: Output success message
