@@ -18,8 +18,34 @@ RandomVariableImpl (基底クラス)
 ├── AddImpl           (加算演算)
 ├── SubImpl           (減算演算)
 ├── MaxImpl           (最大値演算)
-└── Max0Impl          (最大値演算、ゼロ分散チェック付き)
+└── Max0Impl          (max(0, X) 演算)
 ```
+
+#### MAX 演算の実装
+
+`MAX(A, B)` は Clark 近似を使用して計算されます：
+
+```
+MAX(A, B) = A + MAX0(B - A)
+```
+
+ここで `MAX0(X) = max(0, X)` です。
+
+**引数順序の正規化（Issue #158）**:
+
+Clark 近似の精度は、`MAX0` の引数の平均値に依存します。平均が負の場合、`MAX0 ≈ 0` となり近似精度が向上します。このため、`MAX` 関数は内部で引数順序を正規化し、**平均が大きい方を left（基底）として統一**しています。
+
+```cpp
+// src/max.cpp
+RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
+    if (a->mean() >= b->mean()) {
+        return RandomVariable(std::make_shared<OpMAX>(a, b));
+    }
+    return RandomVariable(std::make_shared<OpMAX>(b, a));
+}
+```
+
+これにより、`MAX(A, B)` と `MAX(B, A)` は同じ結果を返します。
 
 #### 主要メソッド
 
@@ -167,16 +193,19 @@ class Parser {
 
 ```cpp
 class CovarianceMatrixImpl {
-    Matrix cmat_;  // std::map<RowCol, double>
+    Matrix cmat_;  // std::unordered_map<RowCol, double, PairHash>
                    // RowCol = std::pair<RandomVariable, RandomVariable>
+                   // PairHash はポインタアドレスに基づくカスタムハッシュ関数
 };
 ```
 
 #### 主要メソッド
 
-- `lookup(a, b, cov)`: 共分散を検索
+- `lookup(a, b, cov)`: 共分散を検索（キャッシュヒット時は true を返す）
 - `set(a, b, cov)`: 共分散を設定
-- `covariance(a, b)`: 確率変数間の共分散を計算
+- `clear()`: キャッシュをクリア（テスト/デバッグ用）
+- `size()`: キャッシュサイズを取得（テスト/デバッグ用）
+- `covariance(a, b)`: 確率変数間の共分散を計算（グローバル関数）
 
 #### 関連ファイル
 

@@ -1,6 +1,6 @@
-# 統計的PERT法 nhssta 0.2.3
+# 統計的PERT法 nhssta 0.2.4
 
-本ドキュメントには統計的PERT法 nhssta 0.2.3 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
+本ドキュメントには統計的PERT法 nhssta 0.2.4 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
 
 ## 1. 概要
 
@@ -102,8 +102,8 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 448 tests from 45 test suites.
-[  PASSED  ] 448 tests.
+[==========] Running 467 tests from 49 test suites.
+[  PASSED  ] 467 tests.
 ==========================================
 Running integration tests...
 ==========================================
