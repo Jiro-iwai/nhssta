@@ -33,14 +33,21 @@
  * ## 使用例（将来の想定）
  *
  * @code
- * // ゲート遅延を Variable として定義
- * Variable delay_g1, delay_g2, delay_g3;
+ * // ゲート遅延は RandomVariable として定義（現行通り）
+ * RandomVariable d1 = Normal(10.0, 1.0);
+ * RandomVariable d2 = Normal(8.0, 0.5);
  *
- * // パス遅延を式として構築
- * Expression path_delay = delay_g1 + MAX(delay_g2, delay_g3);
+ * // パス遅延の計算
+ * RandomVariable path = d1 + MAX(d2, d3);
+ *
+ * // mean, variance を Expression の Variable として表現
+ * Variable mu_d1, sigma_d1, mu_d2, sigma_d2;
+ * Expression path_mean = mu_d1 + f_max_mean(mu_d2, sigma_d2, ...);
+ * Expression path_var  = sigma_d1^2 + f_max_var(...);
  *
  * // 感度を計算（未実装）
- * double sensitivity_g1 = path_delay.derivative(delay_g1);
+ * // ∂(path_mean) / ∂(mu_d1) など
+ * double sensitivity = path_mean.derivative(mu_d1);
  * @endcode
  *
  * @note このファイルは将来の感度解析機能のために保持されています。
