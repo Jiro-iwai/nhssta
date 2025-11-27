@@ -45,11 +45,11 @@ class CovarianceMatrixImpl {
     Matrix cmat;
 };
 
-class CovarianceMatrix {
+class CovarianceMatrixHandle {
    public:
-    CovarianceMatrix()
+    CovarianceMatrixHandle()
         : body_(std::make_shared<CovarianceMatrixImpl>()) {}
-    explicit CovarianceMatrix(std::shared_ptr<CovarianceMatrixImpl> body)
+    explicit CovarianceMatrixHandle(std::shared_ptr<CovarianceMatrixImpl> body)
         : body_(std::move(body)) {}
 
     CovarianceMatrixImpl* operator->() const {
@@ -65,6 +65,9 @@ class CovarianceMatrix {
    private:
     std::shared_ptr<CovarianceMatrixImpl> body_;
 };
+
+// Type alias: CovarianceMatrix is a Handle (thin wrapper around std::shared_ptr)
+using CovarianceMatrix = CovarianceMatrixHandle;
 
 double covariance(const Normal& a, const Normal& b);
 double covariance(const RandomVariable& a, const RandomVariable& b);

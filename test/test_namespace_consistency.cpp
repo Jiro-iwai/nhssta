@@ -135,3 +135,41 @@ TEST_F(NamespaceConsistencyTest, ImplNamingConvention) {
 
     EXPECT_TRUE(true);
 }
+
+// Test: Handle classes use 'Handle' suffix with using alias for public API
+// This ensures consistent naming pattern across all handle types
+TEST_F(NamespaceConsistencyTest, HandleSuffixNamingConvention) {
+    // RandomVariableHandle is aliased as RandomVariable
+    static_assert(std::is_class<RandomVariable::RandomVariableHandle>::value,
+                  "RandomVariableHandle should exist");
+    static_assert(std::is_same<RandomVariable::RandomVariable,
+                               RandomVariable::RandomVariableHandle>::value,
+                  "RandomVariable should be alias of RandomVariableHandle");
+
+    // ExpressionHandle is aliased as Expression
+    static_assert(std::is_class<ExpressionHandle>::value,
+                  "ExpressionHandle should exist");
+    static_assert(std::is_same<Expression, ExpressionHandle>::value,
+                  "Expression should be alias of ExpressionHandle");
+
+    // GateHandle is aliased as Gate
+    static_assert(std::is_class<Nh::GateHandle>::value,
+                  "GateHandle should exist in Nh namespace");
+    static_assert(std::is_same<Nh::Gate, Nh::GateHandle>::value,
+                  "Gate should be alias of GateHandle");
+
+    // InstanceHandle is aliased as Instance
+    static_assert(std::is_class<Nh::InstanceHandle>::value,
+                  "InstanceHandle should exist in Nh namespace");
+    static_assert(std::is_same<Nh::Instance, Nh::InstanceHandle>::value,
+                  "Instance should be alias of InstanceHandle");
+
+    // CovarianceMatrixHandle is aliased as CovarianceMatrix
+    static_assert(std::is_class<RandomVariable::CovarianceMatrixHandle>::value,
+                  "CovarianceMatrixHandle should exist");
+    static_assert(std::is_same<RandomVariable::CovarianceMatrix,
+                               RandomVariable::CovarianceMatrixHandle>::value,
+                  "CovarianceMatrix should be alias of CovarianceMatrixHandle");
+
+    EXPECT_TRUE(true);
+}

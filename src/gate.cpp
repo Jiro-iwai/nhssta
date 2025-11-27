@@ -15,19 +15,19 @@
 
 namespace Nh {
 
-Gate::Gate()
+GateHandle::GateHandle()
     : body_(std::make_shared<GateImpl>()) {}
 
-Gate::Gate(std::shared_ptr<GateImpl> body)
+GateHandle::GateHandle(std::shared_ptr<GateImpl> body)
     : body_(std::move(body)) {
     if (!body_) {
         throw Nh::RuntimeException("Gate: null body");
     }
 }
 
-Instance Gate::create_instance() const {
+InstanceHandle GateHandle::create_instance() const {
     auto inst_body = std::make_shared<InstanceImpl>(*this);
-    Instance inst(inst_body);
+    InstanceHandle inst(inst_body);
     inst->set_name((*this)->allocate_instance_name());
     return inst;
 }
