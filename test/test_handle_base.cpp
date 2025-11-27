@@ -119,29 +119,6 @@ TEST_F(HandleBaseTest, EqualityComparison) {
     EXPECT_NE(h1, h3);
 }
 
-// Test: Less-than comparison
-TEST_F(HandleBaseTest, LessThanComparison) {
-    auto sp1 = std::make_shared<TestImpl>(42);
-    auto sp2 = std::make_shared<TestImpl>(42);
-    TestHandle h1(sp1);
-    TestHandle h2(sp2);
-
-    // Either h1 < h2 or h2 < h1 (depends on memory addresses)
-    EXPECT_NE(h1 < h2, h2 < h1);
-    EXPECT_FALSE(h1 < h1);  // Not less than itself
-}
-
-// Test: Greater-than comparison
-TEST_F(HandleBaseTest, GreaterThanComparison) {
-    auto sp1 = std::make_shared<TestImpl>(42);
-    auto sp2 = std::make_shared<TestImpl>(42);
-    TestHandle h1(sp1);
-    TestHandle h2(sp2);
-
-    EXPECT_NE(h1 > h2, h2 > h1);
-    EXPECT_FALSE(h1 > h1);  // Not greater than itself
-}
-
 // Test: Copy shares ownership
 TEST_F(HandleBaseTest, CopySharesOwnership) {
     auto sp = std::make_shared<TestImpl>(42);

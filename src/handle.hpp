@@ -19,7 +19,7 @@
 // - get() for raw pointer access
 // - shared() for shared_ptr access
 // - operator bool for null checking
-// - Comparison operators (==, !=, <, >)
+// - Comparison operators (==, !=)
 // - dynamic_pointer_cast for safe downcasting
 //
 // Usage:
@@ -84,14 +84,6 @@ class HandleBase {
 
     bool operator!=(const HandleBase& rhs) const {
         return !(*this == rhs);
-    }
-
-    bool operator<(const HandleBase& rhs) const {
-        return body_.get() < rhs.body_.get();
-    }
-
-    bool operator>(const HandleBase& rhs) const {
-        return body_.get() > rhs.body_.get();
     }
 
     // Safe downcast to derived type

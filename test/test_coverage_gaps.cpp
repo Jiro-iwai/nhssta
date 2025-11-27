@@ -304,29 +304,6 @@ TEST_F(CoverageGapsTest, ParserInvalidTokenConversion) {
     deleteTestFile("invalid_int.dlib");
 }
 
-// Test: Expression derivative invalid operation exception path
-TEST_F(CoverageGapsTest, ExpressionDerivativeInvalidOperation) {
-    // This is harder to test directly, but we can verify valid operations work
-    Variable x_var, y_var;
-    Expression x(x_var);
-    Expression y(y_var);
-
-    // Valid derivative operations should not throw
-    Expression sum = x + y;
-    Expression diff = x - y;
-    Expression prod = x * y;
-    Expression quot = x / y;
-    Expression exp_x = exp(x);
-    Expression log_x = log(x);
-
-    EXPECT_NO_THROW((void)sum->d(x));
-    EXPECT_NO_THROW((void)diff->d(x));
-    EXPECT_NO_THROW((void)prod->d(x));
-    EXPECT_NO_THROW((void)quot->d(x));
-    EXPECT_NO_THROW((void)exp_x->d(x));
-    EXPECT_NO_THROW((void)log_x->d(x));
-}
-
 // Test: Parser::checkFile() exception path (non-existent file)
 TEST_F(CoverageGapsTest, ParserCheckFileException) {
     std::string non_existent = test_dir + "/nonexistent.dlib";

@@ -92,9 +92,6 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     // print all expression infomation
     friend void print_all();
 
-    // differential
-    virtual Expression d(const Expression& y);
-
     enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG };
 
     static void print_all();
@@ -132,7 +129,6 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     void remove_root(ExpressionImpl* root);
 
    protected:
-    using Dfrntls = std::map<Expression, Expression>;
     using Expressions = std::set<ExpressionImpl*>;
 
     int id_;
@@ -143,7 +139,6 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
                    // type, const is intentional
     Expression left_;
     Expression right_;
-    Dfrntls dfrntls_;
     Expressions roots_;
 
     /// static data menber
@@ -162,9 +157,6 @@ class ConstImpl : public ExpressionImpl {
         : ExpressionImpl(value) {}
     ~ConstImpl() override = default;
 
-   private:
-    // differential
-    Expression d(const Expression& y) override;
 };
 
 class Const : public Expression {
@@ -180,7 +172,6 @@ class VariableImpl : public ExpressionImpl {
     VariableImpl() = default;
     ~VariableImpl() override = default;
     double value() override;
-    Expression d(const Expression& y) override;
 };
 
 class Variable : public Expression {
