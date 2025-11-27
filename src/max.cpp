@@ -44,7 +44,20 @@ double OpMAX::calc_variance() const {
 }
 
 RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
-    return RandomVariable(std::make_shared<OpMAX>(a, b));
+    // Order operands by mean to ensure consistent decomposition
+    // This reduces negative correlation artifacts in covariance calculations
+    // by ensuring MAX0 always operates on (smaller - larger) <= 0
+    double mean_a = a->mean();
+    double mean_b = b->mean();
+    
+    if (mean_a >= mean_b) {
+        // Use a as left: MAX(a, b) = a + MAX0(b - a)
+        return RandomVariable(std::make_shared<OpMAX>(a, b));
+    } else {
+        // Use b as left: MAX(b, a) = b + MAX0(a - b)
+        // This is mathematically equivalent to MAX(a, b)
+        return RandomVariable(std::make_shared<OpMAX>(b, a));
+    }
 }
 
 /////
