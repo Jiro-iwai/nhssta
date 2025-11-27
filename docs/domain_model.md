@@ -13,7 +13,7 @@
 #### クラス階層
 
 ```
-_RandomVariable_ (基底クラス)
+RandomVariableImpl (基底クラス)
 ├── _Normal_          (正規分布)
 ├── OpADD             (加算演算)
 ├── OpSUB             (減算演算)
@@ -31,7 +31,7 @@ _RandomVariable_ (基底クラス)
 
 #### Handleパターン
 
-`RandomVariableHandle`（`RandomVariable`としてエイリアス）は、`std::shared_ptr<_RandomVariable_>`の薄いラッパーです。
+`RandomVariableHandle`（`RandomVariable`としてエイリアス）は、`std::shared_ptr<RandomVariableImpl>`の薄いラッパーです。
 
 - **コピー**: 軽量（`shared_ptr`のコピーのみ）
 - **所有権**: `shared_ptr`による共有所有
@@ -53,12 +53,12 @@ _RandomVariable_ (基底クラス)
 #### クラス構造
 
 ```
-_Gate_
+GateImpl
 ├── type_name_        (ゲートタイプ名、例: "and2", "or2")
 ├── delays_           (入力ピン→出力ピンの遅延マップ)
 └── num_instances_    (インスタンス番号カウンタ)
 
-Instance (_Instance_)
+Instance (InstanceImpl)
 ├── gate_             (対応するGateへの参照)
 ├── name_             (インスタンス名)
 ├── inputs_            (入力信号のマップ)
@@ -166,7 +166,7 @@ class Parser {
 #### クラス構造
 
 ```cpp
-class _CovarianceMatrix_ {
+class CovarianceMatrixImpl {
     Matrix cmat_;  // std::map<RowCol, double>
                    // RowCol = std::pair<RandomVariable, RandomVariable>
 };

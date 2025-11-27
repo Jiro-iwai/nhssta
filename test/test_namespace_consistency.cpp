@@ -94,8 +94,44 @@ TEST_F(NamespaceConsistencyTest, TypeAliasesUseUsingSyntax) {
     signals["test"] = n;
     EXPECT_EQ(signals.size(), 1);
 
-    // Nh::_Gate_::IO and Nh::_Gate_::Delays are aliases inside class
+    // Nh::GateImpl::IO and Nh::GateImpl::Delays are aliases inside class
     Nh::Gate g;
     g->set_delay("in", "out", n);
+    EXPECT_TRUE(true);
+}
+
+// Test: Internal implementation classes use 'Impl' suffix (Issue #129)
+// This naming convention follows the pImpl idiom standard
+TEST_F(NamespaceConsistencyTest, ImplNamingConvention) {
+    // RandomVariableImpl is the implementation class for RandomVariable handle
+    static_assert(std::is_class<RandomVariable::RandomVariableImpl>::value,
+                  "RandomVariableImpl should exist");
+
+    // NormalImpl is the implementation class for Normal handle
+    static_assert(std::is_class<RandomVariable::NormalImpl>::value,
+                  "NormalImpl should exist");
+
+    // GateImpl is the implementation class for Gate handle
+    static_assert(std::is_class<Nh::GateImpl>::value,
+                  "GateImpl should exist");
+
+    // InstanceImpl is the implementation class for Instance handle
+    static_assert(std::is_class<Nh::InstanceImpl>::value,
+                  "InstanceImpl should exist");
+
+    // CovarianceMatrixImpl is the implementation class
+    static_assert(std::is_class<RandomVariable::CovarianceMatrixImpl>::value,
+                  "CovarianceMatrixImpl should exist");
+
+    // ExpressionImpl is the implementation class for Expression handle
+    static_assert(std::is_class<ExpressionImpl>::value,
+                  "ExpressionImpl should exist");
+
+    // ConstImpl and VariableImpl are derived from ExpressionImpl
+    static_assert(std::is_base_of<ExpressionImpl, ConstImpl>::value,
+                  "ConstImpl should derive from ExpressionImpl");
+    static_assert(std::is_base_of<ExpressionImpl, VariableImpl>::value,
+                  "VariableImpl should derive from ExpressionImpl");
+
     EXPECT_TRUE(true);
 }

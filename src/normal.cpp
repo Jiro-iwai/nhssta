@@ -9,10 +9,10 @@
 
 namespace RandomVariable {
 
-_Normal_::_Normal_() = default;
+NormalImpl::NormalImpl() = default;
 
-_Normal_::_Normal_(double mean, double variance)
-    : _RandomVariable_(mean, variance) {
+NormalImpl::NormalImpl(double mean, double variance)
+    : RandomVariableImpl(mean, variance) {
     // Input validation: catch invalid numeric values at the boundary
     // to prevent silent propagation through calculations (Issue #136)
     if (std::isnan(mean)) {
@@ -32,23 +32,23 @@ _Normal_::_Normal_(double mean, double variance)
     }
 }
 
-_Normal_::~_Normal_() = default;
+NormalImpl::~NormalImpl() = default;
 
-const RandomVariable& _Normal_::left() const {
+const RandomVariable& NormalImpl::left() const {
     return left_;
 }
 
-const RandomVariable& _Normal_::right() const {
+const RandomVariable& NormalImpl::right() const {
     return right_;
 }
 
-Normal _Normal_::clone() const {
+Normal NormalImpl::clone() const {
     Normal p(mean_, variance_);
     return p;
 }
 
 Normal Normal::clone() const {
-    auto ptr = this->dynamic_pointer_cast<_Normal_>();
+    auto ptr = this->dynamic_pointer_cast<NormalImpl>();
     return ptr->clone();
 }
 }  // namespace RandomVariable

@@ -17,7 +17,7 @@ namespace RandomVariable {
 /////
 
 OpMAX::OpMAX(const RandomVariable& left, const RandomVariable& right)
-    : _RandomVariable_(left, right)
+    : RandomVariableImpl(left, right)
     , max0_(MAX0(right - left)) {
     level_ = std::max(left->level(), right->level()) + 1;
 }
@@ -39,7 +39,7 @@ double OpMAX::calc_variance() const {
     double zv = z->variance();
     double cov = covariance(x, z);
     double r = xv + (2.0 * cov) + zv;
-    _RandomVariable_::check_variance(r);
+    RandomVariableImpl::check_variance(r);
     return (r);
 }
 
@@ -50,7 +50,7 @@ RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
 /////
 
 OpMAX0::OpMAX0(const RandomVariable& left)
-    : _RandomVariable_(left, RandomVariable(nullptr)) {
+    : RandomVariableImpl(left, RandomVariable(nullptr)) {
     level_ = left->level() + 1;
 }
 
@@ -82,7 +82,7 @@ double OpMAX0::calc_variance() const {
     double mm = MeanMax(ms);
     double mm2 = MeanMax2(ms);
     double r = va * (mm2 - mm * mm);
-    _RandomVariable_::check_variance(r);
+    RandomVariableImpl::check_variance(r);
     return (r);
 }
 

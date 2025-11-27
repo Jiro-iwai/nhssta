@@ -9,7 +9,7 @@
 
 namespace RandomVariable {
 
-_RandomVariable_::_RandomVariable_()
+RandomVariableImpl::RandomVariableImpl()
     : left_(nullptr)
     , right_(nullptr)
     , mean_(0)
@@ -18,12 +18,12 @@ _RandomVariable_::_RandomVariable_()
     , is_set_variance_(false)
     , level_(0) {
 #ifdef DEBUG
-    std::cerr << "_RandomVariable_(" << this << ":";
+    std::cerr << "RandomVariableImpl(" << this << ":";
     std::cerr << name_ << ") is creating" << std::endl;
 #endif  // DEBUG
 }
 
-_RandomVariable_::_RandomVariable_(double mean, double variance, const std::string& name)
+RandomVariableImpl::RandomVariableImpl(double mean, double variance, const std::string& name)
     : name_(name)
     , left_(nullptr)
     , right_(nullptr)
@@ -33,12 +33,12 @@ _RandomVariable_::_RandomVariable_(double mean, double variance, const std::stri
     , is_set_variance_(false)
     , level_(0) {
 #ifdef DEBUG
-    std::cerr << "_RandomVariable_(" << this << ":";
+    std::cerr << "RandomVariableImpl(" << this << ":";
     std::cerr << name_ << ") is creating" << std::endl;
 #endif  // DEBUG
 }
 
-_RandomVariable_::_RandomVariable_(const RandomVariable& left, const RandomVariable& right,
+RandomVariableImpl::RandomVariableImpl(const RandomVariable& left, const RandomVariable& right,
                                    const std::string& name)
     : name_(name)
     , left_(left)
@@ -49,35 +49,35 @@ _RandomVariable_::_RandomVariable_(const RandomVariable& left, const RandomVaria
     , is_set_variance_(false)
     , level_(0) {
 #ifdef DEBUG
-    std::cerr << "_RandomVariable_(" << this << ":";
+    std::cerr << "RandomVariableImpl(" << this << ":";
     std::cerr << name_ << ") is creating" << std::endl;
 #endif  // DEBUG
 }
 
-_RandomVariable_::~_RandomVariable_() {
+RandomVariableImpl::~RandomVariableImpl() {
 #ifdef DEBUG
-    std::cerr << "_RandomVariable_(" << this << ":";
+    std::cerr << "RandomVariableImpl(" << this << ":";
     std::cerr << name_ << ") is deleting" << std::endl;
 #endif  // DEBUG
 }
 
-const std::string& _RandomVariable_::name() const {
+const std::string& RandomVariableImpl::name() const {
     return name_;
 }
 
-void _RandomVariable_::set_name(const std::string& name) {
+void RandomVariableImpl::set_name(const std::string& name) {
     name_ = name;
 }
 
-const RandomVariable& _RandomVariable_::left() const {
+const RandomVariable& RandomVariableImpl::left() const {
     return left_;
 }
 
-const RandomVariable& _RandomVariable_::right() const {
+const RandomVariable& RandomVariableImpl::right() const {
     return right_;
 }
 
-double _RandomVariable_::mean() {
+double RandomVariableImpl::mean() {
     if (!is_set_mean_) {
         mean_ = calc_mean();
         is_set_mean_ = true;
@@ -86,7 +86,7 @@ double _RandomVariable_::mean() {
     return mean_;
 }
 
-double _RandomVariable_::variance() {
+double RandomVariableImpl::variance() {
     if (!is_set_variance_) {
         variance_ = calc_variance();
         if (std::isnan(variance_)) {
@@ -98,20 +98,20 @@ double _RandomVariable_::variance() {
     return variance_;
 }
 
-double _RandomVariable_::calc_mean() const {
+double RandomVariableImpl::calc_mean() const {
     return mean_;
 }
 
-double _RandomVariable_::calc_variance() const {
+double RandomVariableImpl::calc_variance() const {
     return variance_;
 }
 
-double _RandomVariable_::standard_deviation() {
+double RandomVariableImpl::standard_deviation() {
     double v = variance();
     return std::sqrt(v);
 }
 
-double _RandomVariable_::coefficient_of_variation() {
+double RandomVariableImpl::coefficient_of_variation() {
     double m = mean();
     if (std::abs(m) < CV_ZERO_THRESHOLD) {
         // For very small means, return a large value to indicate high relative error
@@ -121,11 +121,11 @@ double _RandomVariable_::coefficient_of_variation() {
     return sd / std::abs(m);
 }
 
-double _RandomVariable_::relative_error() {
+double RandomVariableImpl::relative_error() {
     return coefficient_of_variation();
 }
 
-void _RandomVariable_::check_variance(double& v) {
+void RandomVariableImpl::check_variance(double& v) {
     if (fabs(v) < MINIMUM_VARIANCE) {
         v = MINIMUM_VARIANCE;
     }

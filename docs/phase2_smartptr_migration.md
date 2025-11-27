@@ -13,7 +13,7 @@
 | ---- | ---- | ---- |
 | `Gate` / `Instance` | ✅ 完了 | `std::shared_ptr` 化し、新旧 API の互換層を整備 |
 | `RandomVariable` 系 (`Normal`, `OpADD`, `OpMAX`, `OpSUB`, `CovarianceMatrix`) | ✅ 完了 | ハンドル型を `std::shared_ptr` 薄ラッパに刷新、`CovarianceMatrix` キャッシュも同様 |
-| `Expression` 系 (`Const`, `Variable`, `Expression_`) | ✅ 完了 | `std::enable_shared_from_this` を採用し、派生オブジェクトからも `shared_ptr` を復元可能 |
+| `Expression` 系 (`Const`, `Variable`, `ExpressionImpl`) | ✅ 完了 | `std::enable_shared_from_this` を採用し、派生オブジェクトからも `shared_ptr` を復元可能 |
 | `SmartPtr` テンプレート | ⚠️ レガシー | デフォルト無効 (`NH_ENABLE_LEGACY_SMARTPTR=1` の場合のみ利用可能)。互換用の `RCObject` のみ温存 |
 | ドキュメント整備 | ✅ 完了 | `README.md` / `CONTRIBUTING.md` にメモリ方針を追記、本ファイルで移行状況を集約 |
 

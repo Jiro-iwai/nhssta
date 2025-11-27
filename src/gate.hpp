@@ -17,23 +17,23 @@ namespace Nh {
 using Normal = ::RandomVariable::Normal;
 using RandomVariable = ::RandomVariable::RandomVariable;
 
-class _Instance_;
+class InstanceImpl;
 class Instance;
 // Use unordered_map for better performance (O(1) average vs O(log n) for map)
 using Signals = std::unordered_map<std::string, RandomVariable>;
 
 /////
 
-class _Gate_ {
+class GateImpl {
    public:
-    friend class _Instance_;
+    friend class InstanceImpl;
 
-    _Gate_()
+    GateImpl()
         : num_instances_(0) {}
-    explicit _Gate_(const std::string& type_name)
+    explicit GateImpl(const std::string& type_name)
         : num_instances_(0)
         , type_name_(type_name) {}
-    virtual ~_Gate_() = default;
+    virtual ~GateImpl() = default;
 
     void set_type_name(const std::string& type_name) {
         type_name_ = type_name;
@@ -86,18 +86,18 @@ class _Gate_ {
 class Gate {
    public:
     Gate();
-    explicit Gate(std::shared_ptr<_Gate_> body);
+    explicit Gate(std::shared_ptr<GateImpl> body);
 
     // Non-owning access: returns raw pointer (no ownership transfer)
-    _Gate_* operator->() const {
+    GateImpl* operator->() const {
         return body_.get();
     }
-    _Gate_& operator*() const {
+    GateImpl& operator*() const {
         return *body_;
     }
 
     // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<_Gate_> get() const {
+    [[nodiscard]] std::shared_ptr<GateImpl> get() const {
         return body_;
     }
 
@@ -106,16 +106,16 @@ class Gate {
    private:
     // Owned shared_ptr: this Gate owns the underlying object
     // Copying the Gate shares this ownership (lightweight copy)
-    std::shared_ptr<_Gate_> body_;
+    std::shared_ptr<GateImpl> body_;
 };
 
 /////
 
-class _Instance_ {
+class InstanceImpl {
    public:
-    _Instance_(const Gate& gate)
+    InstanceImpl(const Gate& gate)
         : gate_(gate) {}
-    virtual ~_Instance_() = default;
+    virtual ~InstanceImpl() = default;
 
     void set_name(const std::string& name) {
         name_ = name;
@@ -143,19 +143,19 @@ class _Instance_ {
 class Instance {
    public:
     Instance() = default;
-    explicit Instance(std::shared_ptr<_Instance_> body)
+    explicit Instance(std::shared_ptr<InstanceImpl> body)
         : body_(std::move(body)) {}
 
     // Non-owning access: returns raw pointer (no ownership transfer)
-    _Instance_* operator->() const {
+    InstanceImpl* operator->() const {
         return body_.get();
     }
-    _Instance_& operator*() const {
+    InstanceImpl& operator*() const {
         return *body_;
     }
 
     // Ownership access: returns shared_ptr (creates new shared_ptr copy, shares ownership)
-    [[nodiscard]] std::shared_ptr<_Instance_> get() const {
+    [[nodiscard]] std::shared_ptr<InstanceImpl> get() const {
         return body_;
     }
 
@@ -169,7 +169,7 @@ class Instance {
    private:
     // Owned shared_ptr: this Instance owns the underlying object
     // Copying the Instance shares this ownership (lightweight copy)
-    std::shared_ptr<_Instance_> body_;
+    std::shared_ptr<InstanceImpl> body_;
 };
 }  // namespace Nh
 
