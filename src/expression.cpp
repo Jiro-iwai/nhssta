@@ -104,6 +104,13 @@ double ExpressionImpl::value() {
                     throw Nh::RuntimeException("Expression: logarithm of negative number");
                 }
                 value_ = std::log(l);
+            } else if (op_ == ERF) {
+                value_ = std::erf(l);
+            } else if (op_ == SQRT) {
+                if (l < 0.0) {
+                    throw Nh::RuntimeException("Expression: square root of negative number");
+                }
+                value_ = std::sqrt(l);
             }
 
         } else {
@@ -211,6 +218,18 @@ void ExpressionImpl::backward(double upstream) {
             // f = log(l)
             // ∂f/∂l = 1/l
             left()->backward(upstream / l);
+
+        } else if (op_ == ERF) {
+            // f = erf(l)
+            // ∂f/∂l = 2/√π × exp(-l²)
+            static constexpr double TWO_OVER_SQRT_PI = 1.1283791670955126;  // 2/√π
+            left()->backward(upstream * TWO_OVER_SQRT_PI * std::exp(-l * l));
+
+        } else if (op_ == SQRT) {
+            // f = sqrt(l)
+            // ∂f/∂l = 1/(2√l)
+            double sqrt_l = value();
+            left()->backward(upstream / (2.0 * sqrt_l));
         }
     }
 }
@@ -248,6 +267,10 @@ void ExpressionImpl::print() {
         std::cout << std::setw(10) << "exp";
     } else if (op_ == LOG) {
         std::cout << std::setw(10) << "log";
+    } else if (op_ == ERF) {
+        std::cout << std::setw(10) << "erf";
+    } else if (op_ == SQRT) {
+        std::cout << std::setw(10) << "sqrt";
     } else if (op_ == POWER) {
         std::cout << std::setw(10) << "^";
     }
@@ -460,6 +483,14 @@ Expression exp(const Expression& a) {
 
 Expression log(const Expression& a) {
     return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::LOG, a, null));
+}
+
+Expression erf(const Expression& a) {
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::ERF, a, null));
+}
+
+Expression sqrt(const Expression& a) {
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::SQRT, a, null));
 }
 
 //////////////////////////

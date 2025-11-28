@@ -155,6 +155,8 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
 
     friend Expression exp(const Expression& a);
     friend Expression log(const Expression& a);
+    friend Expression erf(const Expression& a);
+    friend Expression sqrt(const Expression& a);
 
     // assignment to (double)
     friend double& operator<<(double& a, const Expression& b);
@@ -162,7 +164,7 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     // print all expression infomation
     friend void print_all();
 
-    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG };
+    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG, ERF, SQRT };
 
     static void print_all();
     void print();
@@ -290,6 +292,66 @@ Expression operator^(double a, const Expression& b);
 
 Expression exp(const Expression& a);
 Expression log(const Expression& a);
+Expression erf(const Expression& a);
+Expression sqrt(const Expression& a);
+
+// Statistical functions for sensitivity analysis
+// These are building blocks for SSTA integration
+
+/**
+ * @brief Standard normal PDF: φ(x) = exp(-x²/2) / √(2π)
+ * 
+ * @param x Expression to evaluate
+ * @return Expression representing φ(x)
+ */
+inline Expression phi_expr(const Expression& x) {
+    static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
+    return INV_SQRT_2PI * exp(-(x * x) / 2.0);
+}
+
+/**
+ * @brief Standard normal CDF: Φ(x) = 0.5 × (1 + erf(x/√2))
+ * 
+ * @param x Expression to evaluate
+ * @return Expression representing Φ(x)
+ */
+inline Expression Phi_expr(const Expression& x) {
+    static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
+    return 0.5 * (1.0 + erf(x * INV_SQRT_2));
+}
+
+/**
+ * @brief MeanMax function: E[max(a, x)] where x ~ N(0,1)
+ * MeanMax(a) = φ(a) + a × Φ(a)
+ * 
+ * @param a Expression for the threshold
+ * @return Expression representing MeanMax(a)
+ */
+inline Expression MeanMax_expr(const Expression& a) {
+    return phi_expr(a) + a * Phi_expr(a);
+}
+
+/**
+ * @brief MeanMax2 function: E[max(a, x)²] where x ~ N(0,1)
+ * MeanMax2(a) = 1 + (a² - 1) × Φ(a) + a × φ(a)
+ * 
+ * @param a Expression for the threshold
+ * @return Expression representing MeanMax2(a)
+ */
+inline Expression MeanMax2_expr(const Expression& a) {
+    return 1.0 + (a * a - 1.0) * Phi_expr(a) + a * phi_expr(a);
+}
+
+/**
+ * @brief MeanPhiMax function: E[max(a, x) × x] where x ~ N(0,1)
+ * MeanPhiMax(a) = Φ(-a) = 1 - Φ(a)
+ * 
+ * @param a Expression for the threshold
+ * @return Expression representing MeanPhiMax(a)
+ */
+inline Expression MeanPhiMax_expr(const Expression& a) {
+    return 1.0 - Phi_expr(a);
+}
 
 // assignment to (double)
 double& operator<<(double& a, const Expression& b);
