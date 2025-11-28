@@ -353,6 +353,41 @@ inline Expression MeanPhiMax_expr(const Expression& a) {
     return 1.0 - Phi_expr(a);
 }
 
+// =============================================================================
+// MAX0 functions for SSTA
+// =============================================================================
+
+/**
+ * @brief Mean of max(0, D) where D ~ N(μ, σ²)
+ * 
+ * E[max(0, D)] = μ + σ × MeanMax(-μ/σ)
+ *              = μ + σ × (φ(a) + a × Φ(a))  where a = -μ/σ
+ * 
+ * @param mu Mean of the underlying normal distribution
+ * @param sigma Standard deviation (NOT variance)
+ * @return Expression representing E[max(0, D)]
+ */
+inline Expression max0_mean_expr(const Expression& mu, const Expression& sigma) {
+    Expression a = -(mu / sigma);  // normalized threshold
+    return mu + sigma * MeanMax_expr(a);
+}
+
+/**
+ * @brief Variance of max(0, D) where D ~ N(μ, σ²)
+ * 
+ * Var[max(0, D)] = σ² × (MeanMax2(a) - MeanMax(a)²)  where a = -μ/σ
+ * 
+ * @param mu Mean of the underlying normal distribution
+ * @param sigma Standard deviation (NOT variance)
+ * @return Expression representing Var[max(0, D)]
+ */
+inline Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
+    Expression a = -(mu / sigma);  // normalized threshold
+    Expression mm = MeanMax_expr(a);
+    Expression mm2 = MeanMax2_expr(a);
+    return sigma * sigma * (mm2 - mm * mm);
+}
+
 // assignment to (double)
 double& operator<<(double& a, const Expression& b);
 

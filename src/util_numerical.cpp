@@ -175,7 +175,7 @@ double MeanMax(double a) {
     int u = 0;
     double t = set_range(a, l, u);
     // Linear interpolation: tab[l] * (1 - t) + tab[u] * t
-    double r = mean_max_tab[l] + t * (mean_max_tab[u] - mean_max_tab[l]);
+    double r = mean_max_tab[l] + (t * (mean_max_tab[u] - mean_max_tab[l]));
     return r;
 }
 
@@ -190,7 +190,7 @@ double MeanPhiMax(double a) {
     int u = 0;
     double t = set_range(a, l, u);
     // Linear interpolation
-    double r = mean_x_max_tab[l] + t * (mean_x_max_tab[u] - mean_x_max_tab[l]);
+    double r = mean_x_max_tab[l] + (t * (mean_x_max_tab[u] - mean_x_max_tab[l]));
     return r;
 }
 
@@ -205,7 +205,7 @@ double MeanMax2(double a) {
     int u = 0;
     double t = set_range(a, l, u);
     // Linear interpolation
-    double r = mean_max2_tab[l] + t * (mean_max2_tab[u] - mean_max2_tab[l]);
+    double r = mean_max2_tab[l] + (t * (mean_max2_tab[u] - mean_max2_tab[l]));
     return r;
 }
 
