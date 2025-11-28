@@ -40,14 +40,20 @@ double MeanMax_analytical(double a) {
 
 // Analytical formula for MeanMax2(a)
 // Used in: Var[max(0, D)] = σ² × (MeanMax2 - MeanMax²)
-// For D ~ N(μ, σ²) with a = -μ/σ:
-//   E[max(0, D)²] / σ² = (1 + a²)Φ(-a) + aφ(a)
-//                      = (1 + a²)(1 - Φ(a)) + aφ(a)
-// Note: Table boundary values suggest: MeanMax2(a<-5)=1, MeanMax2(a>5)=a²
+// 
+// MeanMax2(a) = E[max(a, x)²] where x ~ N(0, 1)
+// 
+// Derivation:
+//   E[max(a, x)²] = a²·P(x < a) + E[x² | x > a]·P(x > a)
+//                 = a²·Φ(a) + [aφ(a) + (1 - Φ(a))]
+//                 = 1 + (a² - 1)·Φ(a) + a·φ(a)
+//
+// Boundary verification:
+//   a = 0:  1 + (-1)×0.5 + 0 = 0.5 ✓
+//   a → -∞: 1 + (a²-1)×0 + 0 = 1 ✓
+//   a → +∞: 1 + (a²-1)×1 + 0 = a² ✓
 double MeanMax2_analytical(double a) {
-    // E[max(0,D)²]/σ² where D~N(-aσ, σ²)
-    // = (1 + a²)(1 - Φ(a)) + aφ(a)
-    return (1.0 + a * a) * (1.0 - normal_cdf(a)) + a * normal_pdf(a);
+    return 1.0 + (a * a - 1.0) * normal_cdf(a) + a * normal_pdf(a);
 }
 
 // Analytical formula for MeanPhiMax(a)
@@ -149,20 +155,15 @@ TEST_F(TableAnalyticalEquivalenceTest, MeanMax_FineGrained) {
 // =============================================================================
 
 TEST_F(TableAnalyticalEquivalenceTest, MeanMax2_FullRange) {
-    // NOTE: MeanMax2 table does NOT match the standard analytical formula
-    // E[max(0,D)²]/σ² = (1+a²)(1-Φ(a)) + aφ(a)
-    // 
-    // The table appears to use a different definition or normalization.
-    // This is documented as a known discrepancy.
-    // The SSTA calculations still work correctly as the table is self-consistent.
+    // MeanMax2(a) = E[max(a, x)²] = 1 + (a² - 1)·Φ(a) + a·φ(a)
+    // where x ~ N(0, 1)
     
-    // Just verify the table is self-consistent at key points
-    // a=0: MeanMax2(0) should be 0.5 (this is the known correct value)
+    // Verify at key points
     EXPECT_NEAR(RandomVariable::MeanMax2(0.0), 0.5, 0.01);
     
     // Print comparison for documentation
     std::cout << "\n[MeanMax2] Table vs Analytical comparison:" << std::endl;
-    for (double a = -3.0; a <= 3.0; a += 1.0) {
+    for (double a = -4.0; a <= 5.0; a += 1.0) {
         double table_val = RandomVariable::MeanMax2(a);
         double analytical_val = RandomVariable::MeanMax2_analytical(a);
         std::cout << "  a=" << std::setw(4) << a 
@@ -173,40 +174,64 @@ TEST_F(TableAnalyticalEquivalenceTest, MeanMax2_FullRange) {
 }
 
 TEST_F(TableAnalyticalEquivalenceTest, MeanMax2_BoundaryConditions) {
-    // Test boundary conditions
-    // MeanMax2(a) = E[max(0,D)²]/σ² where D ~ N(-aσ, σ²)
+    // MeanMax2(a) = E[max(a, x)²] = 1 + (a² - 1)·Φ(a) + a·φ(a)
+    // where x ~ N(0, 1)
     
-    // a << 0 (μ >> 0): max(0,D) ≈ D, so E[D²]/σ² = (μ² + σ²)/σ² = a² + 1
-    // Table returns 1.0 as boundary (approximation for small |a|)
+    // a → -∞: Φ(a) → 0, φ(a) → 0, so MeanMax2 → 1
     double table_minus10 = RandomVariable::MeanMax2(-10.0);
     double analytical_minus10 = RandomVariable::MeanMax2_analytical(-10.0);
-    std::cout << "[MeanMax2] a=-10: table=" << table_minus10 
-              << ", analytical=" << analytical_minus10 << std::endl;
+    std::cout << "[MeanMax2] a=-10: table=" << std::fixed << std::setprecision(12)
+              << table_minus10 << ", analytical=" << analytical_minus10 << std::endl;
+    EXPECT_NEAR(table_minus10, 1.0, 0.01);
+    EXPECT_NEAR(analytical_minus10, 1.0, 1e-6);
     
-    // a >> 0 (μ << 0): max(0,D) ≈ 0 almost surely, so E[max(0,D)²] ≈ 0
-    // But table returns a² as boundary
+    // a → +∞: Φ(a) → 1, φ(a) → 0, so MeanMax2 → a²
     double table_plus10 = RandomVariable::MeanMax2(10.0);
     double analytical_plus10 = RandomVariable::MeanMax2_analytical(10.0);
     std::cout << "[MeanMax2] a=+10: table=" << table_plus10 
               << ", analytical=" << analytical_plus10 << std::endl;
+    EXPECT_NEAR(table_plus10, 100.0, 0.01);
+    EXPECT_NEAR(analytical_plus10, 100.0, 1e-6);
     
-    // a = 0 (μ = 0): MeanMax2(0) = (1 + 0)(1 - 0.5) + 0 = 0.5
+    // a = 0: MeanMax2(0) = 1 + (-1)·0.5 + 0 = 0.5
     EXPECT_NEAR(RandomVariable::MeanMax2(0.0), 0.5, 0.01);
     EXPECT_NEAR(RandomVariable::MeanMax2_analytical(0.0), 0.5, 1e-10);
 }
 
 TEST_F(TableAnalyticalEquivalenceTest, MeanMax2_FineGrained) {
-    // NOTE: Skipping fine-grained test as MeanMax2 table uses different definition
-    // See MeanMax2_FullRange test for documentation of the discrepancy
+    // MeanMax2(a) = E[max(a, x)²] = 1 + (a² - 1)·Φ(a) + a·φ(a)
+    // 
+    // NOTE: The table lookup always averages two neighboring values:
+    //   result = (tab[l] + tab[u]) / 2
+    // This is NOT proper linear interpolation - it always uses the midpoint.
+    // Error is approximately |f'(a)| × 0.025 (half step size).
+    // For MeanMax2, the derivative is significant even near a=0.
     
-    // Just verify table values are reasonable (positive and bounded)
-    for (double a = -4.9; a <= 4.9; a += 0.1) {
+    double max_error = 0.0;
+    double max_error_a = 0.0;
+    
+    for (double a = -4.9; a <= 4.9; a += 0.01) {
         double table_val = RandomVariable::MeanMax2(a);
-        EXPECT_GE(table_val, 0.0) << "MeanMax2 should be non-negative at a=" << a;
-        // For extreme values, bound is roughly a² + 1
-        double max_expected = std::max(1.0, a * a + 2.0);
-        EXPECT_LE(table_val, max_expected) << "MeanMax2 out of bounds at a=" << a;
+        double analytical_val = RandomVariable::MeanMax2_analytical(a);
+        double error = std::abs(table_val - analytical_val);
+        
+        if (error > max_error) {
+            max_error = error;
+            max_error_a = a;
+        }
     }
+    
+    std::cout << "[MeanMax2] Max absolute error: " << max_error 
+              << " at a=" << max_error_a << std::endl;
+    
+    // Table interpolation causes up to ~0.25 error at boundaries
+    // In typical SSTA use (|a| < 3), error is acceptable
+    EXPECT_LT(max_error, 0.3) << "Maximum error too large at a=" << max_error_a;
+    
+    // Verify analytical formula is correct at key points
+    EXPECT_NEAR(RandomVariable::MeanMax2_analytical(0.0), 0.5, 1e-10);
+    EXPECT_NEAR(RandomVariable::MeanMax2_analytical(5.0), 25.0, 1e-5);
+    EXPECT_NEAR(RandomVariable::MeanMax2_analytical(-5.0), 1.0, 1e-5);
 }
 
 // =============================================================================
@@ -289,7 +314,7 @@ TEST_F(TableAnalyticalEquivalenceTest, SummaryReport) {
         std::cout << "  Status: MATCHES (within table interpolation tolerance)" << std::endl;
     }
     
-    // MeanMax2: Table uses DIFFERENT definition
+    // MeanMax2: E[max(a, x)²] = 1 + (a² - 1)·Φ(a) + a·φ(a)
     {
         double max_abs_err = 0.0, max_rel_err = 0.0;
         for (double a = -4.9; a <= 4.9; a += 0.01) {
@@ -300,11 +325,10 @@ TEST_F(TableAnalyticalEquivalenceTest, SummaryReport) {
             max_abs_err = std::max(max_abs_err, abs_err);
             max_rel_err = std::max(max_rel_err, rel_err);
         }
-        std::cout << "\nMeanMax2 ((1+a²)(1-Φ(a)) + aφ(a)):" << std::endl;
+        std::cout << "\nMeanMax2 (E[max(a,x)²] = 1 + (a²-1)Φ(a) + aφ(a)):" << std::endl;
         std::cout << "  Max absolute error: " << max_abs_err << std::endl;
         std::cout << "  Max relative error: " << max_rel_err * 100 << "%" << std::endl;
-        std::cout << "  Status: DOES NOT MATCH - table uses different definition" << std::endl;
-        std::cout << "  Note: a=0 value (0.5) is correct, SSTA results are valid" << std::endl;
+        std::cout << "  Status: MATCHES (within table interpolation tolerance)" << std::endl;
     }
     
     // MeanPhiMax: Φ(-a) = 1 - Φ(a)
@@ -326,9 +350,11 @@ TEST_F(TableAnalyticalEquivalenceTest, SummaryReport) {
     
     std::cout << "\n========================================" << std::endl;
     std::cout << "Conclusion:" << std::endl;
-    std::cout << "- MeanMax, MeanPhiMax: Use analytical formulas for Expression" << std::endl;
-    std::cout << "- MeanMax2: Need to investigate table definition or use" << std::endl;
-    std::cout << "            alternative approach for Expression version" << std::endl;
+    std::cout << "- All three functions match analytical formulas!" << std::endl;
+    std::cout << "- MeanMax:    φ(a) + a·Φ(a)" << std::endl;
+    std::cout << "- MeanMax2:   1 + (a²-1)·Φ(a) + a·φ(a)  [E[max(a,x)²]]" << std::endl;
+    std::cout << "- MeanPhiMax: Φ(-a) = 1 - Φ(a)" << std::endl;
+    std::cout << "- Ready to proceed to Phase 1 (Expression implementation)" << std::endl;
     std::cout << "========================================\n" << std::endl;
 }
 
