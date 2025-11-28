@@ -32,16 +32,6 @@ def compare_values(val1_str, val2_str, tol):
     except ValueError:
         return False
 
-def is_correlation_value(val_str):
-    """Check if a value is likely a correlation coefficient (0.0-1.0 range)."""
-    try:
-        val = float(val_str)
-        # Correlation values are typically in [0.0, 1.0] range
-        # LAT values are typically larger (e.g., 35.016, 3.575)
-        return 0.0 <= abs(val) <= 1.0
-    except ValueError:
-        return False
-
 def compare_lines(line1, line2, lat_tol, corr_tol, max_errors):
     """Compare two lines with numerical tolerance.
     
@@ -55,6 +45,15 @@ def compare_lines(line1, line2, lat_tol, corr_tol, max_errors):
     if line1 == line2:
         return True
     
+    # Skip empty lines
+    if not line1.strip() or not line2.strip():
+        return line1.strip() == line2.strip()
+    
+    # Determine section by tab character:
+    # - Lines with tabs → correlation matrix
+    # - Lines without tabs → LAT values
+    is_correlation_line = '\t' in line1 or '\t' in line2
+    
     # Split by whitespace (both space and tab)
     fields1 = re.split(r'[ \t]+', line1.strip())
     fields2 = re.split(r'[ \t]+', line2.strip())
@@ -66,13 +65,8 @@ def compare_lines(line1, line2, lat_tol, corr_tol, max_errors):
     if len(fields1) != len(fields2):
         return False
     
-    # Determine if this is a correlation line (tab-separated, values in [0,1] range)
-    # or LAT line (space-separated, larger values)
-    is_correlation_line = '\t' in line1 or '\t' in line2
-    
     for f1, f2 in zip(fields1, fields2):
         if is_numeric(f1) and is_numeric(f2):
-            # Determine tolerance based on value type
             val1 = float(f1)
             val2 = float(f2)
             diff = abs(val1 - val2)
@@ -82,18 +76,13 @@ def compare_lines(line1, line2, lat_tol, corr_tol, max_errors):
             if abs(val1) > 1e-10 and abs(val2) > 1e-10:
                 rel_err = diff / max(abs(val1), abs(val2))
             
-            # Use correlation tolerance if:
-            # 1. Line contains tabs (correlation matrix format)
-            # 2. Both values are in [0, 1] range (correlation coefficients)
-            if is_correlation_line or (is_correlation_value(f1) and is_correlation_value(f2)):
+            # Use tolerance based on line format (tab = correlation)
+            if is_correlation_line:
                 tol = corr_tol
-                # Update maximum correlation error
                 if rel_err > max_errors['corr']:
                     max_errors['corr'] = rel_err
             else:
-                # LAT values (mean, stddev)
                 tol = lat_tol
-                # Update maximum LAT error
                 if rel_err > max_errors['lat']:
                     max_errors['lat'] = rel_err
             
@@ -119,6 +108,7 @@ def main():
     
     # Track maximum errors
     max_errors = {'lat': 0.0, 'corr': 0.0}
+    all_passed = True
     
     try:
         with open(file1, 'r') as f1, open(file2, 'r') as f2:
@@ -126,16 +116,18 @@ def main():
             lines2 = f2.readlines()
             
             if len(lines1) != len(lines2):
+                print(f"MAX_LAT_ERROR:N/A MAX_CORR_ERROR:N/A (line count mismatch: {len(lines1)} vs {len(lines2)})")
                 sys.exit(1)
             
             for l1, l2 in zip(lines1, lines2):
                 if not compare_lines(l1, l2, lat_tol, corr_tol, max_errors):
-                    sys.exit(1)
+                    all_passed = False
+                    # Continue to collect all errors instead of exiting early
         
-        # Output maximum errors to stdout (for parsing by shell script)
+        # Always output maximum errors to stdout (for parsing by shell script)
         # Format: MAX_LAT_ERROR:0.001234 MAX_CORR_ERROR:0.023456
         print(f"MAX_LAT_ERROR:{max_errors['lat']:.6f} MAX_CORR_ERROR:{max_errors['corr']:.6f}")
-        sys.exit(0)
+        sys.exit(0 if all_passed else 1)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
