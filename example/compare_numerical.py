@@ -119,6 +119,7 @@ def main():
     
     # Track maximum errors
     max_errors = {'lat': 0.0, 'corr': 0.0}
+    all_passed = True
     
     try:
         with open(file1, 'r') as f1, open(file2, 'r') as f2:
@@ -126,16 +127,18 @@ def main():
             lines2 = f2.readlines()
             
             if len(lines1) != len(lines2):
+                print(f"MAX_LAT_ERROR:N/A MAX_CORR_ERROR:N/A (line count mismatch: {len(lines1)} vs {len(lines2)})")
                 sys.exit(1)
             
             for l1, l2 in zip(lines1, lines2):
                 if not compare_lines(l1, l2, lat_tol, corr_tol, max_errors):
-                    sys.exit(1)
+                    all_passed = False
+                    # Continue to collect all errors instead of exiting early
         
-        # Output maximum errors to stdout (for parsing by shell script)
+        # Always output maximum errors to stdout (for parsing by shell script)
         # Format: MAX_LAT_ERROR:0.001234 MAX_CORR_ERROR:0.023456
         print(f"MAX_LAT_ERROR:{max_errors['lat']:.6f} MAX_CORR_ERROR:{max_errors['corr']:.6f}")
-        sys.exit(0)
+        sys.exit(0 if all_passed else 1)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
