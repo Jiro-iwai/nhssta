@@ -430,6 +430,31 @@ inline Expression sub_var_expr(const Expression& sigma1, const Expression& sigma
     return sigma1 * sigma1 + sigma2 * sigma2 - Const(2.0) * cov;
 }
 
+// =============================================================================
+// Covariance expressions (Phase 4 of #167)
+// =============================================================================
+
+/**
+ * @brief Cov(X, max0(Z)) where X and Z are jointly Gaussian
+ * 
+ * Formula: Cov(X, max0(Z)) = Cov(X, Z) × Φ(μ_Z/σ_Z)
+ * 
+ * This is used when computing variance of MAX operations:
+ * Var[MAX(A,B)] = Var[A + MAX0(B-A)] requires Cov terms involving MAX0.
+ * 
+ * @param cov_xz Covariance between X and Z: Cov(X, Z)
+ * @param mu_z Mean of Z
+ * @param sigma_z Standard deviation of Z (NOT variance)
+ * @return Expression representing Cov(X, max0(Z))
+ */
+inline Expression cov_x_max0_expr(const Expression& cov_xz,
+                                  const Expression& mu_z,
+                                  const Expression& sigma_z) {
+    // Cov(X, max0(Z)) = Cov(X, Z) × Φ(μ_Z/σ_Z)
+    // Using MeanPhiMax(-μ/σ) = Φ(μ/σ)
+    return cov_xz * Phi_expr(mu_z / sigma_z);
+}
+
 // assignment to (double)
 double& operator<<(double& a, const Expression& b);
 
