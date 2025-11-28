@@ -388,6 +388,48 @@ inline Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
     return sigma * sigma * (mm2 - mm * mm);
 }
 
+// =============================================================================
+// ADD/SUB mean and variance expressions (Phase 3 of #167)
+// =============================================================================
+
+/**
+ * @brief Mean of sum: E[A + B] = μ_A + μ_B
+ */
+inline Expression add_mean_expr(const Expression& mu1, const Expression& mu2) {
+    return mu1 + mu2;
+}
+
+/**
+ * @brief Variance of sum: Var[A + B] = σ_A² + σ_B² + 2×Cov(A,B)
+ * 
+ * @param sigma1 Standard deviation of A
+ * @param sigma2 Standard deviation of B
+ * @param cov Covariance between A and B
+ */
+inline Expression add_var_expr(const Expression& sigma1, const Expression& sigma2,
+                               const Expression& cov) {
+    return sigma1 * sigma1 + sigma2 * sigma2 + Const(2.0) * cov;
+}
+
+/**
+ * @brief Mean of difference: E[A - B] = μ_A - μ_B
+ */
+inline Expression sub_mean_expr(const Expression& mu1, const Expression& mu2) {
+    return mu1 - mu2;
+}
+
+/**
+ * @brief Variance of difference: Var[A - B] = σ_A² + σ_B² - 2×Cov(A,B)
+ * 
+ * @param sigma1 Standard deviation of A
+ * @param sigma2 Standard deviation of B
+ * @param cov Covariance between A and B
+ */
+inline Expression sub_var_expr(const Expression& sigma1, const Expression& sigma2,
+                               const Expression& cov) {
+    return sigma1 * sigma1 + sigma2 * sigma2 - Const(2.0) * cov;
+}
+
 // assignment to (double)
 double& operator<<(double& a, const Expression& b);
 
