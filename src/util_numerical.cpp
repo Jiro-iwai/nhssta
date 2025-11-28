@@ -149,14 +149,19 @@ static constexpr double kCut = 5.0;
 static constexpr double kDiv = kCut / 100.0;
 static constexpr int TAB_SIZE = 201;  // Array size: -5 to 5 with 0.05 step
 
-static void set_range(double a, int& lower, int& upper) {
+// Returns interpolation coefficient t in [0, 1)
+// Linear interpolation: result = tab[lower] * (1 - t) + tab[upper] * t
+static double set_range(double a, int& lower, int& upper) {
     double len = (a + kCut) / kDiv;
-    lower = int(floor(len));
-    upper = int(ceil(len));
+    lower = static_cast<int>(std::floor(len));
+    upper = lower + 1;
     // Clamp to valid array bounds
     lower = std::max(lower, 0);
     upper = std::min(upper, TAB_SIZE - 1);
     lower = std::min(lower, TAB_SIZE - 1);
+    // Return fractional part for interpolation
+    double t = len - std::floor(len);
+    return t;
 }
 
 double MeanMax(double a) {
@@ -168,8 +173,9 @@ double MeanMax(double a) {
     }
     int l = 0;
     int u = 0;
-    set_range(a, l, u);
-    double r = (mean_max_tab[l] + mean_max_tab[u]) * 0.5;
+    double t = set_range(a, l, u);
+    // Linear interpolation: tab[l] * (1 - t) + tab[u] * t
+    double r = mean_max_tab[l] + t * (mean_max_tab[u] - mean_max_tab[l]);
     return r;
 }
 
@@ -182,8 +188,9 @@ double MeanPhiMax(double a) {
     }
     int l = 0;
     int u = 0;
-    set_range(a, l, u);
-    double r = (mean_x_max_tab[l] + mean_x_max_tab[u]) * 0.5;
+    double t = set_range(a, l, u);
+    // Linear interpolation
+    double r = mean_x_max_tab[l] + t * (mean_x_max_tab[u] - mean_x_max_tab[l]);
     return r;
 }
 
@@ -196,8 +203,9 @@ double MeanMax2(double a) {
     }
     int l = 0;
     int u = 0;
-    set_range(a, l, u);
-    double r = (mean_max2_tab[l] + mean_max2_tab[u]) * 0.5;
+    double t = set_range(a, l, u);
+    // Linear interpolation
+    double r = mean_max2_tab[l] + t * (mean_max2_tab[u] - mean_max2_tab[l]);
     return r;
 }
 
