@@ -57,14 +57,20 @@ double MeanMax2_analytical(double a) {
 }
 
 // Analytical formula for MeanPhiMax(a)
-// Used in: Cov(x, max(0,Z)) = Cov(x,Z) × MeanPhiMax(-μ_Z/σ_Z)
-// The covariance formula requires Φ(-μ/σ), so with a = -μ/σ:
-//   MeanPhiMax(a) = Φ(-a) = 1 - Φ(a)
-// Boundary check:
-//   MeanPhiMax(-5) = Φ(5) ≈ 1 ✓ (table returns 1.0)
-//   MeanPhiMax(+5) = Φ(-5) ≈ 0 ✓ (table returns 0.0)
+// 
+// MeanPhiMax(a) = E[max(a, x) · x] where x ~ N(0, 1)
+//
+// Derivation:
+//   E[max(a,x)·x] = ∫_{-∞}^{a} a·x·φ(x)dx + ∫_{a}^{∞} x²·φ(x)dx
+//                = -a·φ(a) + [1 + a·φ(a) - Φ(a)]
+//                = 1 - Φ(a) = Φ(-a)
+//
+// Boundary verification:
+//   a → -∞: Φ(-a) → 1 ✓
+//   a = 0:  Φ(0) = 0.5 ✓
+//   a → +∞: Φ(-a) → 0 ✓
 double MeanPhiMax_analytical(double a) {
-    return 1.0 - normal_cdf(a);  // = Φ(-a)
+    return 1.0 - normal_cdf(a);  // = Φ(-a) = E[max(a,x)·x]
 }
 
 }  // namespace RandomVariable
