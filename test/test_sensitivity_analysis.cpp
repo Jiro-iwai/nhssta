@@ -242,12 +242,15 @@ TEST_F(SensitivityAnalysisTest, Max0_VarianceSensitivity) {
 
     // Check gradients exist (non-zero for non-trivial case)
     // Variance gradients are complex but should be calculable
-    double grad_mu = D->mu_expr()->gradient();
     double grad_sigma = D->sigma_expr()->gradient();
     
     // For μ >> σ, max(0,D) ≈ D, so Var[max(0,D)] ≈ Var[D] = σ²
     // Thus ∂Var/∂σ ≈ 2σ (positive)
     EXPECT_GT(grad_sigma, 0.0);
+    
+    // grad_mu can be any value depending on the distribution
+    // Just verify it's finite
+    EXPECT_TRUE(std::isfinite(D->mu_expr()->gradient()));
 }
 
 // ============================================================================
