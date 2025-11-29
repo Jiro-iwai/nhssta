@@ -164,7 +164,7 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     // print all expression infomation
     friend void print_all();
 
-    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG, ERF, SQRT };
+    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG, ERF, SQRT, PHI2 };
 
     static void print_all();
     void print();
@@ -173,6 +173,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     ExpressionImpl(double value);
 
     ExpressionImpl(const Op& op, const Expression& left, const Expression& right);
+
+    // Constructor for 3-argument operations (e.g., PHI2)
+    ExpressionImpl(const Op& op, const Expression& first, const Expression& second,
+                   const Expression& third);
 
     virtual ~ExpressionImpl();
 
@@ -195,6 +199,9 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     }
     [[nodiscard]] const Expression& right() const {
         return right_;
+    }
+    [[nodiscard]] const Expression& third() const {
+        return third_;
     }
     void set_value(double value);
     void _set_value(double value);
@@ -222,6 +229,7 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
                    // type, const is intentional
     Expression left_;
     Expression right_;
+    Expression third_;  // For 3-argument operations (e.g., PHI2: h, k, rho)
     Expressions roots_;
 
     /// static data menber
@@ -454,6 +462,79 @@ inline Expression cov_x_max0_expr(const Expression& cov_xz,
     // Using MeanPhiMax(-μ/σ) = Φ(μ/σ)
     return cov_xz * Phi_expr(mu_z / sigma_z);
 }
+
+// =============================================================================
+// Bivariate normal distribution expressions (Phase 5 of #167)
+// =============================================================================
+
+/**
+ * @brief Bivariate standard normal PDF φ₂(x, y; ρ)
+ * 
+ * Formula: φ₂(x, y; ρ) = 1/(2π√(1-ρ²)) × exp(-(x² - 2ρxy + y²)/(2(1-ρ²)))
+ * 
+ * Gradients (derived from the formula):
+ * - ∂φ₂/∂x = φ₂ × (-(x - ρy)/(1-ρ²))
+ * - ∂φ₂/∂y = φ₂ × (-(y - ρx)/(1-ρ²))
+ * - ∂φ₂/∂ρ = φ₂ × [ρ/(1-ρ²) + (x² - 2ρxy + y²)×ρ/(1-ρ²)² - xy/(1-ρ²)]
+ * 
+ * @param x First variable
+ * @param y Second variable
+ * @param rho Correlation coefficient (-1 < ρ < 1)
+ */
+Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho);
+
+/**
+ * @brief Bivariate standard normal CDF Φ₂(h, k; ρ)
+ * 
+ * Φ₂(h, k; ρ) = P(X ≤ h, Y ≤ k) where (X, Y) ~ N(0, 0, 1, 1, ρ)
+ * 
+ * Value: Computed using numerical integration (Gauss-Hermite)
+ * Gradients (analytical):
+ * - ∂Φ₂/∂h = φ(h) × Φ((k - ρh)/√(1-ρ²))
+ * - ∂Φ₂/∂k = φ(k) × Φ((h - ρk)/√(1-ρ²))
+ * - ∂Φ₂/∂ρ = φ₂(h, k; ρ)
+ * 
+ * @param h First threshold
+ * @param k Second threshold
+ * @param rho Correlation coefficient (-1 < ρ < 1)
+ */
+Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho);
+
+/**
+ * @brief E[D0⁺ × D1⁺] where D0, D1 are bivariate normal
+ * 
+ * Formula:
+ * E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ) 
+ *            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
+ *            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
+ *            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + φ₂(a0, a1; ρ)]
+ * 
+ * where a0 = μ0/σ0, a1 = μ1/σ1
+ * 
+ * @param mu0 Mean of D0
+ * @param sigma0 Standard deviation of D0 (> 0)
+ * @param mu1 Mean of D1
+ * @param sigma1 Standard deviation of D1 (> 0)
+ * @param rho Correlation between D0 and D1
+ */
+Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
+                                  const Expression& mu1, const Expression& sigma1,
+                                  const Expression& rho);
+
+/**
+ * @brief Cov(max(0,D0), max(0,D1)) where D0, D1 are bivariate normal
+ * 
+ * Formula: Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]
+ * 
+ * @param mu0 Mean of D0
+ * @param sigma0 Standard deviation of D0 (> 0)
+ * @param mu1 Mean of D1
+ * @param sigma1 Standard deviation of D1 (> 0)
+ * @param rho Correlation between D0 and D1
+ */
+Expression cov_max0_max0_expr(const Expression& mu0, const Expression& sigma0,
+                              const Expression& mu1, const Expression& sigma1,
+                              const Expression& rho);
 
 // assignment to (double)
 double& operator<<(double& a, const Expression& b);

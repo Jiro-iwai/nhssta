@@ -32,6 +32,13 @@ double expected_prod_pos(double mu0, double sigma0,
                          double mu1, double sigma1,
                          double rho);
 
+// Cov(max(0,D0), max(0,D1)) where D0, D1 are bivariate normal with correlation ρ
+// Formula: E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]
+// Precondition: sigma0 > 0, sigma1 > 0
+double covariance_max0_max0(double mu0, double sigma0,
+                            double mu1, double sigma1,
+                            double rho);
+
 }  // namespace RandomVariable
 
 #endif  // NH_UTIL_NUMERICAL__H
