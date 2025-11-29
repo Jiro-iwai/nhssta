@@ -9,6 +9,7 @@
 #include <string>
 #include <type_traits>
 
+#include "expression.hpp"
 #include "handle.hpp"
 
 namespace RandomVariable {
@@ -86,6 +87,17 @@ class RandomVariableImpl {
     [[nodiscard]] int level() const {
         return level_;
     }
+
+    // Sensitivity analysis: Expression-based accessors
+    // These return Expression objects that can be used for automatic differentiation.
+    // Call backward() on the result, then gradient() on the input parameters.
+    [[nodiscard]] virtual Expression mean_expr() const;
+    [[nodiscard]] virtual Expression var_expr() const;
+    [[nodiscard]] virtual Expression std_expr() const;
+    
+    // Access to input parameter expressions (for gradient retrieval)
+    [[nodiscard]] virtual Expression mu_expr() const;
+    [[nodiscard]] virtual Expression sigma_expr() const;
 
    protected:
     RandomVariableImpl(double mean, double variance, const std::string& name = "");
