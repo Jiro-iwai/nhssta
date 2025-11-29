@@ -43,6 +43,22 @@ double OpMAX::calc_variance() const {
     return (r);
 }
 
+Expression OpMAX::mean_expr() const {
+    // MAX(A, B) = A + MAX0(B - A)
+    // E[MAX(A,B)] = E[A] + E[MAX0(B-A)]
+    return left()->mean_expr() + max0()->mean_expr();
+}
+
+Expression OpMAX::var_expr() const {
+    // Var[MAX(A,B)] = Var[A] + 2*Cov(A, MAX0(B-A)) + Var[MAX0(B-A)]
+    // For now, compute covariance numerically
+    // TODO: Make covariance Expression-based in C-5
+    double cov = covariance(left(), max0());
+    Expression var_left = left()->var_expr();
+    Expression var_max0 = max0()->var_expr();
+    return var_left + Const(2.0 * cov) + var_max0;
+}
+
 RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
     // Fix for Issue #158: Normalize order so that the variable with larger mean
     // is always the left (base) argument. This ensures consistent decomposition
@@ -98,6 +114,22 @@ double OpMAX0::calc_variance() const {
 
 const RandomVariable& OpMAX0::right() const {
     return right_;
+}
+
+Expression OpMAX0::mean_expr() const {
+    // E[max(0,D)] = μ + σ·MeanMax(-μ/σ)
+    // Use max0_mean_expr from expression.hpp
+    Expression mu = left()->mean_expr();
+    Expression sigma = left()->std_expr();
+    return max0_mean_expr(mu, sigma);
+}
+
+Expression OpMAX0::var_expr() const {
+    // Var[max(0,D)] = σ²·(MeanMax2(-μ/σ) - MeanMax(-μ/σ)²)
+    // Use max0_var_expr from expression.hpp
+    Expression mu = left()->mean_expr();
+    Expression sigma = left()->std_expr();
+    return max0_var_expr(mu, sigma);
 }
 
 RandomVariable MAX0(const RandomVariable& a) {

@@ -51,4 +51,38 @@ Normal Normal::clone() const {
     auto ptr = this->dynamic_pointer_cast<NormalImpl>();
     return ptr->clone();
 }
+
+// Sensitivity analysis support
+
+void NormalImpl::init_expr() const {
+    if (!mu_expr_) {
+        // Create Variable expressions for μ and σ
+        Variable mu_var;
+        mu_var = mean_;  // Set value to stored mean
+        mu_expr_ = mu_var;
+        
+        Variable sigma_var;
+        sigma_var = std::sqrt(variance_);  // Set value to σ = √variance
+        sigma_expr_ = sigma_var;
+    }
+}
+
+Expression NormalImpl::mean_expr() const {
+    init_expr();
+    // E[D] = μ
+    return mu_expr_;
+}
+
+Expression NormalImpl::var_expr() const {
+    init_expr();
+    // Var[D] = σ²
+    return sigma_expr_ * sigma_expr_;
+}
+
+Expression NormalImpl::std_expr() const {
+    init_expr();
+    // Std[D] = σ
+    return sigma_expr_;
+}
+
 }  // namespace RandomVariable

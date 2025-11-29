@@ -134,4 +134,20 @@ void RandomVariableImpl::check_variance(double& v) {
     }
 }
 
+// Default implementations for Expression-based methods
+// Derived classes should override these for sensitivity analysis support
+
+Expression RandomVariableImpl::mean_expr() const {
+    throw Nh::RuntimeException("mean_expr() not implemented for this RandomVariable type");
+}
+
+Expression RandomVariableImpl::var_expr() const {
+    throw Nh::RuntimeException("var_expr() not implemented for this RandomVariable type");
+}
+
+Expression RandomVariableImpl::std_expr() const {
+    // Default: sqrt(var_expr())
+    return sqrt(var_expr());
+}
+
 }  // namespace RandomVariable

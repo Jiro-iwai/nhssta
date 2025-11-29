@@ -13,6 +13,10 @@ class OpSUB : public RandomVariableImpl {
     OpSUB(const RandomVariable& left, const RandomVariable& right);
     ~OpSUB() override;
 
+    // Sensitivity analysis support
+    [[nodiscard]] Expression mean_expr() const override;
+    [[nodiscard]] Expression var_expr() const override;
+
    private:
     [[nodiscard]] double calc_mean() const override;
     [[nodiscard]] double calc_variance() const override;
