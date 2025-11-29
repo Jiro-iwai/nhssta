@@ -606,5 +606,123 @@ TEST_F(CovMax0Max0ExprTest, ConsistencyWithRandomVariable) {
     }
 }
 
+// ============================================================================
+// Accuracy Investigation: Simpson's rule for Φ₂
+// ============================================================================
+
+TEST_F(CovMax0Max0ExprTest, Phi2Cdf_SimpsonAccuracy) {
+    std::cout << "\n=== Φ₂ Simpson's Rule Accuracy Investigation ===\n";
+    std::cout << std::fixed << std::setprecision(10);
+
+    // Test 1: At origin where exact formula exists
+    // Φ₂(0, 0; ρ) = 1/4 + arcsin(ρ)/(2π)
+    std::cout << "\n[1] Φ₂(0, 0; ρ) = 1/4 + arcsin(ρ)/(2π)\n";
+    std::cout << std::setw(10) << "ρ" << std::setw(18) << "Simpson(500pt)"
+              << std::setw(18) << "Exact" << std::setw(15) << "Error\n";
+    std::cout << std::string(60, '-') << "\n";
+
+    double max_error_origin = 0.0;
+    std::vector<double> rho_values = {-0.9, -0.5, -0.3, 0.0, 0.3, 0.5, 0.9};
+
+    for (double rho_val : rho_values) {
+        Variable h, k, rho;
+        h = 0.0;
+        k = 0.0;
+        rho = rho_val;
+
+        Expression result = Phi2_expr(h, k, rho);
+        double exact = 0.25 + std::asin(rho_val) / (2.0 * M_PI);
+        double error = std::abs(result->value() - exact);
+        max_error_origin = std::max(max_error_origin, error);
+
+        std::cout << std::setw(10) << rho_val
+                  << std::setw(18) << result->value()
+                  << std::setw(18) << exact
+                  << std::setw(15) << error << "\n";
+    }
+    std::cout << "Max error at origin: " << max_error_origin << "\n";
+
+    // Test 2: Independence case Φ₂(h, k; 0) = Φ(h) × Φ(k)
+    std::cout << "\n[2] Φ₂(h, k; 0) = Φ(h) × Φ(k) (independence)\n";
+    std::cout << std::setw(6) << "h" << std::setw(6) << "k"
+              << std::setw(18) << "Simpson" << std::setw(18) << "Exact"
+              << std::setw(15) << "Error\n";
+    std::cout << std::string(60, '-') << "\n";
+
+    double max_error_indep = 0.0;
+    std::vector<std::pair<double, double>> hk_values = {
+        {-2.0, -2.0}, {-1.0, 0.0}, {0.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}, {2.0, 2.0}
+    };
+
+    for (const auto& hk : hk_values) {
+        Variable h, k, rho;
+        h = hk.first;
+        k = hk.second;
+        rho = 0.0;
+
+        Expression result = Phi2_expr(h, k, rho);
+        double exact = RandomVariable::normal_cdf(hk.first) *
+                       RandomVariable::normal_cdf(hk.second);
+        double error = std::abs(result->value() - exact);
+        max_error_indep = std::max(max_error_indep, error);
+
+        std::cout << std::setw(6) << hk.first << std::setw(6) << hk.second
+                  << std::setw(18) << result->value()
+                  << std::setw(18) << exact
+                  << std::setw(15) << error << "\n";
+    }
+    std::cout << "Max error (independence): " << max_error_indep << "\n";
+
+    // Test 3: Compare Simpson 500pt vs reference Simpson 1000pt
+    std::cout << "\n[3] Simpson 500pt vs 1000pt reference\n";
+    std::cout << std::setw(6) << "h" << std::setw(6) << "k" << std::setw(6) << "ρ"
+              << std::setw(18) << "500pt" << std::setw(18) << "1000pt"
+              << std::setw(15) << "Diff\n";
+    std::cout << std::string(70, '-') << "\n";
+
+    double max_diff_500_1000 = 0.0;
+    std::vector<std::tuple<double, double, double>> cases = {
+        {0.0, 0.0, 0.5},
+        {1.0, 0.5, 0.3},
+        {1.0, 1.0, 0.5},
+        {-1.0, 1.0, -0.3},
+        {2.0, 2.0, 0.8},
+    };
+
+    for (const auto& c : cases) {
+        double h_val = std::get<0>(c);
+        double k_val = std::get<1>(c);
+        double rho_val = std::get<2>(c);
+
+        Variable h, k, rho;
+        h = h_val;
+        k = k_val;
+        rho = rho_val;
+
+        Expression result = Phi2_expr(h, k, rho);
+        double ref = Phi2_reference(h_val, k_val, rho_val);  // 1000pt
+        double diff = std::abs(result->value() - ref);
+        max_diff_500_1000 = std::max(max_diff_500_1000, diff);
+
+        std::cout << std::setw(6) << h_val << std::setw(6) << k_val
+                  << std::setw(6) << rho_val
+                  << std::setw(18) << result->value()
+                  << std::setw(18) << ref
+                  << std::setw(15) << diff << "\n";
+    }
+    std::cout << "Max diff (500pt vs 1000pt): " << max_diff_500_1000 << "\n";
+
+    // Summary
+    std::cout << "\n=== Summary ===\n";
+    std::cout << "Max error at origin (vs exact):     " << max_error_origin << "\n";
+    std::cout << "Max error (independence, vs exact): " << max_error_indep << "\n";
+    std::cout << "Max diff (500pt vs 1000pt):         " << max_diff_500_1000 << "\n";
+
+    // Assertions
+    EXPECT_LT(max_error_origin, 1e-4);  // Should be very accurate at origin
+    EXPECT_LT(max_error_indep, 1e-5);   // Independence case should be exact
+    EXPECT_LT(max_diff_500_1000, 1e-4); // 500pt should be close to 1000pt
+}
+
 }  // namespace
 
