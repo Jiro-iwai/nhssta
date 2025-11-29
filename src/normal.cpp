@@ -85,14 +85,4 @@ Expression NormalImpl::std_expr() const {
     return sigma_expr_;
 }
 
-Expression NormalImpl::mu_expr() const {
-    init_expr();
-    return mu_expr_;
-}
-
-Expression NormalImpl::sigma_expr() const {
-    init_expr();
-    return sigma_expr_;
-}
-
 }  // namespace RandomVariable

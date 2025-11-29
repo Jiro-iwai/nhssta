@@ -65,8 +65,8 @@ TEST_F(SensitivityAnalysisTest, Normal_MeanSensitivity) {
 
     // Compute gradient of mean w.r.t. parameters
     mean_D->backward();
-    EXPECT_DOUBLE_EQ(D->mu_expr()->gradient(), 1.0);    // ∂E[D]/∂μ = 1
-    EXPECT_DOUBLE_EQ(D->sigma_expr()->gradient(), 0.0); // ∂E[D]/∂σ = 0
+    EXPECT_DOUBLE_EQ(D->mean_expr()->gradient(), 1.0);  // ∂E[D]/∂μ = 1
+    EXPECT_DOUBLE_EQ(D->std_expr()->gradient(), 0.0);   // ∂E[D]/∂σ = 0
 }
 
 TEST_F(SensitivityAnalysisTest, Normal_VarianceSensitivity) {
@@ -80,8 +80,8 @@ TEST_F(SensitivityAnalysisTest, Normal_VarianceSensitivity) {
 
     // Compute gradient of variance w.r.t. σ
     var_D->backward();
-    EXPECT_DOUBLE_EQ(D->mu_expr()->gradient(), 0.0);    // ∂Var[D]/∂μ = 0
-    EXPECT_DOUBLE_EQ(D->sigma_expr()->gradient(), 4.0); // ∂Var[D]/∂σ = ∂(σ²)/∂σ = 2σ = 4
+    EXPECT_DOUBLE_EQ(D->mean_expr()->gradient(), 0.0);  // ∂Var[D]/∂μ = 0
+    EXPECT_DOUBLE_EQ(D->std_expr()->gradient(), 4.0);   // ∂Var[D]/∂σ = ∂(σ²)/∂σ = 2σ = 4
 }
 
 TEST_F(SensitivityAnalysisTest, Normal_StdSensitivity) {
@@ -95,8 +95,8 @@ TEST_F(SensitivityAnalysisTest, Normal_StdSensitivity) {
 
     // Compute gradient of std w.r.t. σ
     std_D->backward();
-    EXPECT_DOUBLE_EQ(D->mu_expr()->gradient(), 0.0);    // ∂Std[D]/∂μ = 0
-    EXPECT_DOUBLE_EQ(D->sigma_expr()->gradient(), 1.0); // ∂Std[D]/∂σ = 1
+    EXPECT_DOUBLE_EQ(D->mean_expr()->gradient(), 0.0);  // ∂Std[D]/∂μ = 0
+    EXPECT_DOUBLE_EQ(D->std_expr()->gradient(), 1.0);   // ∂Std[D]/∂σ = 1
 }
 
 // ============================================================================
@@ -132,13 +132,13 @@ TEST_F(SensitivityAnalysisTest, Add_MeanSensitivity) {
     mean_sum->backward();
     
     // ∂E[A+B]/∂μ_A = 1
-    EXPECT_DOUBLE_EQ(A->mu_expr()->gradient(), 1.0);
+    EXPECT_DOUBLE_EQ(A->mean_expr()->gradient(), 1.0);
     // ∂E[A+B]/∂μ_B = 1  
-    EXPECT_DOUBLE_EQ(B->mu_expr()->gradient(), 1.0);
+    EXPECT_DOUBLE_EQ(B->mean_expr()->gradient(), 1.0);
     // ∂E[A+B]/∂σ_A = 0 (mean doesn't depend on σ)
-    EXPECT_DOUBLE_EQ(A->sigma_expr()->gradient(), 0.0);
+    EXPECT_DOUBLE_EQ(A->std_expr()->gradient(), 0.0);
     // ∂E[A+B]/∂σ_B = 0
-    EXPECT_DOUBLE_EQ(B->sigma_expr()->gradient(), 0.0);
+    EXPECT_DOUBLE_EQ(B->std_expr()->gradient(), 0.0);
 }
 
 TEST_F(SensitivityAnalysisTest, Sub_MeanSensitivity) {
@@ -156,9 +156,9 @@ TEST_F(SensitivityAnalysisTest, Sub_MeanSensitivity) {
     mean_diff->backward();
 
     // ∂E[A-B]/∂μ_A = 1
-    EXPECT_DOUBLE_EQ(A->mu_expr()->gradient(), 1.0);
+    EXPECT_DOUBLE_EQ(A->mean_expr()->gradient(), 1.0);
     // ∂E[A-B]/∂μ_B = -1
-    EXPECT_DOUBLE_EQ(B->mu_expr()->gradient(), -1.0);
+    EXPECT_DOUBLE_EQ(B->mean_expr()->gradient(), -1.0);
 }
 
 TEST_F(SensitivityAnalysisTest, Add_VarianceSensitivity_Independent) {
@@ -177,13 +177,13 @@ TEST_F(SensitivityAnalysisTest, Add_VarianceSensitivity_Independent) {
     var_sum->backward();
 
     // ∂Var[A+B]/∂σ_A = 2σ_A = 4
-    EXPECT_DOUBLE_EQ(A->sigma_expr()->gradient(), 4.0);
+    EXPECT_DOUBLE_EQ(A->std_expr()->gradient(), 4.0);
     // ∂Var[A+B]/∂σ_B = 2σ_B = 2
-    EXPECT_DOUBLE_EQ(B->sigma_expr()->gradient(), 2.0);
+    EXPECT_DOUBLE_EQ(B->std_expr()->gradient(), 2.0);
     // ∂Var[A+B]/∂μ_A = 0
-    EXPECT_DOUBLE_EQ(A->mu_expr()->gradient(), 0.0);
+    EXPECT_DOUBLE_EQ(A->mean_expr()->gradient(), 0.0);
     // ∂Var[A+B]/∂μ_B = 0
-    EXPECT_DOUBLE_EQ(B->mu_expr()->gradient(), 0.0);
+    EXPECT_DOUBLE_EQ(B->mean_expr()->gradient(), 0.0);
 }
 
 // ============================================================================
@@ -219,8 +219,8 @@ TEST_F(SensitivityAnalysisTest, Max0_MeanSensitivity) {
     // Verify gradients numerically
     // ∂E[max(0,D)]/∂μ should be approximately Φ(-μ/σ) + 1
     // For μ=2, σ=1: Φ(-2) ≈ 0.023, so gradient ≈ 1.023
-    double grad_mu = D->mu_expr()->gradient();
-    double grad_sigma = D->sigma_expr()->gradient();
+    double grad_mu = D->mean_expr()->gradient();
+    double grad_sigma = D->std_expr()->gradient();
     
     // Check gradients are reasonable (positive for both μ and σ when μ > 0)
     EXPECT_GT(grad_mu, 0.0);
@@ -242,7 +242,7 @@ TEST_F(SensitivityAnalysisTest, Max0_VarianceSensitivity) {
 
     // Check gradients exist (non-zero for non-trivial case)
     // Variance gradients are complex but should be calculable
-    double grad_sigma = D->sigma_expr()->gradient();
+    double grad_sigma = D->std_expr()->gradient();
     
     // For μ >> σ, max(0,D) ≈ D, so Var[max(0,D)] ≈ Var[D] = σ²
     // Thus ∂Var/∂σ ≈ 2σ (positive)
@@ -250,7 +250,7 @@ TEST_F(SensitivityAnalysisTest, Max0_VarianceSensitivity) {
     
     // grad_mu can be any value depending on the distribution
     // Just verify it's finite
-    EXPECT_TRUE(std::isfinite(D->mu_expr()->gradient()));
+    EXPECT_TRUE(std::isfinite(D->mean_expr()->gradient()));
 }
 
 // ============================================================================
@@ -283,8 +283,8 @@ TEST_F(SensitivityAnalysisTest, Max_MeanSensitivity) {
 
     // Since μ_A > μ_B, A dominates in MAX(A,B)
     // ∂E[MAX]/∂μ_A should be larger than ∂E[MAX]/∂μ_B
-    double grad_muA = A->mu_expr()->gradient();
-    double grad_muB = B->mu_expr()->gradient();
+    double grad_muA = A->mean_expr()->gradient();
+    double grad_muB = B->mean_expr()->gradient();
     
     EXPECT_GT(grad_muA, grad_muB);
     
@@ -307,8 +307,8 @@ TEST_F(SensitivityAnalysisTest, Max_MeanSensitivity_EqualMeans) {
     mean_max->backward();
 
     // With equal means and variances, sensitivities should be approximately equal
-    double grad_muA = A->mu_expr()->gradient();
-    double grad_muB = B->mu_expr()->gradient();
+    double grad_muA = A->mean_expr()->gradient();
+    double grad_muB = B->mean_expr()->gradient();
     
     EXPECT_NEAR(grad_muA, grad_muB, 0.1);  // Allow some numerical tolerance
 }
@@ -338,12 +338,12 @@ TEST_F(SensitivityAnalysisTest, SimplePath_Sensitivity) {
     
     path_mean->backward();
 
-    double grad_muA = A->mu_expr()->gradient();
-    double grad_muB = B->mu_expr()->gradient();
-    double grad_muC = C->mu_expr()->gradient();
-    double grad_sigmaA = A->sigma_expr()->gradient();
-    double grad_sigmaB = B->sigma_expr()->gradient();
-    double grad_sigmaC = C->sigma_expr()->gradient();
+    double grad_muA = A->mean_expr()->gradient();
+    double grad_muB = B->mean_expr()->gradient();
+    double grad_muC = C->mean_expr()->gradient();
+    double grad_sigmaA = A->std_expr()->gradient();
+    double grad_sigmaB = B->std_expr()->gradient();
+    double grad_sigmaC = C->std_expr()->gradient();
 
     std::cout << "\n=== Simple Path Sensitivity Analysis ===\n";
     std::cout << "Path = A + MAX(B, C)\n";

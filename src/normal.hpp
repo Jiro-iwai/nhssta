@@ -27,8 +27,6 @@ class NormalImpl : public RandomVariableImpl {
     [[nodiscard]] Expression mean_expr() const override;
     [[nodiscard]] Expression var_expr() const override;
     [[nodiscard]] Expression std_expr() const override;
-    [[nodiscard]] Expression mu_expr() const override;
-    [[nodiscard]] Expression sigma_expr() const override;
 
    private:
     [[nodiscard]] const RandomVariable& left() const;

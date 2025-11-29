@@ -150,12 +150,4 @@ Expression RandomVariableImpl::std_expr() const {
     return sqrt(var_expr());
 }
 
-Expression RandomVariableImpl::mu_expr() const {
-    throw Nh::RuntimeException("mu_expr() not implemented for this RandomVariable type");
-}
-
-Expression RandomVariableImpl::sigma_expr() const {
-    throw Nh::RuntimeException("sigma_expr() not implemented for this RandomVariable type");
-}
-
 }  // namespace RandomVariable
