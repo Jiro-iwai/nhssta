@@ -15,9 +15,9 @@ CXX ?= g++
 CXXFLAGS = -g -Wall -std=c++17 
 # Boost dependencies have been removed in Phase 1
 # If you need Boost for legacy code, uncomment and set BOOST_DIR:
-# BOOST_DIR = /opt/homebrew/opt/boost
-# INCLUDE = -I$(BOOST_DIR)/include
-INCLUDE = -I../include 
+BOOST_DIR = /opt/homebrew/opt/boost
+BOOST_INCLUDE = -I$(BOOST_DIR)/include
+INCLUDE = -I../include $(BOOST_INCLUDE) 
 CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
 	random_variable.cpp add.cpp util_numerical.cpp gate.cpp \
 	parser.cpp ssta.cpp expression.cpp main.cpp
@@ -64,7 +64,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_small_rho.cpp ../test/test_expression_derivative.cpp \
 	../test/test_table_analytical_equivalence.cpp ../test/test_expression_math.cpp \
 	../test/test_max0_expr.cpp ../test/test_add_sub_expr.cpp \
-	../test/test_cov_x_max0_expr.cpp
+	../test/test_cov_x_max0_expr.cpp ../test/test_boost_owens_t.cpp \
+	../test/test_phi2_derivation.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 
