@@ -173,19 +173,19 @@ run_test() {
     COMPARE_OUTPUT=$(python3 compare_numerical.py "${TEMP_RESULT_FILE}" "${RESULT_FILE}" "${LAT_TOLERANCE}" "${CORR_TOLERANCE}" 2>/dev/null)
     COMPARE_EXIT_CODE=$?
     
-        # Extract maximum errors from output using awk (compatible with macOS)
-        MAX_LAT_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_LAT_ERROR:' '{print $2}' | awk '{print $1}' | awk -F'MAX_CORR_ERROR:' '{print $1}')
-        MAX_CORR_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_CORR_ERROR:' '{print $2}')
-        
-        # Default to 0.0 if extraction failed
-        if [ -z "${MAX_LAT_ERROR}" ] || [ "${MAX_LAT_ERROR}" = "" ]; then
-            MAX_LAT_ERROR="0.000000"
-        fi
-        if [ -z "${MAX_CORR_ERROR}" ] || [ "${MAX_CORR_ERROR}" = "" ]; then
-            MAX_CORR_ERROR="0.000000"
-        fi
-        
-        # Convert to percentage
+    # Extract maximum errors from output using awk (compatible with macOS)
+    MAX_LAT_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_LAT_ERROR:' '{print $2}' | awk '{print $1}' | awk -F'MAX_CORR_ERROR:' '{print $1}')
+    MAX_CORR_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_CORR_ERROR:' '{print $2}')
+    
+    # Default to 0.0 if extraction failed
+    if [ -z "${MAX_LAT_ERROR}" ] || [ "${MAX_LAT_ERROR}" = "" ]; then
+        MAX_LAT_ERROR="0.000000"
+    fi
+    if [ -z "${MAX_CORR_ERROR}" ] || [ "${MAX_CORR_ERROR}" = "" ]; then
+        MAX_CORR_ERROR="0.000000"
+    fi
+    
+    # Convert to percentage
     MAX_LAT_PCT=$(echo "${MAX_LAT_ERROR}" | awk '{printf "%.2f", $1 * 100}')
     MAX_CORR_PCT=$(echo "${MAX_CORR_ERROR}" | awk '{printf "%.2f", $1 * 100}')
     
