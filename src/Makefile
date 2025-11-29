@@ -64,8 +64,9 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_small_rho.cpp ../test/test_expression_derivative.cpp \
 	../test/test_table_analytical_equivalence.cpp ../test/test_expression_math.cpp \
 	../test/test_max0_expr.cpp ../test/test_add_sub_expr.cpp \
-	../test/test_cov_x_max0_expr.cpp ../test/test_boost_owens_t.cpp \
-	../test/test_phi2_derivation.cpp
+	../test/test_cov_x_max0_expr.cpp
+# NOTE: test_boost_owens_t.cpp and test_phi2_derivation.cpp require Boost
+# They are kept for reference but not included in CI builds
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 
