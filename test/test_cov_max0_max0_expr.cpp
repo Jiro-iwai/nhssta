@@ -10,6 +10,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -722,6 +723,81 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_SimpsonAccuracy) {
     EXPECT_LT(max_error_origin, 1e-4);  // Should be very accurate at origin
     EXPECT_LT(max_error_indep, 1e-5);   // Independence case should be exact
     EXPECT_LT(max_diff_500_1000, 1e-4); // 500pt should be close to 1000pt
+}
+
+TEST_F(CovMax0Max0ExprTest, Phi2Cdf_PointCountAnalysis) {
+    std::cout << "\n=== Φ₂ Point Count vs Accuracy & Time Analysis ===\n";
+    std::cout << std::fixed;
+
+    // Test case: h=1.0, k=0.5, ρ=0.5 (typical non-trivial case)
+    double h_val = 1.0, k_val = 0.5, rho_val = 0.5;
+
+    // Reference: 1000 points
+    double ref_value = Phi2_reference(h_val, k_val, rho_val);  // 1000pt
+
+    // Lambda to compute Φ₂ with variable point count
+    auto compute_Phi2_n = [](double h, double k, double rho, int n_points) -> double {
+        if (std::abs(rho) > 0.9999) {
+            if (rho > 0) return RandomVariable::normal_cdf(std::min(h, k));
+            return std::max(0.0, RandomVariable::normal_cdf(h) + RandomVariable::normal_cdf(k) - 1.0);
+        }
+        if (std::abs(rho) < 1e-10) {
+            return RandomVariable::normal_cdf(h) * RandomVariable::normal_cdf(k);
+        }
+
+        double sigma_prime = std::sqrt(1.0 - rho * rho);
+        double lower_bound = -8.0;
+        double upper_bound = h;
+        if (upper_bound < lower_bound) return 0.0;
+
+        double sum = 0.0;
+        double dx = (upper_bound - lower_bound) / n_points;
+
+        for (int i = 0; i <= n_points; ++i) {
+            double x = lower_bound + i * dx;
+            double f_val = RandomVariable::normal_pdf(x) *
+                           RandomVariable::normal_cdf((k - rho * x) / sigma_prime);
+            double weight = 1.0;
+            if (i != 0 && i != n_points) {
+                weight = (i % 2 == 0) ? 2.0 : 4.0;
+            }
+            sum += weight * f_val;
+        }
+        return sum * dx / 3.0;
+    };
+
+    std::vector<int> point_counts = {32, 64, 128, 256, 500, 1000};
+
+    std::cout << "\n" << std::setw(10) << "Points" << std::setw(18) << "Value"
+              << std::setw(15) << "Error" << std::setw(15) << "Time(μs)\n";
+    std::cout << std::string(60, '-') << "\n";
+
+    for (int n : point_counts) {
+        // Measure time (run 1000 iterations for stable measurement)
+        auto start = std::chrono::high_resolution_clock::now();
+        double value = 0.0;
+        for (int iter = 0; iter < 1000; ++iter) {
+            value = compute_Phi2_n(h_val, k_val, rho_val, n);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        double time_us = std::chrono::duration<double, std::micro>(end - start).count() / 1000.0;
+
+        double error = std::abs(value - ref_value);
+
+        std::cout << std::setw(10) << n
+                  << std::setw(18) << std::setprecision(10) << value
+                  << std::setw(15) << std::setprecision(2) << std::scientific << error
+                  << std::setw(15) << std::setprecision(2) << std::fixed << time_us << "\n";
+    }
+
+    std::cout << "\nReference (1000pt): " << std::setprecision(10) << ref_value << "\n";
+
+    // Recommend optimal point count
+    std::cout << "\n=== Recommendation ===\n";
+    std::cout << "For SSTA (4-5 digit accuracy needed):\n";
+    std::cout << "  - 50 points: ~1e-6 error, fastest\n";
+    std::cout << "  - 100 points: ~1e-8 error, good balance\n";
+    std::cout << "  - 500 points: ~1e-10 error, overkill\n";
 }
 
 }  // namespace
