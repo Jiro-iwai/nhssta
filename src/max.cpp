@@ -68,7 +68,7 @@ RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
     // When A > B in mean, B-A has negative mean, so MAX0(B-A) ≈ 0
     // This gives better numerical stability than the reverse case.
     if (a->mean() >= b->mean()) {
-    return RandomVariable(std::make_shared<OpMAX>(a, b));
+        return RandomVariable(std::make_shared<OpMAX>(a, b));
     }
     return RandomVariable(std::make_shared<OpMAX>(b, a));
 }
