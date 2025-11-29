@@ -352,4 +352,14 @@ double expected_prod_pos(double mu0, double sigma0,
     return sum;
 }
 
+double covariance_max0_max0(double mu0, double sigma0,
+                            double mu1, double sigma1,
+                            double rho) {
+    // Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]
+    double E_prod = expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
+    double E0_pos = expected_positive_part(mu0, sigma0);
+    double E1_pos = expected_positive_part(mu1, sigma1);
+    return E_prod - (E0_pos * E1_pos);
+}
+
 }  // namespace RandomVariable
