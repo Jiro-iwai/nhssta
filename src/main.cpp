@@ -240,8 +240,8 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
         << std::setw(10) << "output"
         << std::setw(6) << "pin"
         << std::setw(8) << "type"
-        << std::right << std::setw(12) << "∂F/∂μ" 
-        << std::setw(12) << "∂F/∂σ" << std::endl;
+        << std::right << std::setw(12) << "dF/dmu" 
+        << std::setw(12) << "dF/dsigma" << std::endl;
     oss << "#-----------------------------------------------------------" << std::endl;
     
     for (const auto& sens : results.gate_sensitivities) {
