@@ -64,7 +64,9 @@ class Ssta {
     bool is_lat_ = false;
     bool is_correlation_ = false;
     bool is_critical_path_ = false;
+    bool is_sensitivity_ = false;
     size_t critical_path_count_ = DEFAULT_CRITICAL_PATH_COUNT;
+    size_t sensitivity_top_n_ = DEFAULT_CRITICAL_PATH_COUNT;
     Gates gates_;
     Signals signals_;
     Net net_;
@@ -89,6 +91,12 @@ class Ssta {
         is_critical_path_ = true;
         critical_path_count_ = top_n;
     }
+    void set_sensitivity() {
+        is_sensitivity_ = true;
+    }
+    void set_sensitivity_top_n(size_t top_n) {
+        sensitivity_top_n_ = top_n;
+    }
 
     [[nodiscard]] bool is_lat() const {
         return is_lat_;
@@ -98,6 +106,9 @@ class Ssta {
     }
     [[nodiscard]] bool is_critical_path() const {
         return is_critical_path_;
+    }
+    [[nodiscard]] bool is_sensitivity() const {
+        return is_sensitivity_;
     }
 
     void set_dlib(const std::string& dlib) {
@@ -113,6 +124,10 @@ class Ssta {
     [[nodiscard]] CriticalPaths getCriticalPaths(size_t top_n) const;
     [[nodiscard]] CriticalPaths getCriticalPaths() const {
         return getCriticalPaths(critical_path_count_);
+    }
+    [[nodiscard]] SensitivityResults getSensitivityResults(size_t top_n) const;
+    [[nodiscard]] SensitivityResults getSensitivityResults() const {
+        return getSensitivityResults(sensitivity_top_n_);
     }
 };
 }  // namespace Nh

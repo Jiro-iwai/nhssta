@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "add.hpp"
+#include "expression.hpp"
 #include "parser.hpp"
 #include "util_numerical.hpp"
 
@@ -150,7 +151,11 @@ void Ssta::read_bench() {
 
     connect_instances();
 
-    gates_.clear();
+    // Clear gates_ to free memory, unless sensitivity analysis is enabled
+    // (sensitivity analysis needs the gate delays for gradient computation)
+    if (!is_sensitivity_) {
+        gates_.clear();
+    }
 }
 
 void Ssta::read_bench_input(Parser& parser) {
@@ -637,6 +642,98 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
     }
     
     return paths;
+}
+
+SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
+    using namespace RandomVariable;
+    
+    SensitivityResults results;
+    
+    // Step 1: Collect all output signals and their LAT statistics
+    std::vector<SensitivityPath> all_paths;
+    for (const auto& output : outputs_) {
+        auto sig_it = signals_.find(output);
+        if (sig_it == signals_.end()) {
+            continue;
+        }
+        const RandomVariable& lat = sig_it->second;
+        double mean = lat->mean();
+        double stddev = std::sqrt(lat->variance());
+        all_paths.emplace_back(output, mean, stddev);
+    }
+    
+    // Step 2: Sort by score (LAT + σ) descending
+    std::sort(all_paths.begin(), all_paths.end(),
+              [](const SensitivityPath& a, const SensitivityPath& b) {
+                  return a.score > b.score;
+              });
+    
+    // Step 3: Select top N paths
+    if (all_paths.size() > top_n) {
+        all_paths.resize(top_n);
+    }
+    results.top_paths = all_paths;
+    
+    if (all_paths.empty()) {
+        return results;
+    }
+    
+    // Step 4: Build objective function F = log(Σ exp(LAT + σ))
+    // First, clear all gradients
+    zero_all_grad();
+    
+    // Build Expression for each path's score
+    Expression sum_exp = Const(0.0);
+    for (const auto& path : all_paths) {
+        auto sig_it = signals_.find(path.endpoint);
+        if (sig_it == signals_.end()) {
+            continue;
+        }
+        const RandomVariable& lat = sig_it->second;
+        Expression mean_expr = lat->mean_expr();
+        Expression std_expr = lat->std_expr();
+        Expression score_expr = mean_expr + std_expr;
+        sum_exp = sum_exp + exp(score_expr);
+    }
+    
+    Expression objective = log(sum_exp);
+    results.objective_value = objective->value();
+    
+    // Step 5: Compute gradients via backward pass
+    objective->backward();
+    
+    // Step 6: Collect gate sensitivities
+    // Iterate over all gates and collect their gradients
+    for (const auto& gate_pair : gates_) {
+        const std::string& gate_name = gate_pair.first;
+        const Gate& gate = gate_pair.second;
+        
+        // Get delays for this gate
+        const auto& delays = gate->delays();
+        for (const auto& delay_pair : delays) {
+            const Normal& delay = delay_pair.second;
+            
+            // Get gradients from the Expression
+            double grad_mu = delay->mean_expr()->gradient();
+            double grad_sigma = delay->std_expr()->gradient();
+            
+            // Only include gates with non-zero gradients
+            if (std::abs(grad_mu) > 1e-10 || std::abs(grad_sigma) > 1e-10) {
+                std::string full_name = gate_name + ":" + delay_pair.first.first;
+                results.gate_sensitivities.emplace_back(full_name, grad_mu, grad_sigma);
+            }
+        }
+    }
+    
+    // Sort by absolute gradient magnitude (descending)
+    std::sort(results.gate_sensitivities.begin(), results.gate_sensitivities.end(),
+              [](const GateSensitivity& a, const GateSensitivity& b) {
+                  double mag_a = std::abs(a.grad_mu) + std::abs(a.grad_sigma);
+                  double mag_b = std::abs(b.grad_mu) + std::abs(b.grad_sigma);
+                  return mag_a > mag_b;
+              });
+    
+    return results;
 }
 
 }  // namespace Nh

@@ -91,6 +91,49 @@ struct CriticalPath {
 // Collection of critical paths (top N paths)
 using CriticalPaths = std::vector<CriticalPath>;
 
+// Sensitivity analysis result for a single gate
+struct GateSensitivity {
+    std::string gate_name;
+    double grad_mu;    // ∂F/∂μ
+    double grad_sigma; // ∂F/∂σ
+
+    GateSensitivity()
+        : grad_mu(0.0)
+        , grad_sigma(0.0) {}
+    GateSensitivity(const std::string& name, double gm, double gs)
+        : gate_name(name)
+        , grad_mu(gm)
+        , grad_sigma(gs) {}
+};
+
+// Path info for sensitivity analysis (with score = LAT + σ)
+struct SensitivityPath {
+    std::string endpoint;
+    double lat;
+    double std_dev;
+    double score;  // LAT + σ
+
+    SensitivityPath()
+        : lat(0.0)
+        , std_dev(0.0)
+        , score(0.0) {}
+    SensitivityPath(const std::string& ep, double l, double s)
+        : endpoint(ep)
+        , lat(l)
+        , std_dev(s)
+        , score(l + s) {}
+};
+
+// Sensitivity analysis results
+struct SensitivityResults {
+    std::vector<SensitivityPath> top_paths;
+    std::vector<GateSensitivity> gate_sensitivities;
+    double objective_value;  // log(Σ exp(LAT + σ))
+
+    SensitivityResults()
+        : objective_value(0.0) {}
+};
+
 }  // namespace Nh
 
 #endif  // NH_SSTA_RESULTS__H
