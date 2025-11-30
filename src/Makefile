@@ -65,7 +65,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_table_analytical_equivalence.cpp ../test/test_expression_math.cpp \
 	../test/test_max0_expr.cpp ../test/test_add_sub_expr.cpp \
 	../test/test_cov_x_max0_expr.cpp ../test/test_cov_max0_max0_expr.cpp \
-	../test/test_sensitivity_analysis.cpp
+	../test/test_sensitivity_analysis.cpp ../test/test_covariance_expr.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 

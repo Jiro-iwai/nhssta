@@ -522,6 +522,26 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
                                   const Expression& rho);
 
 /**
+ * @brief E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
+ *
+ * When ρ = 1: D0 = μ0 + σ0·Z, D1 = μ1 + σ1·Z (same Z)
+ * Both positive when Z > c where c = -min(a0, a1)
+ * E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+ */
+Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& sigma0,
+                                       const Expression& mu1, const Expression& sigma1);
+
+/**
+ * @brief E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
+ *
+ * When ρ = -1: D0 = μ0 + σ0·Z, D1 = μ1 - σ1·Z (opposite signs)
+ * Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
+ * Returns 0 if a0 + a1 <= 0 (interval is empty)
+ */
+Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,
+                                           const Expression& mu1, const Expression& sigma1);
+
+/**
  * @brief Cov(max(0,D0), max(0,D1)) where D0, D1 are bivariate normal
  * 
  * Formula: Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]

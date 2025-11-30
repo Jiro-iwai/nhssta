@@ -51,12 +51,10 @@ Expression OpMAX::mean_expr() const {
 
 Expression OpMAX::var_expr() const {
     // Var[MAX(A,B)] = Var[A] + 2*Cov(A, MAX0(B-A)) + Var[MAX0(B-A)]
-    // For now, compute covariance numerically
-    // TODO: Make covariance Expression-based in C-5
-    double cov = covariance(left(), max0());
     Expression var_left = left()->var_expr();
     Expression var_max0 = max0()->var_expr();
-    return var_left + Const(2.0 * cov) + var_max0;
+    Expression cov = cov_expr(left(), max0());
+    return var_left + Const(2.0) * cov + var_max0;
 }
 
 RandomVariable MAX(const RandomVariable& a, const RandomVariable& b) {
