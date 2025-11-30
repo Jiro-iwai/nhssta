@@ -289,6 +289,43 @@ static double clamp(double val, double min_val, double max_val) {
     return val;
 }
 
+// Helper: E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
+// Both positive when Z > c where c = -min(a0, a1)
+// E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+static double expected_prod_pos_rho1(double mu0, double sigma0,
+                                     double mu1, double sigma1) {
+    double a0 = mu0 / sigma0;
+    double a1 = mu1 / sigma1;
+    double c = -std::min(a0, a1);
+
+    double Phi_neg_c = normal_cdf(-c);
+    double phi_c = normal_pdf(c);
+
+    return sigma0 * sigma1 * ((a0 * a1 + 1.0) * Phi_neg_c + (a0 + a1 + c) * phi_c);
+}
+
+// Helper: E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
+// Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
+// E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
+static double expected_prod_pos_rho_neg1(double mu0, double sigma0,
+                                         double mu1, double sigma1) {
+    double a0 = mu0 / sigma0;
+    double a1 = mu1 / sigma1;
+
+    // If a0 + a1 <= 0, interval is empty
+    if (a0 + a1 <= 0.0) {
+        return 0.0;
+    }
+
+    double Phi_a0 = normal_cdf(a0);
+    double Phi_a1 = normal_cdf(a1);
+    double phi_a0 = normal_pdf(a0);
+    double phi_a1 = normal_pdf(a1);
+
+    return sigma0 * sigma1 *
+           ((a0 * a1 - 1.0) * (Phi_a0 + Phi_a1 - 1.0) + a1 * phi_a0 + a0 * phi_a1);
+}
+
 double expected_prod_pos(double mu0, double sigma0,
                          double mu1, double sigma1,
                          double rho) {
@@ -297,6 +334,21 @@ double expected_prod_pos(double mu0, double sigma0,
     if (sigma0 <= 0.0 || sigma1 <= 0.0) {
         throw Nh::RuntimeException("expected_prod_pos: sigma0 and sigma1 must be positive");
     }
+
+    // Clamp rho to [-1, 1] for numerical stability
+    rho = clamp(rho, -1.0, 1.0);
+
+    // Use analytical formulas for ρ ≈ ±1 to avoid numerical issues
+    constexpr double RHO_THRESHOLD = 0.9999;
+    if (rho > RHO_THRESHOLD) {
+        return expected_prod_pos_rho1(mu0, sigma0, mu1, sigma1);
+    }
+    if (rho < -RHO_THRESHOLD) {
+        return expected_prod_pos_rho_neg1(mu0, sigma0, mu1, sigma1);
+    }
+
+    //
+    // General case: Gauss-Hermite quadrature
     //
     // Decomposition:
     //   D0 = μ0 + σ0 * Z
@@ -311,10 +363,7 @@ double expected_prod_pos(double mu0, double sigma0,
     //
     // E[D1⁺ | Z=z] = s*φ(m(z)/s) + m(z)*Φ(m(z)/s)
 
-    // Clamp rho to [-1, 1] for numerical stability (also clamped by caller)
-    rho = clamp(rho, -1.0, 1.0);
-
-    double one_minus_rho2 = std::max(0.0, 1.0 - (rho * rho));
+    double one_minus_rho2 = 1.0 - (rho * rho);
     double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
 
     double sum = 0.0;
@@ -335,16 +384,9 @@ double expected_prod_pos(double mu0, double sigma0,
         // Conditional mean of D1 given Z=z
         double m1z = mu1 + (rho * sigma1 * z);
 
-        // E[D1⁺ | Z=z]
-        double E_D1pos_givenZ = 0.0;
-        if (s1_cond > 1e-12) {
-            // Normal case: use expected_positive_part formula
-            double t = m1z / s1_cond;
-            E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
-        } else {
-            // ρ = ±1 limit: D1 is deterministic given Z
-            E_D1pos_givenZ = std::max(0.0, m1z);
-        }
+        // E[D1⁺ | Z=z] using expected_positive_part formula
+        double t = m1z / s1_cond;
+        double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
 
         sum += w * D0plus * E_D1pos_givenZ;
     }
