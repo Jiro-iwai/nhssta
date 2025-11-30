@@ -215,17 +215,17 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
     oss << "# Objective: log(Σ exp(LAT + σ)) = " << std::fixed << std::setprecision(3) 
         << results.objective_value << std::endl;
     oss << "#" << std::endl;
-    oss << "# Top " << results.top_paths.size() << " Paths (by LAT + σ):" << std::endl;
+    oss << "# Top " << results.top_paths.size() << " Endpoints (by LAT + σ):" << std::endl;
     oss << "#" << std::endl;
     
-    oss << std::left << std::setw(15) << "#endpoint" 
+    oss << std::left << std::setw(18) << "#node" 
         << std::right << std::setw(10) << "LAT" 
-        << std::setw(9) << "σ" 
+        << std::setw(9) << "sigma" 
         << std::setw(10) << "score" << std::endl;
     oss << "#-----------------------------------------" << std::endl;
     
     for (const auto& path : results.top_paths) {
-        oss << std::left << std::setw(15) << path.endpoint;
+        oss << std::left << std::setw(18) << path.endpoint;
         oss << std::right << std::setw(10) << std::fixed << std::setprecision(3) << path.lat;
         oss << std::setw(9) << std::fixed << std::setprecision(3) << path.std_dev;
         oss << std::setw(10) << std::fixed << std::setprecision(3) << path.score << std::endl;

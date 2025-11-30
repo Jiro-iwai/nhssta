@@ -654,32 +654,34 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     
     SensitivityResults results;
     
-    // Step 1: Collect all output signals and their LAT statistics
-    std::vector<SensitivityPath> all_paths;
-    for (const auto& output : outputs_) {
-        auto sig_it = signals_.find(output);
+    // Step 1: Collect output signals for objective function
+    // Note: DFF D terminals are not included due to Expression tree complexity
+    // TODO: Issue for future improvement - optimize Expression tree for deep RandomVariables
+    std::vector<SensitivityPath> endpoint_paths;
+    for (const auto& endpoint : outputs_) {
+        auto sig_it = signals_.find(endpoint);
         if (sig_it == signals_.end()) {
             continue;
         }
         const RandomVariable& lat = sig_it->second;
         double mean = lat->mean();
         double stddev = std::sqrt(lat->variance());
-        all_paths.emplace_back(output, mean, stddev);
+        endpoint_paths.emplace_back(endpoint, mean, stddev);
     }
     
     // Step 2: Sort by score (LAT + σ) descending
-    std::sort(all_paths.begin(), all_paths.end(),
+    std::sort(endpoint_paths.begin(), endpoint_paths.end(),
               [](const SensitivityPath& a, const SensitivityPath& b) {
                   return a.score > b.score;
               });
     
-    // Step 3: Select top N paths
-    if (all_paths.size() > top_n) {
-        all_paths.resize(top_n);
+    // Step 3: Select top N endpoints for objective function
+    if (endpoint_paths.size() > top_n) {
+        endpoint_paths.resize(top_n);
     }
-    results.top_paths = all_paths;
+    results.top_paths = endpoint_paths;
     
-    if (all_paths.empty()) {
+    if (endpoint_paths.empty()) {
         return results;
     }
     
@@ -687,9 +689,9 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     // First, clear all gradients
     zero_all_grad();
     
-    // Build Expression for each path's score
+    // Build Expression for each endpoint's score
     Expression sum_exp = Const(0.0);
-    for (const auto& path : all_paths) {
+    for (const auto& path : endpoint_paths) {
         auto sig_it = signals_.find(path.endpoint);
         if (sig_it == signals_.end()) {
             continue;
