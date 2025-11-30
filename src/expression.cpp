@@ -694,6 +694,64 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     return term1 + term2 + term3 + term4;
 }
 
+// E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
+// When ρ = 1: D0 = μ0 + σ0·Z, D1 = μ1 + σ1·Z (same Z)
+// Both positive when Z > c where c = -min(a0, a1), a0 = μ0/σ0, a1 = μ1/σ1
+// E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& sigma0,
+                                       const Expression& mu1, const Expression& sigma1) {
+    Expression a0 = mu0 / sigma0;
+    Expression a1 = mu1 / sigma1;
+
+    // c = -min(a0, a1)
+    // For differentiability, we compute both cases and use the appropriate one
+    // When a0 < a1: c = -a0, when a0 >= a1: c = -a1
+    double a0_val = a0->value();
+    double a1_val = a1->value();
+    Expression c = (a0_val < a1_val) ? (Const(-1.0) * a0) : (Const(-1.0) * a1);
+
+    // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+    Expression Phi_neg_c = Phi_expr(Const(-1.0) * c);
+    Expression phi_c = phi_expr(c);
+
+    Expression result = sigma0 * sigma1 *
+                        ((a0 * a1 + Const(1.0)) * Phi_neg_c + (a0 + a1 + c) * phi_c);
+
+    return result;
+}
+
+// E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
+// When ρ = -1: D0 = μ0 + σ0·Z, D1 = μ1 - σ1·Z (opposite signs)
+// Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
+// E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
+// Returns 0 if a0 + a1 <= 0 (interval is empty)
+Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,
+                                           const Expression& mu1, const Expression& sigma1) {
+    Expression a0 = mu0 / sigma0;
+    Expression a1 = mu1 / sigma1;
+
+    // Check if interval is non-empty: a0 + a1 > 0
+    double a0_val = a0->value();
+    double a1_val = a1->value();
+
+    if (a0_val + a1_val <= 0.0) {
+        // Interval is empty, E[D0⁺ D1⁺] = 0
+        return Const(0.0);
+    }
+
+    // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
+    Expression Phi_a0 = Phi_expr(a0);
+    Expression Phi_a1 = Phi_expr(a1);
+    Expression phi_a0 = phi_expr(a0);
+    Expression phi_a1 = phi_expr(a1);
+
+    Expression result = sigma0 * sigma1 *
+                        ((a0 * a1 - Const(1.0)) * (Phi_a0 + Phi_a1 - Const(1.0)) +
+                         a1 * phi_a0 + a0 * phi_a1);
+
+    return result;
+}
+
 Expression cov_max0_max0_expr(const Expression& mu0, const Expression& sigma0,
                               const Expression& mu1, const Expression& sigma1,
                               const Expression& rho) {

@@ -8,6 +8,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "expression.hpp"
 #include "handle.hpp"
 #include "normal.hpp"
 #include "random_variable.hpp"
@@ -66,6 +67,13 @@ using CovarianceMatrix = CovarianceMatrixHandle;
 
 double covariance(const Normal& a, const Normal& b);
 double covariance(const RandomVariable& a, const RandomVariable& b);
+
+// Expression-based covariance for automatic differentiation (Phase C-5 of #167)
+// Returns an Expression representing Cov(a, b) that can be differentiated
+Expression cov_expr(const RandomVariable& a, const RandomVariable& b);
+
+// Clear the cov_expr cache (for testing)
+void clear_cov_expr_cache();
 
 CovarianceMatrix& get_covariance_matrix();
 }  // namespace RandomVariable

@@ -38,12 +38,10 @@ Expression OpSUB::mean_expr() const {
 
 Expression OpSUB::var_expr() const {
     // Var[A - B] = Var[A] - 2*Cov(A,B) + Var[B]
-    // For now, compute covariance numerically and use it as a constant
-    // TODO: Make covariance Expression-based in C-5
-    double cov = covariance(left(), right());
     Expression var_left = left()->var_expr();
     Expression var_right = right()->var_expr();
-    return var_left - Const(2.0 * cov) + var_right;
+    Expression cov = cov_expr(left(), right());
+    return var_left - Const(2.0) * cov + var_right;
 }
 
 RandomVariable operator-(const RandomVariable& a, const RandomVariable& b) {
