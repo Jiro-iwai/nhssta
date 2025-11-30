@@ -709,10 +709,31 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     
     // Step 6: Collect gate sensitivities from cloned delays
     // instance_to_delays_ contains the actual cloned delays used in the Expression tree
+    
+    // Build reverse mapping: instance name -> output signal name
+    std::unordered_map<std::string, std::string> instance_to_output;
+    for (const auto& sig_inst : signal_to_instance_) {
+        instance_to_output[sig_inst.second] = sig_inst.first;
+    }
+    
     constexpr double MIN_VARIANCE = 1e-10;  // Skip const delays (Issue #184)
     for (const auto& inst_pair : instance_to_delays_) {
         const std::string& instance_name = inst_pair.first;
         const auto& delays = inst_pair.second;
+        
+        // Get output node name for this instance
+        std::string output_node;
+        auto out_it = instance_to_output.find(instance_name);
+        if (out_it != instance_to_output.end()) {
+            output_node = out_it->second;
+        }
+        
+        // Get gate type for this instance
+        std::string gate_type;
+        auto type_it = instance_to_gate_type_.find(instance_name);
+        if (type_it != instance_to_gate_type_.end()) {
+            gate_type = type_it->second;
+        }
         
         for (const auto& delay_pair : delays) {
             const std::string& pin_name = delay_pair.first;
@@ -730,8 +751,9 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
             
             // Only include gates with non-zero gradients
             if (std::abs(grad_mu) > 1e-10 || std::abs(grad_sigma) > 1e-10) {
-                std::string full_name = instance_name + ":" + pin_name;
-                results.gate_sensitivities.emplace_back(full_name, grad_mu, grad_sigma);
+                results.gate_sensitivities.emplace_back(
+                    instance_name, output_node, pin_name, gate_type,
+                    grad_mu, grad_sigma);
             }
         }
     }

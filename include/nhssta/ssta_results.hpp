@@ -93,7 +93,11 @@ using CriticalPaths = std::vector<CriticalPath>;
 
 // Sensitivity analysis result for a single gate
 struct GateSensitivity {
-    std::string gate_name;
+    std::string gate_name;    // Legacy: "instance:pin" format
+    std::string instance;     // Instance name (e.g., "inv:0")
+    std::string output_node;  // Output signal name (e.g., "n1", "Y")
+    std::string input_pin;    // Input pin name (e.g., "a", "0")
+    std::string gate_type;    // Gate type (e.g., "inv", "and")
     double grad_mu;    // ∂F/∂μ
     double grad_sigma; // ∂F/∂σ
 
@@ -102,6 +106,16 @@ struct GateSensitivity {
         , grad_sigma(0.0) {}
     GateSensitivity(const std::string& name, double gm, double gs)
         : gate_name(name)
+        , grad_mu(gm)
+        , grad_sigma(gs) {}
+    GateSensitivity(const std::string& inst, const std::string& out_node,
+                    const std::string& in_pin, const std::string& type,
+                    double gm, double gs)
+        : gate_name(inst + ":" + in_pin)
+        , instance(inst)
+        , output_node(out_node)
+        , input_pin(in_pin)
+        , gate_type(type)
         , grad_mu(gm)
         , grad_sigma(gs) {}
 };
