@@ -264,8 +264,8 @@ void Ssta::connect_instances() {
                 signals_[out_signal_name] = out;
                 out->set_name(out_signal_name);
 
-                // Track path information if critical path analysis is enabled
-                if (is_critical_path_) {
+                // Track path information if critical path or sensitivity analysis is enabled
+                if (is_critical_path_ || is_sensitivity_) {
                     track_path(out_signal_name, inst, ins, gate_name);
                 }
 
@@ -435,18 +435,16 @@ void Ssta::track_path(const std::string& signal_name, const Instance& inst, cons
     // Map instance to gate type (gate_type is already lowercased in read_bench_net)
     instance_to_gate_type_[instance_name] = gate_type;
     
-    // Save gate delays for this instance (before gates_ is cleared)
-    // gate_type is already lowercased in read_bench_net()
-    auto gate_it = gates_.find(gate_type);
-    if (gate_it != gates_.end()) {
-        const Gate& gate = gate_it->second;
-        const auto& gate_delays = gate->delays();
-        std::unordered_map<std::string, Normal> delays_map;
-        for (const auto& delay_pair : gate_delays) {
-            delays_map[delay_pair.first.first] = delay_pair.second;  // pin_name -> delay
-        }
-        instance_to_delays_[instance_name] = delays_map;
+    // Save cloned delays for this instance (for sensitivity analysis)
+    // Use inst->used_delays() which contains the actual cloned delays
+    // that are used in the Expression tree
+    const auto& used_delays = inst->used_delays();
+    std::unordered_map<std::string, Normal> delays_map;
+    for (const auto& delay_pair : used_delays) {
+        // Key is (input_pin, output_pin), store by input_pin for now
+        delays_map[delay_pair.first.first] = delay_pair.second;
     }
+    instance_to_delays_[instance_name] = delays_map;
 }
 
 CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
@@ -702,24 +700,30 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     // Step 5: Compute gradients via backward pass
     objective->backward();
     
-    // Step 6: Collect gate sensitivities
-    // Iterate over all gates and collect their gradients
-    for (const auto& gate_pair : gates_) {
-        const std::string& gate_name = gate_pair.first;
-        const Gate& gate = gate_pair.second;
+    // Step 6: Collect gate sensitivities from cloned delays
+    // instance_to_delays_ contains the actual cloned delays used in the Expression tree
+    constexpr double MIN_VARIANCE = 1e-10;  // Skip const delays (Issue #184)
+    for (const auto& inst_pair : instance_to_delays_) {
+        const std::string& instance_name = inst_pair.first;
+        const auto& delays = inst_pair.second;
         
-        // Get delays for this gate
-        const auto& delays = gate->delays();
         for (const auto& delay_pair : delays) {
+            const std::string& pin_name = delay_pair.first;
             const Normal& delay = delay_pair.second;
             
-            // Get gradients from the Expression
+            // Skip const delays (σ ≈ 0) to avoid numerical issues
+            // See Issue #184 for future improvement
+            if (delay->variance() < MIN_VARIANCE) {
+                continue;
+            }
+            
+            // Get gradients from the cloned Expression
             double grad_mu = delay->mean_expr()->gradient();
             double grad_sigma = delay->std_expr()->gradient();
             
             // Only include gates with non-zero gradients
             if (std::abs(grad_mu) > 1e-10 || std::abs(grad_sigma) > 1e-10) {
-                std::string full_name = gate_name + ":" + delay_pair.first.first;
+                std::string full_name = instance_name + ":" + pin_name;
                 results.gate_sensitivities.emplace_back(full_name, grad_mu, grad_sigma);
             }
         }

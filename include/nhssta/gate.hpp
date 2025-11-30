@@ -118,11 +118,19 @@ class InstanceImpl {
     void set_input(const std::string& in_name, const RandomVariable& signal);
     RandomVariable output(const std::string& out_name = "y");
 
+    // Access cloned delays used in Expression tree (for sensitivity analysis)
+    // Key: (input_pin, output_pin), Value: cloned Normal delay
+    using UsedDelays = std::unordered_map<GateImpl::IO, Normal, GateImpl::IOHash>;
+    [[nodiscard]] const UsedDelays& used_delays() const {
+        return used_delays_;
+    }
+
    private:
     Gate gate_;
     std::string name_;
     Signals inputs_;
     Signals outputs_;
+    UsedDelays used_delays_;  // Track cloned delays for sensitivity analysis
 };
 
 // Handle pattern for Instance using HandleBase template

@@ -87,7 +87,12 @@ RandomVariable InstanceImpl::output(const std::string& out_name) {
 
             const std::string& ith_in_name = i->first.first;
             Normal gate_delay = gate_->delay(ith_in_name, out_name);
-            RandomVariable delay = gate_delay.clone();  ////
+            Normal delay_normal = gate_delay.clone();
+            RandomVariable delay = delay_normal;  // For ADD operation
+
+            // Track cloned delay for sensitivity analysis
+            GateImpl::IO io(ith_in_name, out_name);
+            used_delays_[io] = delay_normal;
 
             auto k = inputs_.find(ith_in_name);
             if (k != inputs_.end()) {

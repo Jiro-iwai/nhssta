@@ -140,16 +140,16 @@ for (const auto& inst : instances_) {
 | `test/test_main_cli.cpp` | テスト |
 | `src/gate.cpp` | **要修正**: `clone()` の削除/変更 |
 
-### 次のステップ
+### 完了した変更
 
-1. `InstanceImpl` にクローンされた delay を保存するメンバ `used_delays_` を追加
-2. `InstanceImpl::output()` でクローン時に `used_delays_` に追加
-3. `Ssta` にインスタンス一覧へのアクセス手段を追加（または instances_ を保持）
-4. `getSensitivityResults()` でインスタンス経由でクローンを反復して勾配収集
-5. σ=0 (const delay) 対策: 暫定的に感度解析から除外
-   - 将来的に極限値を直接返す方式を検討
-6. 統合テストで動作確認
-7. PR 作成
+1. ✅ `InstanceImpl` に `used_delays_` メンバを追加（クローンされた delay を追跡）
+2. ✅ `InstanceImpl::output()` でクローン時に `used_delays_` に追加
+3. ✅ `track_path()` で `inst->used_delays()` からクローンを収集
+4. ✅ `getSensitivityResults()` で `instance_to_delays_` からクローンの勾配を収集
+5. ✅ σ=0 (const delay) 対策: 暫定的に感度解析から除外
+   - 将来的に極限値を直接返す方式を検討（Issue #184）
+6. ✅ 統合テストで動作確認（627 テストパス）
+7. 🔜 PR 作成
 
 ### σ=0 対策の方針
 
