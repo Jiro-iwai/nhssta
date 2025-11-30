@@ -96,7 +96,7 @@ struct GateSensitivity {
     std::string gate_name;    // Legacy: "instance:pin" format
     std::string instance;     // Instance name (e.g., "inv:0")
     std::string output_node;  // Output signal name (e.g., "n1", "Y")
-    std::string input_pin;    // Input pin name (e.g., "a", "0")
+    std::string input_signal; // Input signal name (e.g., "A", "N2")
     std::string gate_type;    // Gate type (e.g., "inv", "and")
     double grad_mu;    // ∂F/∂μ
     double grad_sigma; // ∂F/∂σ
@@ -109,12 +109,12 @@ struct GateSensitivity {
         , grad_mu(gm)
         , grad_sigma(gs) {}
     GateSensitivity(const std::string& inst, const std::string& out_node,
-                    const std::string& in_pin, const std::string& type,
+                    const std::string& in_sig, const std::string& type,
                     double gm, double gs)
-        : gate_name(inst + ":" + in_pin)
+        : gate_name(inst + ":" + in_sig)
         , instance(inst)
         , output_node(out_node)
-        , input_pin(in_pin)
+        , input_signal(in_sig)
         , gate_type(type)
         , grad_mu(gm)
         , grad_sigma(gs) {}

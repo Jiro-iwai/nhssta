@@ -735,6 +735,13 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
             gate_type = type_it->second;
         }
         
+        // Get input signal names for this instance
+        std::vector<std::string> input_signals;
+        auto inputs_it = instance_to_inputs_.find(instance_name);
+        if (inputs_it != instance_to_inputs_.end()) {
+            input_signals = inputs_it->second;
+        }
+        
         for (const auto& delay_pair : delays) {
             const std::string& pin_name = delay_pair.first;
             const Normal& delay = delay_pair.second;
@@ -745,6 +752,17 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
                 continue;
             }
             
+            // Map pin number to input signal name
+            std::string input_signal = pin_name;  // fallback to pin name
+            try {
+                size_t pin_idx = std::stoul(pin_name);
+                if (pin_idx < input_signals.size()) {
+                    input_signal = input_signals[pin_idx];
+                }
+            } catch (...) {
+                // Keep pin_name if not a number
+            }
+            
             // Get gradients from the cloned Expression
             double grad_mu = delay->mean_expr()->gradient();
             double grad_sigma = delay->std_expr()->gradient();
@@ -752,7 +770,7 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
             // Only include gates with non-zero gradients
             if (std::abs(grad_mu) > 1e-10 || std::abs(grad_sigma) > 1e-10) {
                 results.gate_sensitivities.emplace_back(
-                    instance_name, output_node, pin_name, gate_type,
+                    instance_name, output_node, input_signal, gate_type,
                     grad_mu, grad_sigma);
             }
         }

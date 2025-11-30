@@ -238,22 +238,22 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
     
     oss << std::left << std::setw(12) << "#instance" 
         << std::setw(10) << "output"
-        << std::setw(6) << "pin"
+        << std::setw(8) << "input"
         << std::setw(8) << "type"
         << std::right << std::setw(12) << "dF/dmu" 
         << std::setw(12) << "dF/dsigma" << std::endl;
-    oss << "#-----------------------------------------------------------" << std::endl;
+    oss << "#-------------------------------------------------------------" << std::endl;
     
     for (const auto& sens : results.gate_sensitivities) {
         oss << std::left << std::setw(12) << sens.instance;
         oss << std::setw(10) << sens.output_node;
-        oss << std::setw(6) << sens.input_pin;
+        oss << std::setw(8) << sens.input_signal;
         oss << std::setw(8) << sens.gate_type;
         oss << std::right << std::setw(12) << std::fixed << std::setprecision(6) << sens.grad_mu;
         oss << std::setw(12) << std::fixed << std::setprecision(6) << sens.grad_sigma << std::endl;
     }
     
-    oss << "#-----------------------------------------------------------" << std::endl;
+    oss << "#-------------------------------------------------------------" << std::endl;
     
     return oss.str();
 }
