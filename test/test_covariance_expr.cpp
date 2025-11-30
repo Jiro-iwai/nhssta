@@ -262,9 +262,8 @@ TEST_F(CovarianceExprTest, CovExpr_Max0_Gradient) {
     auto Max0_X = MAX0(X);
 
     Expression cov_x_max0 = cov_expr(X, Max0_X);
-    double cov_value = cov_x_max0->value();
 
-    cov_x_max0->backward();
+    cov_x_max0->backward();  // Triggers value() internally
 
     // Numerical verification
     double grad_mu_numerical = numerical_gradient(
