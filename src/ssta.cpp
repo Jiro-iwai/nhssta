@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "add.hpp"
+#include "covariance.hpp"
 #include "expression.hpp"
 #include "parser.hpp"
 #include "util_numerical.hpp"
@@ -25,7 +26,13 @@ static constexpr double DFF_CLOCK_ARRIVAL_TIME = 0.0;
 
 Ssta::Ssta() = default;
 
-Ssta::~Ssta() = default;
+Ssta::~Ssta() {
+    // Clear static caches to prevent crash during static destruction
+    // The cov_expr_cache contains Expression objects (shared_ptr to ExpressionImpl)
+    // If destroyed after eTbl_ (static in expression.cpp), the ExpressionImpl
+    // destructors will crash when trying to erase from an already-destroyed set
+    ::RandomVariable::clear_cov_expr_cache();
+}
 
 void Ssta::check() {
     // Validate configuration and throw exception if invalid
