@@ -142,10 +142,9 @@ struct SensitivityPath {
 struct SensitivityResults {
     std::vector<SensitivityPath> top_paths;
     std::vector<GateSensitivity> gate_sensitivities;
-    double objective_value;  // log(Σ exp(LAT + σ))
+    double objective_value{0.0};  // log(Σ exp(LAT + σ))
 
-    SensitivityResults()
-        : objective_value(0.0) {}
+    SensitivityResults() = default;
 };
 
 }  // namespace Nh
