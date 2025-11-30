@@ -146,9 +146,24 @@ for (const auto& inst : instances_) {
 2. `InstanceImpl::output()` でクローン時に `used_delays_` に追加
 3. `Ssta` にインスタンス一覧へのアクセス手段を追加（または instances_ を保持）
 4. `getSensitivityResults()` でインスタンス経由でクローンを反復して勾配収集
-5. σ=0 (const delay) のゼロ除算対策を追加
+5. σ=0 (const delay) 対策: 暫定的に感度解析から除外
+   - 将来的に極限値を直接返す方式を検討
 6. 統合テストで動作確認
 7. PR 作成
+
+### σ=0 対策の方針
+
+**暫定対応（案C）**: const delay を感度解析から除外
+```cpp
+// getSensitivityResults() で
+if (delay->variance() < MIN_VARIANCE) {
+    continue;  // const delay はスキップ
+}
+```
+
+**将来検討（案B）**: 極限値を直接返す
+- σ→0 のとき max(0, μ) を返す
+- μ の感度も正しく計算可能にする
 
 ### 参考
 
