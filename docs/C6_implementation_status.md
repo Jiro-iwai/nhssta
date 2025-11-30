@@ -142,11 +142,13 @@ for (const auto& inst : instances_) {
 
 ### 次のステップ
 
-1. `clone()` の設計意図を確認
-2. 案1 を適用して勾配伝播を修正
-3. σ=0 (const delay) のゼロ除算対策を追加
-4. 統合テストで動作確認
-5. PR 作成
+1. `InstanceImpl` にクローンされた delay を保存するメンバ `used_delays_` を追加
+2. `InstanceImpl::output()` でクローン時に `used_delays_` に追加
+3. `Ssta` にインスタンス一覧へのアクセス手段を追加（または instances_ を保持）
+4. `getSensitivityResults()` でインスタンス経由でクローンを反復して勾配収集
+5. σ=0 (const delay) のゼロ除算対策を追加
+6. 統合テストで動作確認
+7. PR 作成
 
 ### 参考
 
