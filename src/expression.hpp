@@ -116,7 +116,10 @@ class ExpressionHandle : public HandleBase<ExpressionImpl> {
    public:
     using element_type = ExpressionImpl;
 
-    // Inherit all constructors from HandleBase
+    // Default constructor: creates null handle
+    ExpressionHandle() = default;
+    
+    // Inherit other constructors from HandleBase
     using HandleBase<ExpressionImpl>::HandleBase;
 };
 
@@ -189,11 +192,12 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     [[nodiscard]] double gradient() const { return gradient_; }
     void zero_grad();
     static void zero_all_grad();
+    static size_t node_count();
 
     // Value computation
     virtual double value();
-
-   protected:
+    
+    // Public accessors for children (needed for topological sort in backward)
     [[nodiscard]] const Expression& left() const {
         return left_;
     }
@@ -203,6 +207,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     [[nodiscard]] const Expression& third() const {
         return third_;
     }
+
+   protected:
+    // Helper for topological sort backward
+    void propagate_gradient();
     void set_value(double value);
     void _set_value(double value);
     void unset_value();

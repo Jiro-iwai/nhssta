@@ -31,12 +31,12 @@ double OpADD::calc_variance() const {
     return (r);
 }
 
-Expression OpADD::mean_expr() const {
+Expression OpADD::calc_mean_expr() const {
     // E[A + B] = E[A] + E[B]
     return left()->mean_expr() + right()->mean_expr();
 }
 
-Expression OpADD::var_expr() const {
+Expression OpADD::calc_var_expr() const {
     // Var[A + B] = Var[A] + 2*Cov(A,B) + Var[B]
     Expression var_left = left()->var_expr();
     Expression var_right = right()->var_expr();

@@ -22,8 +22,8 @@ class OpMAX : public RandomVariableImpl {
     }
 
     // Sensitivity analysis support
-    [[nodiscard]] Expression mean_expr() const override;
-    [[nodiscard]] Expression var_expr() const override;
+    [[nodiscard]] Expression calc_mean_expr() const override;
+    [[nodiscard]] Expression calc_var_expr() const override;
 
    private:
     [[nodiscard]] double calc_mean() const override;
@@ -42,8 +42,8 @@ class OpMAX0 : public RandomVariableImpl {
     ~OpMAX0() override;
 
     // Sensitivity analysis support
-    [[nodiscard]] Expression mean_expr() const override;
-    [[nodiscard]] Expression var_expr() const override;
+    [[nodiscard]] Expression calc_mean_expr() const override;
+    [[nodiscard]] Expression calc_var_expr() const override;
 
    private:
     [[nodiscard]] double calc_mean() const override;

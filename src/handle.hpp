@@ -98,7 +98,7 @@ class HandleBase {
 
    protected:
     // Protected to allow derived classes direct access
-    std::shared_ptr<T> body_;
+    std::shared_ptr<T> body_ = nullptr;
 };
 
 #endif  // NH_HANDLE__H

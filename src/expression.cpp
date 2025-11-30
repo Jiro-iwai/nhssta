@@ -11,6 +11,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <vector>
 
 // Local helper functions for bivariate normal distribution
 namespace {
@@ -256,16 +257,19 @@ void ExpressionImpl::zero_all_grad() {
     for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&ExpressionImpl::zero_grad));
 }
 
-void ExpressionImpl::backward(double upstream) {
-    // Accumulate gradient (for nodes used multiple times in the graph)
-    gradient_ += upstream;
-    is_gradient_set_ = true;
+size_t ExpressionImpl::node_count() {
+    return eTbl_.size();
+}
 
-    // For leaf nodes (CONST, PARAM/Variable), stop here
+// Helper: propagate gradient from this node to its children (called once per node)
+void ExpressionImpl::propagate_gradient() {
+    // For leaf nodes, nothing to propagate
     if (op_ == CONST || op_ == PARAM) {
         return;
     }
-
+    
+    double upstream = gradient_;
+    
     // Check 3-argument operations first
     if (left() != null && right() != null && third() != null) {
         double h = left()->value();
@@ -273,10 +277,6 @@ void ExpressionImpl::backward(double upstream) {
         double rho = third()->value();
 
         if (op_ == PHI2) {
-            // Φ₂(h, k; ρ) gradients (analytical):
-            // ∂Φ₂/∂h = φ(h) × Φ((k - ρh)/√(1-ρ²))
-            // ∂Φ₂/∂k = φ(k) × Φ((h - ρk)/√(1-ρ²))
-            // ∂Φ₂/∂ρ = φ₂(h, k; ρ)
             double one_minus_rho2 = 1.0 - (rho * rho);
             double sigma = std::sqrt(std::max(1e-12, one_minus_rho2));
 
@@ -284,9 +284,9 @@ void ExpressionImpl::backward(double upstream) {
             double grad_k = normal_pdf(k) * normal_cdf((h - rho * k) / sigma);
             double grad_rho = compute_phi2(h, k, rho);
 
-            left()->backward(upstream * grad_h);
-            right()->backward(upstream * grad_k);
-            third()->backward(upstream * grad_rho);
+            left()->gradient_ += upstream * grad_h;
+            right()->gradient_ += upstream * grad_k;
+            third()->gradient_ += upstream * grad_rho;
         }
         return;
     }
@@ -297,67 +297,79 @@ void ExpressionImpl::backward(double upstream) {
         double r = right()->value();
 
         if (op_ == PLUS) {
-            // f = l + r
-            // ∂f/∂l = 1, ∂f/∂r = 1
-            left()->backward(upstream);
-            right()->backward(upstream);
-
+            left()->gradient_ += upstream;
+            right()->gradient_ += upstream;
         } else if (op_ == MINUS) {
-            // f = l - r
-            // ∂f/∂l = 1, ∂f/∂r = -1
-            left()->backward(upstream);
-            right()->backward(-upstream);
-
+            left()->gradient_ += upstream;
+            right()->gradient_ += -upstream;
         } else if (op_ == MUL) {
-            // f = l * r
-            // ∂f/∂l = r, ∂f/∂r = l
-            left()->backward(upstream * r);
-            right()->backward(upstream * l);
-
+            left()->gradient_ += upstream * r;
+            right()->gradient_ += upstream * l;
         } else if (op_ == DIV) {
-            // f = l / r
-            // ∂f/∂l = 1/r, ∂f/∂r = -l/r²
-            left()->backward(upstream / r);
-            right()->backward(-upstream * l / (r * r));
-
+            left()->gradient_ += upstream / r;
+            right()->gradient_ += -upstream * l / (r * r);
         } else if (op_ == POWER) {
-            // f = l^r
-            // ∂f/∂l = r * l^(r-1)
-            // ∂f/∂r = l^r * log(l)
-            double f_val = value();  // l^r
-            left()->backward(upstream * r * std::pow(l, r - 1));
+            double f_val = value();
+            left()->gradient_ += upstream * r * std::pow(l, r - 1);
             if (l > 0) {
-                right()->backward(upstream * f_val * std::log(l));
+                right()->gradient_ += upstream * f_val * std::log(l);
             }
-            // Note: if l <= 0, gradient w.r.t. r is undefined
         }
-
     } else if (left() != null) {
         // Unary operations
         double l = left()->value();
 
         if (op_ == EXP) {
-            // f = exp(l)
-            // ∂f/∂l = exp(l)
-            left()->backward(upstream * value());
-
+            left()->gradient_ += upstream * value();
         } else if (op_ == LOG) {
-            // f = log(l)
-            // ∂f/∂l = 1/l
-            left()->backward(upstream / l);
-
+            left()->gradient_ += upstream / l;
         } else if (op_ == ERF) {
-            // f = erf(l)
-            // ∂f/∂l = 2/√π × exp(-l²)
-            static constexpr double TWO_OVER_SQRT_PI = 1.1283791670955126;  // 2/√π
-            left()->backward(upstream * TWO_OVER_SQRT_PI * std::exp(-l * l));
-
+            static constexpr double TWO_OVER_SQRT_PI = 1.1283791670955126;
+            left()->gradient_ += upstream * TWO_OVER_SQRT_PI * std::exp(-l * l);
         } else if (op_ == SQRT) {
-            // f = sqrt(l)
-            // ∂f/∂l = 1/(2√l)
             double sqrt_l = value();
-            left()->backward(upstream / (2.0 * sqrt_l));
+            left()->gradient_ += upstream / (2.0 * sqrt_l);
         }
+    }
+}
+
+// Topological sort helper: DFS to build reverse topological order
+static void topo_sort_dfs(ExpressionImpl* node, 
+                          std::set<ExpressionImpl*>& visited,
+                          std::vector<ExpressionImpl*>& order) {
+    if (visited.count(node) > 0) return;
+    visited.insert(node);
+    
+    // Visit children first
+    if (node->left().get()) {
+        topo_sort_dfs(node->left().get(), visited, order);
+    }
+    if (node->right().get()) {
+        topo_sort_dfs(node->right().get(), visited, order);
+    }
+    if (node->third().get()) {
+        topo_sort_dfs(node->third().get(), visited, order);
+    }
+    
+    // Add this node after children (reverse topological order)
+    order.push_back(node);
+}
+
+void ExpressionImpl::backward(double upstream) {
+    // Build topological order (children before parents)
+    std::set<ExpressionImpl*> visited;
+    std::vector<ExpressionImpl*> topo_order;
+    topo_sort_dfs(this, visited, topo_order);
+    
+    // Set initial gradient at the root
+    gradient_ += upstream;
+    is_gradient_set_ = true;
+    
+    // Process in reverse order (parents before children)
+    // This ensures all upstream gradients are accumulated before propagation
+    for (auto it = topo_order.rbegin(); it != topo_order.rend(); ++it) {
+        (*it)->propagate_gradient();
+        (*it)->is_gradient_set_ = true;
     }
 }
 

@@ -14,8 +14,8 @@ class OpADD : public RandomVariableImpl {
     ~OpADD() override;
 
     // Sensitivity analysis support
-    [[nodiscard]] Expression mean_expr() const override;
-    [[nodiscard]] Expression var_expr() const override;
+    [[nodiscard]] Expression calc_mean_expr() const override;
+    [[nodiscard]] Expression calc_var_expr() const override;
 
    private:
     [[nodiscard]] double calc_mean() const override;

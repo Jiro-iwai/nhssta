@@ -134,18 +134,42 @@ void RandomVariableImpl::check_variance(double& v) {
     }
 }
 
-// Default implementations for Expression-based methods
-// Derived classes should override these for sensitivity analysis support
+// Expression-based methods with caching
+// These are non-virtual wrappers that cache results from calc_*_expr() methods
 
 Expression RandomVariableImpl::mean_expr() const {
-    throw Nh::RuntimeException("mean_expr() not implemented for this RandomVariable type");
+    if (!cached_mean_expr_) {
+        cached_mean_expr_ = calc_mean_expr();
+    }
+    return cached_mean_expr_;
 }
 
 Expression RandomVariableImpl::var_expr() const {
-    throw Nh::RuntimeException("var_expr() not implemented for this RandomVariable type");
+    if (!cached_var_expr_) {
+        cached_var_expr_ = calc_var_expr();
+    }
+    return cached_var_expr_;
 }
 
 Expression RandomVariableImpl::std_expr() const {
+    if (!cached_std_expr_) {
+        cached_std_expr_ = calc_std_expr();
+    }
+    return cached_std_expr_;
+}
+
+// Default implementations for calc_*_expr() methods
+// Derived classes should override these for sensitivity analysis support
+
+Expression RandomVariableImpl::calc_mean_expr() const {
+    throw Nh::RuntimeException("calc_mean_expr() not implemented for this RandomVariable type");
+}
+
+Expression RandomVariableImpl::calc_var_expr() const {
+    throw Nh::RuntimeException("calc_var_expr() not implemented for this RandomVariable type");
+}
+
+Expression RandomVariableImpl::calc_std_expr() const {
     // Default: sqrt(var_expr())
     return sqrt(var_expr());
 }
