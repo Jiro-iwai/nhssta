@@ -161,12 +161,13 @@ if (delay->variance() < MIN_VARIANCE) {
 }
 ```
 
-**将来検討（案B）**: 極限値を直接返す
+**将来検討（案B）**: 極限値を直接返す → Issue #184
 - σ→0 のとき max(0, μ) を返す
 - μ の感度も正しく計算可能にする
 
 ### 参考
 
 - Issue #167: 感度解析機能
+- Issue #184: σ→0 の場合に極限値を直接返す
 - `docs/sensitivity_analysis_plan.md`: 設計ドキュメント
 
