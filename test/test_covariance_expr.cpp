@@ -237,9 +237,9 @@ TEST_F(CovarianceExprTest, CovExpr_Max0_WithArgument) {
 
     // Compare with numerical covariance
     // Note: Expression uses analytical Phi, RandomVariable uses table-based MeanPhiMax
-    // Tolerance increased to account for table interpolation differences
+    // Actual error ~0.0006, tolerance set to 8e-4
     double numerical_cov = covariance(X, Max0_X);
-    EXPECT_NEAR(cov_x_max0->value(), numerical_cov, 1e-3);
+    EXPECT_NEAR(cov_x_max0->value(), numerical_cov, 8e-4);
 }
 
 TEST_F(CovarianceExprTest, CovExpr_Max0_WithIndependent) {
@@ -364,8 +364,9 @@ TEST_F(CovarianceExprTest, CovExpr_Max0_Max0_SameComputation) {
     Expression cov_expr_result = cov_expr(Max0_Sum1, Max0_Sum2);
 
     // Should not diverge! Should return Var(MAX0(Sum)) since ρ ≈ 1
+    // ρ = 1 case uses same var_expr path, so exact match expected
     double expected_var = Max0_Sum1->variance();
-    EXPECT_NEAR(cov_expr_result->value(), expected_var, 1e-3);
+    EXPECT_NEAR(cov_expr_result->value(), expected_var, 1e-10);
     EXPECT_FALSE(std::isnan(cov_expr_result->value()));
     EXPECT_FALSE(std::isinf(cov_expr_result->value()));
 }
@@ -425,8 +426,9 @@ TEST_F(CovarianceExprTest, CovExpr_Max_WithSelf) {
 
     // Compare with numerical covariance
     // Note: Expression uses analytical formulas, RandomVariable uses tables
+    // Actual error ~0.0007, tolerance set to 8e-4
     double numerical_cov = covariance(MaxAB, A);
-    EXPECT_NEAR(cov_max_a->value(), numerical_cov, 1e-3);
+    EXPECT_NEAR(cov_max_a->value(), numerical_cov, 8e-4);
 }
 
 TEST_F(CovarianceExprTest, CovExpr_Max_Max_Same) {
@@ -439,8 +441,9 @@ TEST_F(CovarianceExprTest, CovExpr_Max_Max_Same) {
     Expression cov_max_max = cov_expr(MaxAB, MaxAB);
 
     // Note: Both use var_expr() path, tolerance accounts for analytical vs table differences
+    // Actual error ~0.0001, tolerance set to 2e-4
     double expected_var = MaxAB->variance();
-    EXPECT_NEAR(cov_max_max->value(), expected_var, 1e-3);
+    EXPECT_NEAR(cov_max_max->value(), expected_var, 2e-4);
 }
 
 TEST_F(CovarianceExprTest, CovExpr_Max_Max_Different) {
@@ -533,8 +536,9 @@ TEST_F(CovarianceExprTest, VarExpr_Max_Accuracy) {
     Expression var_max = MaxAB->var_expr();
 
     // Note: Expression uses analytical formulas, RandomVariable uses tables/Gauss-Hermite
+    // Actual error ~0.0001, tolerance set to 2e-4
     double expected_var = MaxAB->variance();
-    EXPECT_NEAR(var_max->value(), expected_var, 1e-3);
+    EXPECT_NEAR(var_max->value(), expected_var, 2e-4);
 }
 
 TEST_F(CovarianceExprTest, VarExpr_Max_Gradient) {
@@ -599,8 +603,9 @@ TEST_F(CovarianceExprTest, ConsistencyCheck_PathVariance) {
     Expression var_path = Path->var_expr();
 
     // Note: Complex variance calculations accumulate numerical differences
+    // Actual error ~0.0075, tolerance set to 8e-3
     double expected_var = Path->variance();
-    EXPECT_NEAR(var_path->value(), expected_var, 1e-2);
+    EXPECT_NEAR(var_path->value(), expected_var, 8e-3);
 }
 
 }  // namespace RandomVariable
