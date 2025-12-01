@@ -733,7 +733,7 @@ Expression phi2_expr(const Expression& x, const Expression& y, const Expression&
     } else {
         // Compute internally (backward compatibility)
         size_t nodes_before_one_minus_rho2 = ExpressionImpl::node_count();
-        one_minus_rho2_local = Const(1.0) - rho * rho;
+        one_minus_rho2_local = one - rho * rho;
         sqrt_one_minus_rho2_local = sqrt(one_minus_rho2_local);
         size_t nodes_after_one_minus_rho2 = ExpressionImpl::node_count();
         
@@ -745,7 +745,7 @@ Expression phi2_expr(const Expression& x, const Expression& y, const Expression&
     }
     
     size_t nodes_before_coeff = ExpressionImpl::node_count();
-    Expression coeff = Const(1.0) / (Const(2.0 * M_PI) * sqrt_one_minus_rho2_local);
+    Expression coeff = one / (Const(2.0 * M_PI) * sqrt_one_minus_rho2_local);
     size_t nodes_after_coeff = ExpressionImpl::node_count();
     
     if (nodes_after_coeff - nodes_before_coeff > 0) {
@@ -800,6 +800,8 @@ static std::unordered_map<Phi2CacheKey, Expression, Phi2CacheKeyHash> phi2_expr_
 
 // Cache for phi_expr (pointer-based)
 static std::unordered_map<ExpressionImpl*, Expression> phi_expr_cache;
+static size_t phi_expr_cache_hits = 0;
+static size_t phi_expr_cache_misses = 0;
 
 Expression phi_expr(const Expression& x) {
     // φ(x) = exp(-x²/2) / √(2π)
@@ -807,8 +809,11 @@ Expression phi_expr(const Expression& x) {
     // Check cache first
     auto it = phi_expr_cache.find(x.get());
     if (it != phi_expr_cache.end()) {
+        phi_expr_cache_hits++;
         return it->second;
     }
+    
+    phi_expr_cache_misses++;
     
     static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
     Expression result = INV_SQRT_2PI * exp(-(x * x) / 2.0);
@@ -902,7 +907,7 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     }
 
     size_t nodes_before_one_minus_rho2 = ExpressionImpl::node_count();
-    Expression one_minus_rho2 = Const(1.0) - rho * rho;
+    Expression one_minus_rho2 = one - rho * rho;
     Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
     size_t nodes_after_one_minus_rho2 = ExpressionImpl::node_count();
     
@@ -1059,7 +1064,7 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
     Expression phi_c = phi_expr(c);
 
     Expression result = sigma0 * sigma1 *
-                        ((a0 * a1 + Const(1.0)) * Phi_neg_c + (a0 + a1 + c) * phi_c);
+                        ((a0 * a1 + one) * Phi_neg_c + (a0 + a1 + c) * phi_c);
 
     return result;
 }
@@ -1090,7 +1095,7 @@ Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expressi
     Expression phi_a1 = phi_expr(a1);
 
     Expression result = sigma0 * sigma1 *
-                        ((a0 * a1 - Const(1.0)) * (Phi_a0 + Phi_a1 - Const(1.0)) +
+                        ((a0 * a1 - one) * (Phi_a0 + Phi_a1 - one) +
                          a1 * phi_a0 + a0 * phi_a1);
 
     return result;
