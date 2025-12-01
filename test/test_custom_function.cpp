@@ -1221,3 +1221,156 @@ TEST_F(CustomFunctionTest, NodeCountComplexFunction) {
         << "Total after 11 calls: " << nodes_total << " nodes";
 }
 
+// Test: Custom function with composite Expression arguments (critical bug fix verification)
+TEST_F(CustomFunctionTest, CompositeExpressionArguments) {
+    CustomFunction f = CustomFunction::create(
+        2,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[1];
+        },
+        "multiply"
+    );
+
+    Variable X, Y, Z;
+    X = 2.0;
+    Y = 3.0;
+    Z = 4.0;
+
+    // Build composite expression: g = X * Y
+    Expression g = X * Y;
+
+    // Use composite expression as argument: F = f(g, Z)
+    Expression F = f(g, Z);
+
+    EXPECT_DOUBLE_EQ(F->value(), 24.0);  // f(6, 4) = 24
+
+    // Compute gradients - should propagate to X, Y, Z
+    zero_all_grad();
+    F->backward();
+
+    // dF/dX = dF/dg * dg/dX = Z * Y = 4 * 3 = 12
+    EXPECT_DOUBLE_EQ(X->gradient(), 12.0);
+
+    // dF/dY = dF/dg * dg/dY = Z * X = 4 * 2 = 8
+    EXPECT_DOUBLE_EQ(Y->gradient(), 8.0);
+
+    // dF/dZ = df/dZ = g = 6
+    EXPECT_DOUBLE_EQ(Z->gradient(), 6.0);
+}
+
+// Test: Custom function called multiple times with different composite expressions
+TEST_F(CustomFunctionTest, MultipleCallsWithCompositeExpressions) {
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "square"
+    );
+
+    Variable X, Y;
+    X = 2.0;
+    Y = 3.0;
+
+    // Build composite expressions
+    Expression g1 = X * Y;  // 6
+    Expression g2 = X + Y;  // 5
+
+    // Use in main expression: F = f(g1) + f(g2)
+    Expression F = f(g1) + f(g2);
+
+    EXPECT_DOUBLE_EQ(F->value(), 61.0);  // 36 + 25 = 61
+
+    // Compute gradients
+    zero_all_grad();
+    F->backward();
+
+    // dF/dX = df(g1)/dg1 * dg1/dX + df(g2)/dg2 * dg2/dX
+    //       = 2*g1 * Y + 2*g2 * 1
+    //       = 2*6*3 + 2*5*1 = 36 + 10 = 46
+    EXPECT_DOUBLE_EQ(X->gradient(), 46.0);
+
+    // dF/dY = df(g1)/dg1 * dg1/dY + df(g2)/dg2 * dg2/dY
+    //       = 2*g1 * X + 2*g2 * 1
+    //       = 2*6*2 + 2*5*1 = 24 + 10 = 34
+    EXPECT_DOUBLE_EQ(Y->gradient(), 34.0);
+}
+
+// Test: Custom function value cache is properly cleared (critical bug fix verification)
+TEST_F(CustomFunctionTest, ValueCacheProperlyCleared) {
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "square"
+    );
+
+    // First evaluation
+    double val1 = f.value({3.0});
+    EXPECT_DOUBLE_EQ(val1, 9.0);
+
+    // Second evaluation with different input - should NOT return cached value
+    double val2 = f.value({5.0});
+    EXPECT_DOUBLE_EQ(val2, 25.0);  // Should be 25, not 9
+
+    // Third evaluation
+    double val3 = f.value({7.0});
+    EXPECT_DOUBLE_EQ(val3, 49.0);  // Should be 49, not 9 or 25
+
+    // Verify gradients also work correctly
+    std::vector<double> grad1 = f.gradient({3.0});
+    EXPECT_DOUBLE_EQ(grad1[0], 6.0);  // 2*3 = 6
+
+    std::vector<double> grad2 = f.gradient({5.0});
+    EXPECT_DOUBLE_EQ(grad2[0], 10.0);  // 2*5 = 10, not 6
+
+    std::vector<double> grad3 = f.gradient({7.0});
+    EXPECT_DOUBLE_EQ(grad3[0], 14.0);  // 2*7 = 14, not 6 or 10
+}
+
+// Test: Custom function with nested composite expressions
+TEST_F(CustomFunctionTest, NestedCompositeExpressions) {
+    CustomFunction f = CustomFunction::create(
+        2,
+        [](const std::vector<Variable>& v) {
+            return v[0] + v[1];
+        },
+        "add"
+    );
+
+    Variable X, Y, Z;
+    X = 1.0;
+    Y = 2.0;
+    Z = 3.0;
+
+    // Build nested composite expressions
+    Expression g1 = X * Y;      // 2
+    Expression g2 = Y + Z;       // 5
+    Expression h = g1 * g2;      // 10
+
+    // Use nested composite: F = f(g1, h)
+    Expression F = f(g1, h);
+
+    EXPECT_DOUBLE_EQ(F->value(), 12.0);  // 2 + 10 = 12
+
+    // Compute gradients - should propagate through all levels
+    zero_all_grad();
+    F->backward();
+
+    // dF/dX = dF/dg1 * dg1/dX + dF/dh * dh/dg1 * dg1/dX
+    //       = 1 * Y + 1 * g2 * Y
+    //       = 2 + 5*2 = 2 + 10 = 12
+    EXPECT_DOUBLE_EQ(X->gradient(), 12.0);
+
+    // dF/dY = dF/dg1 * dg1/dY + dF/dh * (dh/dg1 * dg1/dY + dh/dg2 * dg2/dY)
+    //       = 1 * X + 1 * (g2 * X + g1 * 1)
+    //       = 1 + (5*1 + 2*1) = 1 + 7 = 8
+    EXPECT_DOUBLE_EQ(Y->gradient(), 8.0);
+
+    // dF/dZ = dF/dh * dh/dg2 * dg2/dZ
+    //       = 1 * g1 * 1
+    //       = 2
+    EXPECT_DOUBLE_EQ(Z->gradient(), 2.0);
+}
+

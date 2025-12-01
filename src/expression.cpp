@@ -181,6 +181,14 @@ ExpressionImpl::~ExpressionImpl() {
     if (third() != null) {
         third()->remove_root(this);
     }
+    // CUSTOM_FUNCTION ノードの場合、custom_args_ の親子関係も解除
+    if (op_ == CUSTOM_FUNCTION) {
+        for (const Expression& arg : custom_args_) {
+            if (arg != null) {
+                arg->remove_root(this);
+            }
+        }
+    }
 }
 
 double ExpressionImpl::value() {
@@ -417,15 +425,24 @@ static void topo_sort_dfs(ExpressionImpl* node,
     }
     visited.insert(node);
     
-    // Visit children first
-    if (node->left().get() != nullptr) {
-        topo_sort_dfs(node->left().get(), visited, order);
-    }
-    if (node->right().get() != nullptr) {
-        topo_sort_dfs(node->right().get(), visited, order);
-    }
-    if (node->third().get() != nullptr) {
-        topo_sort_dfs(node->third().get(), visited, order);
+    // CUSTOM_FUNCTION ノードの場合は custom_args_ を子として辿る
+    if (node->op() == ExpressionImpl::CUSTOM_FUNCTION) {
+        for (const Expression& arg : node->custom_args()) {
+            if (arg.get() != nullptr) {
+                topo_sort_dfs(arg.get(), visited, order);
+            }
+        }
+    } else {
+        // 既存ロジック: left/right/third
+        if (node->left().get() != nullptr) {
+            topo_sort_dfs(node->left().get(), visited, order);
+        }
+        if (node->right().get() != nullptr) {
+            topo_sort_dfs(node->right().get(), visited, order);
+        }
+        if (node->third().get() != nullptr) {
+            topo_sort_dfs(node->third().get(), visited, order);
+        }
     }
     
     // Add this node after children (reverse topological order)
@@ -492,7 +509,10 @@ void ExpressionImpl::print() {
     } else if (op_ == PHI2) {
         std::cout << std::setw(10) << "PHI2";
     } else if (op_ == CUSTOM_FUNCTION) {
-        std::cout << std::setw(10) << ("CUSTOM(" + custom_func_->name() + ")");
+        std::ostringstream oss;
+        oss << "CUSTOM(" << custom_func_->name()
+            << ", n=" << custom_args_.size() << ")";
+        std::cout << std::setw(10) << oss.str();
     }
 
     if (left() != null) {
@@ -1040,10 +1060,12 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
     }
 
     // 1. Clear value cache and gradients in internal expression tree
-    //    (but NOT the local input variables - they will be set next)
-    //    Also skip CONST nodes - they should always have their value set
     for (auto* node : nodes_) {
-        // Skip local input variables - they will be set below
+        // 1.1. 勾配は全ノードでクリア
+        node->zero_grad();
+
+        // 1.2. ローカル入力変数は value を直接上書きするので、
+        //      キャッシュクリアは上流側（root）からやればいい。
         bool is_local_var = false;
         for (size_t i = 0; i < input_dim_; ++i) {
             if (node == local_vars_[i].get()) {
@@ -1051,20 +1073,22 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
                 break;
             }
         }
-        // Skip CONST nodes - they should always have their value set and shouldn't be cleared
-        // Check if node is CONST by checking if it's already set and has no children
-        if (!is_local_var) {
-            // Only unset if it's not a CONST node (CONST nodes have is_set_value_ == true from construction)
-            // We can check this by seeing if it's a ConstImpl or by checking is_set_value_
-            // For safety, we check if value is already set - if so, it might be a CONST node
-            if (!node->is_set_value()) {
-                node->unset_value();
-            }
+        if (is_local_var) {
+            continue;
         }
-        node->zero_grad();
+
+        // 1.3. CONST ノードはグローバル共有なので value_ を触らない
+        if (node->op() == ExpressionImpl::CONST) {
+            continue;
+        }
+
+        // 1.4. それ以外のノードのキャッシュは無条件でクリア
+        //      unset_value() 側ですでに if (!is_set_value()) return; ガードが入っているので、
+        //      呼ぶ前に is_set_value() を見る必要はない
+        node->unset_value();
     }
 
-    // 2. Set values to local input variables (after clearing other nodes)
+    // 2. 最後にローカル入力変数に値を入れる
     for (size_t i = 0; i < input_dim_; ++i) {
         local_vars_[i] = x[i];
     }

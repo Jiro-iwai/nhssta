@@ -198,6 +198,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
         return id_;
     }
 
+    [[nodiscard]] Op op() const noexcept {
+        return op_;
+    }
+
     // Automatic differentiation (reverse-mode)
     void backward(double upstream = 1.0);
     [[nodiscard]] double gradient() const { return gradient_; }
@@ -217,6 +221,9 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     }
     [[nodiscard]] const Expression& third() const {
         return third_;
+    }
+    [[nodiscard]] const std::vector<Expression>& custom_args() const {
+        return custom_args_;
     }
 
    protected:
