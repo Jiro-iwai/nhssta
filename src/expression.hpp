@@ -568,11 +568,11 @@ public:
 
     // Factory method
     static CustomFunction create(size_t input_dim,
-                                 Builder builder,
+                                 const Builder& builder,
                                  const std::string& name = "") {
         return CustomFunction(
             std::make_shared<CustomFunctionImpl>(
-                input_dim, std::move(builder), name));
+                input_dim, builder, name));
     }
 
     [[nodiscard]] bool valid() const noexcept { return static_cast<bool>(impl_); }
