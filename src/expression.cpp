@@ -5,14 +5,18 @@
 #include "util_numerical.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 // Local helper functions for bivariate normal distribution
@@ -181,6 +185,33 @@ ExpressionImpl::~ExpressionImpl() {
 
 double ExpressionImpl::value() {
     if (!is_set_value()) {
+        // Check CUSTOM_FUNCTION operation first
+        if (op_ == CUSTOM_FUNCTION) {
+            std::vector<double> args_values;
+            args_values.reserve(custom_args_.size());
+            for (const Expression& e : custom_args_) {
+                args_values.push_back(e->value());
+            }
+
+            double v = custom_func_->value(args_values);
+
+            value_ = v;
+            is_set_value_ = true;
+            return v;
+        }
+
+        // Check CONST and PARAM operations
+        if (op_ == CONST) {
+            // CONST nodes should always have is_set_value_ == true
+            // This branch should not be reached, but handle it for safety
+            return value_;
+        }
+        if (op_ == PARAM) {
+            // PARAM nodes (Variables) must have value set before calling value()
+            // This branch should not be reached if Variable::operator= was called
+            throw Nh::RuntimeException("Expression: variable value not set");
+        }
+
         // Check 3-argument operations first
         if (left() != null && right() != null && third() != null) {
             double h = left()->value();
@@ -233,6 +264,8 @@ double ExpressionImpl::value() {
                     throw Nh::RuntimeException("Expression: square root of negative number");
                 }
                 value_ = std::sqrt(l);
+            } else {
+                throw Nh::RuntimeException("Expression: invalid unary operation");
             }
 
         } else {
@@ -288,6 +321,29 @@ void ExpressionImpl::propagate_gradient() {
     }
     
     double upstream = gradient_;
+    
+    // Check CUSTOM_FUNCTION operation first
+    if (op_ == CUSTOM_FUNCTION) {
+        std::vector<double> args_values;
+        args_values.reserve(custom_args_.size());
+        for (const Expression& e : custom_args_) {
+            args_values.push_back(e->value());
+        }
+
+        auto [val, grad_vec] = custom_func_->eval_with_gradient(args_values);
+
+        const size_t n = custom_args_.size();
+        if (grad_vec.size() != n) {
+            throw std::runtime_error(
+                "CustomFunction::eval_with_gradient: gradient size mismatch");
+        }
+
+        for (size_t i = 0; i < n; ++i) {
+            double contrib = upstream * grad_vec[i];
+            custom_args_[i]->gradient_ += contrib;
+        }
+        return;
+    }
     
     // Check 3-argument operations first
     if (left() != null && right() != null && third() != null) {
@@ -433,6 +489,10 @@ void ExpressionImpl::print() {
         std::cout << std::setw(10) << "sqrt";
     } else if (op_ == POWER) {
         std::cout << std::setw(10) << "^";
+    } else if (op_ == PHI2) {
+        std::cout << std::setw(10) << "PHI2";
+    } else if (op_ == CUSTOM_FUNCTION) {
+        std::cout << std::setw(10) << ("CUSTOM(" + custom_func_->name() + ")");
     }
 
     if (left() != null) {
@@ -713,7 +773,9 @@ Expression phi_expr(const Expression& x) {
     phi_expr_cache_misses++;
     
     static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
-    Expression result = INV_SQRT_2PI * exp(-(x * x) / two);
+    // Create a new Const(2.0) each time to avoid issues with global 'two' being cleared
+    // in custom function internal expression trees
+    Expression result = INV_SQRT_2PI * exp(-(x * x) / Const(2.0));
     
     // Cache the result
     phi_expr_cache[x.get()] = result;
@@ -890,3 +952,175 @@ Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expressi
 
 
 //////////////////////////
+
+//////////////////////////
+// Custom Function Implementation
+
+ExpressionImpl::ExpressionImpl(const CustomFunctionHandle& func,
+                               const std::vector<Expression>& args)
+    : id_(current_id_++)
+    , is_set_value_(false)
+    , value_(0.0)
+    , gradient_(0.0)
+    , is_gradient_set_(false)
+    , op_(CUSTOM_FUNCTION)
+    , left_(null)
+    , right_(null)
+    , third_(null)
+    , custom_func_(func)
+    , custom_args_(args) {
+    eTbl().insert(this);
+    // Add this node as root to all argument expressions
+    for (const Expression& arg : custom_args_) {
+        if (arg) {
+            arg->add_root(this);
+        }
+    }
+}
+
+CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
+                                       Builder builder,
+                                       const std::string& name)
+    : input_dim_(input_dim) {
+    // Determine name
+    if (name.empty()) {
+        static std::atomic<size_t> counter{0};
+        size_t id = counter++;
+        name_ = "custom_f_" + std::to_string(id);
+    } else {
+        name_ = name;
+    }
+
+    // 1. Create local input variables
+    local_vars_.resize(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        local_vars_[i] = Variable();
+    }
+
+    // 2. Call builder to construct expression tree
+    output_ = builder(local_vars_);
+
+    // 3. Build list of all nodes in internal expression tree
+    build_nodes_list();
+}
+
+void CustomFunctionImpl::build_nodes_list() {
+    nodes_.clear();
+    std::unordered_set<ExpressionImpl*> visited;
+    if (output_) {
+        collect_nodes_dfs(output_.get(), visited);
+    }
+}
+
+void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
+                                           std::unordered_set<ExpressionImpl*>& visited) {
+    if (!node || visited.find(node) != visited.end()) {
+        return;
+    }
+
+    visited.insert(node);
+    nodes_.push_back(node);
+
+    // Recursively collect children
+    if (node->left()) {
+        collect_nodes_dfs(node->left().get(), visited);
+    }
+    if (node->right()) {
+        collect_nodes_dfs(node->right().get(), visited);
+    }
+    if (node->third()) {
+        collect_nodes_dfs(node->third().get(), visited);
+    }
+}
+
+void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
+    if (x.size() != input_dim_) {
+        throw std::invalid_argument(
+            "CustomFunctionImpl::set_inputs_and_clear: size mismatch");
+    }
+
+    // 1. Clear value cache and gradients in internal expression tree
+    //    (but NOT the local input variables - they will be set next)
+    //    Also skip CONST nodes - they should always have their value set
+    for (auto* node : nodes_) {
+        // Skip local input variables - they will be set below
+        bool is_local_var = false;
+        for (size_t i = 0; i < input_dim_; ++i) {
+            if (node == local_vars_[i].get()) {
+                is_local_var = true;
+                break;
+            }
+        }
+        // Skip CONST nodes - they should always have their value set and shouldn't be cleared
+        // Check if node is CONST by checking if it's already set and has no children
+        if (!is_local_var) {
+            // Only unset if it's not a CONST node (CONST nodes have is_set_value_ == true from construction)
+            // We can check this by seeing if it's a ConstImpl or by checking is_set_value_
+            // For safety, we check if value is already set - if so, it might be a CONST node
+            if (!node->is_set_value()) {
+                node->unset_value();
+            }
+        }
+        node->zero_grad();
+    }
+
+    // 2. Set values to local input variables (after clearing other nodes)
+    for (size_t i = 0; i < input_dim_; ++i) {
+        local_vars_[i] = x[i];
+    }
+}
+
+double CustomFunctionImpl::value(const std::vector<double>& x) {
+    set_inputs_and_clear(x);
+    return output_->value();
+}
+
+std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
+    set_inputs_and_clear(x);
+    output_->value();
+    output_->backward(1.0);
+
+    std::vector<double> grad(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        grad[i] = local_vars_[i]->gradient();
+    }
+    return grad;
+}
+
+std::pair<double, std::vector<double>>
+CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
+    set_inputs_and_clear(x);
+    double v = output_->value();
+    output_->backward(1.0);
+
+    std::vector<double> grad(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        grad[i] = local_vars_[i]->gradient();
+    }
+    return {v, std::move(grad)};
+}
+
+std::pair<double, std::vector<double>>
+CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
+    return value_and_gradient(args_values);
+}
+
+Expression CustomFunction::operator()(const std::vector<Expression>& args) const {
+    ensure_valid();
+    if (args.size() != impl_->input_dim()) {
+        throw std::invalid_argument(
+            "CustomFunction::operator(): argument count mismatch");
+    }
+    return make_custom_call(impl_, args);
+}
+
+Expression CustomFunction::operator()(std::initializer_list<Expression> args) const {
+    return (*this)(std::vector<Expression>(args));
+}
+
+Expression make_custom_call(const CustomFunctionHandle& func,
+                            const std::vector<Expression>& args) {
+    // Create a new ExpressionImpl node with CUSTOM_FUNCTION operation
+    auto impl = std::make_shared<ExpressionImpl>(func, args);
+    return Expression(impl);
+}
