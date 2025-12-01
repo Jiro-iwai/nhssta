@@ -540,11 +540,17 @@ private:
     // List of all nodes in internal expression tree (built once)
     std::vector<ExpressionImpl*> nodes_;
 
+    // Cache for last evaluated arguments and value to avoid re-evaluation
+    std::vector<double> last_args_;
+    double last_value_;
+    bool has_cached_value_;
+
     // Helper methods
     void build_nodes_list();
     void collect_nodes_dfs(ExpressionImpl* node,
                            std::unordered_set<ExpressionImpl*>& visited);
     void set_inputs_and_clear(const std::vector<double>& x);
+    bool args_equal(const std::vector<double>& a, const std::vector<double>& b) const;
 };
 
 // User-facing wrapper class
@@ -647,7 +653,7 @@ private:
 
     void ensure_valid() const {
         if (!impl_) {
-            throw std::runtime_error(
+            throw Nh::RuntimeException(
                 "CustomFunction: invalid (null) handle");
         }
     }

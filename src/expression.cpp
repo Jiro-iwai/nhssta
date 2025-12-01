@@ -342,7 +342,7 @@ void ExpressionImpl::propagate_gradient() {
 
         const size_t n = custom_args_.size();
         if (grad_vec.size() != n) {
-            throw std::runtime_error(
+            throw Nh::RuntimeException(
                 "CustomFunction::eval_with_gradient: gradient size mismatch");
         }
 
@@ -1001,7 +1001,7 @@ ExpressionImpl::ExpressionImpl(const CustomFunctionHandle& func,
 CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
                                        Builder builder,
                                        const std::string& name)
-    : input_dim_(input_dim) {
+    : input_dim_(input_dim), last_value_(0.0), has_cached_value_(false) {
     // Determine name
     if (name.empty()) {
         static std::atomic<size_t> counter{0};
@@ -1064,7 +1064,7 @@ void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
 
 void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
     if (x.size() != input_dim_) {
-        throw std::invalid_argument(
+        throw Nh::RuntimeException(
             "CustomFunctionImpl::set_inputs_and_clear: size mismatch");
     }
 
@@ -1103,9 +1103,27 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
     }
 }
 
+bool CustomFunctionImpl::args_equal(const std::vector<double>& a,
+                                    const std::vector<double>& b) const {
+    if (a.size() != b.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 double CustomFunctionImpl::value(const std::vector<double>& x) {
     set_inputs_and_clear(x);
-    return output_->value();
+    double v = output_->value();
+    // Cache the value and arguments for potential reuse in eval_with_gradient
+    last_args_ = x;
+    last_value_ = v;
+    has_cached_value_ = true;
+    return v;
 }
 
 std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
@@ -1135,13 +1153,32 @@ CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
 
 std::pair<double, std::vector<double>>
 CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
-    return value_and_gradient(args_values);
+    // Optimization: if value was already computed with the same arguments,
+    // reuse it and only compute gradient
+    double v;
+    if (has_cached_value_ && args_equal(args_values, last_args_)) {
+        // Reuse cached value, only compute gradient
+        v = last_value_;
+        // Still need to set inputs for gradient computation
+        set_inputs_and_clear(args_values);
+        // Value is already computed, skip value() call
+        output_->backward(1.0);
+    } else {
+        // Compute both value and gradient
+        return value_and_gradient(args_values);
+    }
+
+    std::vector<double> grad(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        grad[i] = local_vars_[i]->gradient();
+    }
+    return {v, std::move(grad)};
 }
 
 Expression CustomFunction::operator()(const std::vector<Expression>& args) const {
     ensure_valid();
     if (args.size() != impl_->input_dim()) {
-        throw std::invalid_argument(
+        throw Nh::RuntimeException(
             "CustomFunction::operator(): argument count mismatch");
     }
     return make_custom_call(impl_, args);

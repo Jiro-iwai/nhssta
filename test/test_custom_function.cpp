@@ -513,8 +513,8 @@ TEST_F(CustomFunctionTest, InvalidArgumentCount) {
     X = 1.0;
 
     // Should throw when calling with wrong number of arguments
-    EXPECT_THROW(f(X), std::invalid_argument);
-    EXPECT_THROW(f({X, X, X}), std::invalid_argument);
+    EXPECT_THROW(f(X), Nh::RuntimeException);
+    EXPECT_THROW(f({X, X, X}), Nh::RuntimeException);
 }
 
 // Test: Invalid input size for value/gradient
@@ -528,8 +528,8 @@ TEST_F(CustomFunctionTest, InvalidInputSize) {
     );
 
     // Should throw when calling with wrong input size
-    EXPECT_THROW(f.value({1.0}), std::invalid_argument);
-    EXPECT_THROW(f.gradient({1.0, 2.0, 3.0}), std::invalid_argument);
+    EXPECT_THROW(f.value({1.0}), Nh::RuntimeException);
+    EXPECT_THROW(f.gradient({1.0, 2.0, 3.0}), Nh::RuntimeException);
 }
 
 // Test: Default name generation
@@ -674,10 +674,10 @@ TEST_F(CustomFunctionTest, InvalidCustomFunction) {
     EXPECT_FALSE(static_cast<bool>(f));
 
     // Should throw when accessing methods
-    EXPECT_THROW(f.input_dim(), std::runtime_error);
-    EXPECT_THROW(f.name(), std::runtime_error);
-    EXPECT_THROW(f.value({1.0}), std::runtime_error);
-    EXPECT_THROW(f.gradient({1.0}), std::runtime_error);
+    EXPECT_THROW(f.input_dim(), Nh::RuntimeException);
+    EXPECT_THROW(f.name(), Nh::RuntimeException);
+    EXPECT_THROW(f.value({1.0}), Nh::RuntimeException);
+    EXPECT_THROW(f.gradient({1.0}), Nh::RuntimeException);
 }
 
 // Test: Custom function with division (potential division by zero)
