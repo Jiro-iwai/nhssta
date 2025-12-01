@@ -515,11 +515,11 @@ public:
     using Builder = CustomFunctionBuilder;
 
     CustomFunctionImpl(size_t input_dim,
-                       Builder builder,
+                       const Builder& builder,
                        const std::string& name = "");
 
-    size_t input_dim() const noexcept { return input_dim_; }
-    const std::string& name() const noexcept { return name_; }
+    [[nodiscard]] size_t input_dim() const noexcept { return input_dim_; }
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
 
     // Independent evaluation API
     double value(const std::vector<double>& x);
@@ -542,15 +542,16 @@ private:
 
     // Cache for last evaluated arguments and value to avoid re-evaluation
     std::vector<double> last_args_;
-    double last_value_;
-    bool has_cached_value_;
+    double last_value_{0.0};
+    bool has_cached_value_{false};
 
     // Helper methods
     void build_nodes_list();
     void collect_nodes_dfs(ExpressionImpl* node,
                            std::unordered_set<ExpressionImpl*>& visited);
     void set_inputs_and_clear(const std::vector<double>& x);
-    bool args_equal(const std::vector<double>& a, const std::vector<double>& b) const;
+    [[nodiscard]] static bool args_equal(const std::vector<double>& a,
+                                         const std::vector<double>& b);
 };
 
 // User-facing wrapper class
@@ -574,31 +575,31 @@ public:
                 input_dim, std::move(builder), name));
     }
 
-    bool valid() const noexcept { return static_cast<bool>(impl_); }
+    [[nodiscard]] bool valid() const noexcept { return static_cast<bool>(impl_); }
     explicit operator bool() const noexcept { return valid(); }
 
-    size_t input_dim() const {
+    [[nodiscard]] size_t input_dim() const {
         ensure_valid();
         return impl_->input_dim();
     }
 
-    const std::string& name() const {
+    [[nodiscard]] const std::string& name() const {
         ensure_valid();
         return impl_->name();
     }
 
     // Independent evaluation API
-    double value(const std::vector<double>& x) const {
+    [[nodiscard]] double value(const std::vector<double>& x) const {
         ensure_valid();
         return impl_->value(x);
     }
 
-    std::vector<double> gradient(const std::vector<double>& x) const {
+    [[nodiscard]] std::vector<double> gradient(const std::vector<double>& x) const {
         ensure_valid();
         return impl_->gradient(x);
     }
 
-    std::pair<double, std::vector<double>>
+    [[nodiscard]] std::pair<double, std::vector<double>>
     value_and_gradient(const std::vector<double>& x) const {
         ensure_valid();
         return impl_->value_and_gradient(x);
@@ -646,7 +647,7 @@ public:
         return (*this)({a, b, c, d, e, f, g});
     }
 
-    CustomFunctionHandle handle() const noexcept { return impl_; }
+    [[nodiscard]] CustomFunctionHandle handle() const noexcept { return impl_; }
 
 private:
     CustomFunctionHandle impl_;

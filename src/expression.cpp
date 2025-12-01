@@ -999,9 +999,9 @@ ExpressionImpl::ExpressionImpl(const CustomFunctionHandle& func,
 }
 
 CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
-                                       Builder builder,
+                                       const Builder& builder,
                                        const std::string& name)
-    : input_dim_(input_dim), last_value_(0.0), has_cached_value_(false) {
+    : input_dim_(input_dim) {
     // Determine name
     if (name.empty()) {
         static std::atomic<size_t> counter{0};
@@ -1034,7 +1034,7 @@ void CustomFunctionImpl::build_nodes_list() {
 
 void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
                                            std::unordered_set<ExpressionImpl*>& visited) {
-    if (!node || visited.find(node) != visited.end()) {
+    if (node == nullptr || visited.find(node) != visited.end()) {
         return;
     }
 
@@ -1104,7 +1104,7 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
 }
 
 bool CustomFunctionImpl::args_equal(const std::vector<double>& a,
-                                    const std::vector<double>& b) const {
+                                    const std::vector<double>& b) {
     if (a.size() != b.size()) {
         return false;
     }
@@ -1155,7 +1155,7 @@ std::pair<double, std::vector<double>>
 CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
     // Optimization: if value was already computed with the same arguments,
     // reuse it and only compute gradient
-    double v;
+    double v = 0.0;
     if (has_cached_value_ && args_equal(args_values, last_args_)) {
         // Reuse cached value, only compute gradient
         v = last_value_;
