@@ -547,6 +547,7 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
  *
  * When ρ = -1: D0 = μ0 + σ0·Z, D1 = μ1 - σ1·Z (opposite signs)
  * Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
+ * E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
  * Returns 0 if a0 + a1 <= 0 (interval is empty)
  */
 Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,

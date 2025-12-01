@@ -11,6 +11,8 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <tuple>
+#include <unordered_map>
 #include <vector>
 
 // Local helper functions for bivariate normal distribution
@@ -667,6 +669,25 @@ void zero_all_grad() {
 //////////////////////////
 // Bivariate normal distribution expressions (Phase 5 of #167)
 
+// Cache for expected_prod_pos_expr (pointer-based)
+// Key: tuple of ExpressionImpl pointers (mu0, sigma0, mu1, sigma1, rho)
+using ExpectedProdPosCacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
+
+// Hash function for tuple of pointers
+struct ExpectedProdPosCacheKeyHash {
+    std::size_t operator()(const ExpectedProdPosCacheKey& key) const {
+        std::size_t h1 = std::hash<ExpressionImpl*>{}(std::get<0>(key));
+        std::size_t h2 = std::hash<ExpressionImpl*>{}(std::get<1>(key));
+        std::size_t h3 = std::hash<ExpressionImpl*>{}(std::get<2>(key));
+        std::size_t h4 = std::hash<ExpressionImpl*>{}(std::get<3>(key));
+        std::size_t h5 = std::hash<ExpressionImpl*>{}(std::get<4>(key));
+        return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3) ^ (h5 << 4);
+    }
+};
+
+static std::unordered_map<ExpectedProdPosCacheKey, Expression, ExpectedProdPosCacheKeyHash>
+    expected_prod_pos_expr_cache;
+
 Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho) {
     // φ₂(x, y; ρ) = 1/(2π√(1-ρ²)) × exp(-(x² - 2ρxy + y²)/(2(1-ρ²)))
     Expression one_minus_rho2 = Const(1.0) - rho * rho;
@@ -694,6 +715,13 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     //
     // where a0 = μ0/σ0, a1 = μ1/σ1
 
+    // Check cache first (pointer-based)
+    auto key = std::make_tuple(mu0.get(), sigma0.get(), mu1.get(), sigma1.get(), rho.get());
+    auto it = expected_prod_pos_expr_cache.find(key);
+    if (it != expected_prod_pos_expr_cache.end()) {
+        return it->second;
+    }
+
     Expression a0 = mu0 / sigma0;
     Expression a1 = mu1 / sigma1;
 
@@ -720,7 +748,12 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     Expression term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
     Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
 
-    return term1 + term2 + term3 + term4;
+    Expression result = term1 + term2 + term3 + term4;
+    
+    // Cache the result
+    expected_prod_pos_expr_cache[key] = result;
+    
+    return result;
 }
 
 // E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
