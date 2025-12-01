@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
@@ -697,6 +698,7 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
             continue;
         }
         const RandomVariable& lat = sig_it->second;
+        
         Expression mean_expr = lat->mean_expr();
         Expression std_expr = lat->std_expr();
         Expression score_expr = mean_expr + std_expr;

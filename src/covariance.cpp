@@ -3,11 +3,13 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <nhssta/exception.hpp>
 
 #include "add.hpp"
 #include "covariance.hpp"
+#include "expression.hpp"
 #include "max.hpp"
 #include "statistics.hpp"
 #include "sub.hpp"
@@ -218,7 +220,9 @@ static Expression cov_max0_max0_expr_impl(const RandomVariable& a, const RandomV
     }
 
     // Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]
-    return E_prod - E_D0_pos * E_D1_pos;
+    Expression result = E_prod - E_D0_pos * E_D1_pos;
+    
+    return result;
 }
 
 Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
@@ -240,9 +244,13 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
     }
     // C-5.3: ADD linear expansion - Cov(A+B, X) = Cov(A,X) + Cov(B,X)
     else if (dynamic_cast<const OpADD*>(a.get()) != nullptr) {
-        result = cov_expr(a->left(), b) + cov_expr(a->right(), b);
+        Expression cov_left = cov_expr(a->left(), b);
+        Expression cov_right = cov_expr(a->right(), b);
+        result = cov_left + cov_right;
     } else if (dynamic_cast<const OpADD*>(b.get()) != nullptr) {
-        result = cov_expr(a, b->left()) + cov_expr(a, b->right());
+        Expression cov_left = cov_expr(a, b->left());
+        Expression cov_right = cov_expr(a, b->right());
+        result = cov_left + cov_right;
     }
     // C-5.3: SUB linear expansion - Cov(A-B, X) = Cov(A,X) - Cov(B,X)
     else if (dynamic_cast<const OpSUB*>(a.get()) != nullptr) {
