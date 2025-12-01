@@ -1621,3 +1621,181 @@ TEST_F(CustomFunctionTest, MixedSimpleAndCompositeArguments) {
     EXPECT_DOUBLE_EQ(Z->gradient(), 0.0);
 }
 
+// Test: Nested custom function gradient accumulation bug fix
+// This test verifies that when a custom function calls another custom function,
+// the gradient does not accumulate across multiple calls.
+TEST_F(CustomFunctionTest, NestedCustomFunctionGradientNoAccumulation) {
+    // Define f(x, y) = x^2 + y^2
+    CustomFunction f = CustomFunction::create(
+        2,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0] + v[1] * v[1];
+        },
+        "f"
+    );
+
+    // Define g(x, y) that calls f(x, y) internally
+    // g(x, y) = f(x, y) + x
+    CustomFunction g = CustomFunction::create(
+        2,
+        [&f](const std::vector<Variable>& v) {
+            Expression f_result = f(v[0], v[1]);
+            return f_result + v[0];
+        },
+        "g"
+    );
+
+    // Create main expression tree: G(X, Y) = g(X, Y)
+    Variable X, Y;
+    X = 2.0;
+    Y = 3.0;
+    Expression G = g(X, Y);
+
+    // First call: compute gradient
+    zero_all_grad();
+    G->backward();
+    double grad_X_first = X->gradient();
+    double grad_Y_first = Y->gradient();
+
+    // Expected gradients:
+    // dG/dX = dg/dX = df/dX + 1 = 2*X + 1 = 2*2 + 1 = 5
+    // dG/dY = dg/dY = df/dY = 2*Y = 2*3 = 6
+    EXPECT_DOUBLE_EQ(grad_X_first, 5.0);
+    EXPECT_DOUBLE_EQ(grad_Y_first, 6.0);
+
+    // Second call: compute gradient again with same inputs
+    zero_all_grad();
+    G->backward();
+    double grad_X_second = X->gradient();
+    double grad_Y_second = Y->gradient();
+
+    // Gradients should be the same (not accumulated)
+    EXPECT_DOUBLE_EQ(grad_X_second, 5.0);
+    EXPECT_DOUBLE_EQ(grad_Y_second, 6.0);
+    EXPECT_DOUBLE_EQ(grad_X_first, grad_X_second);
+    EXPECT_DOUBLE_EQ(grad_Y_first, grad_Y_second);
+
+    // Third call: compute gradient again
+    zero_all_grad();
+    G->backward();
+    double grad_X_third = X->gradient();
+    double grad_Y_third = Y->gradient();
+
+    // Still should be the same
+    EXPECT_DOUBLE_EQ(grad_X_third, 5.0);
+    EXPECT_DOUBLE_EQ(grad_Y_third, 6.0);
+
+    // Change inputs and verify gradients update correctly
+    X = 1.0;
+    Y = 4.0;
+    zero_all_grad();
+    G->backward();
+    double grad_X_new = X->gradient();
+    double grad_Y_new = Y->gradient();
+
+    // Expected gradients with new inputs:
+    // dG/dX = 2*1 + 1 = 3
+    // dG/dY = 2*4 = 8
+    EXPECT_DOUBLE_EQ(grad_X_new, 3.0);
+    EXPECT_DOUBLE_EQ(grad_Y_new, 8.0);
+}
+
+// Test: Nested custom function with multiple gradient calls
+// Verifies that gradients do not accumulate across multiple calls
+TEST_F(CustomFunctionTest, NestedCustomFunctionValueAndGradientNoAccumulation) {
+    // Define f(x) = x^2
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "f"
+    );
+
+    // Define g(x) that calls f(x) internally
+    // g(x) = f(x) + x
+    CustomFunction g = CustomFunction::create(
+        1,
+        [&f](const std::vector<Variable>& v) {
+            Expression f_result = f(v[0]);
+            return f_result + v[0];
+        },
+        "g"
+    );
+
+    // Create main expression tree: G(X) = g(X)
+    Variable X;
+    X = 3.0;
+    Expression G = g(X);
+
+    // First call: compute value and gradient
+    double val1 = G->value();
+    zero_all_grad();
+    G->backward();
+    double grad1 = X->gradient();
+    EXPECT_DOUBLE_EQ(val1, 12.0);  // 3^2 + 3 = 9 + 3 = 12
+    EXPECT_DOUBLE_EQ(grad1, 7.0);  // 2*3 + 1 = 7
+
+    // Second call with same input
+    double val2 = G->value();
+    zero_all_grad();
+    G->backward();
+    double grad2 = X->gradient();
+    EXPECT_DOUBLE_EQ(val2, 12.0);
+    EXPECT_DOUBLE_EQ(grad2, 7.0);
+    EXPECT_DOUBLE_EQ(grad1, grad2);
+
+    // Third call
+    double val3 = G->value();
+    zero_all_grad();
+    G->backward();
+    double grad3 = X->gradient();
+    EXPECT_DOUBLE_EQ(val3, 12.0);
+    EXPECT_DOUBLE_EQ(grad3, 7.0);
+}
+
+// Test: Deeply nested custom functions
+// Verifies that deeply nested custom functions work correctly
+TEST_F(CustomFunctionTest, DeeplyNestedCustomFunctions) {
+    // f(x) = x^2
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "f"
+    );
+
+    // g(x) = f(x) + x
+    CustomFunction g = CustomFunction::create(
+        1,
+        [&f](const std::vector<Variable>& v) {
+            return f(v[0]) + v[0];
+        },
+        "g"
+    );
+
+    // h(x) = g(x) * 2
+    CustomFunction h = CustomFunction::create(
+        1,
+        [&g](const std::vector<Variable>& v) {
+            return g(v[0]) * Const(2.0);
+        },
+        "h"
+    );
+
+    Variable X;
+    X = 2.0;
+    Expression H = h(X);
+
+    // Compute value and gradient multiple times
+    for (int i = 0; i < 5; ++i) {
+        zero_all_grad();
+        H->backward();
+        double grad = X->gradient();
+
+        // Expected: dH/dX = 2 * dg/dX = 2 * (2*X + 1) = 2 * (2*2 + 1) = 2 * 5 = 10
+        EXPECT_DOUBLE_EQ(grad, 10.0);
+    }
+}
+

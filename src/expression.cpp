@@ -1041,15 +1041,24 @@ void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
     visited.insert(node);
     nodes_.push_back(node);
 
-    // Recursively collect children
-    if (node->left()) {
-        collect_nodes_dfs(node->left().get(), visited);
-    }
-    if (node->right()) {
-        collect_nodes_dfs(node->right().get(), visited);
-    }
-    if (node->third()) {
-        collect_nodes_dfs(node->third().get(), visited);
+    // CUSTOM_FUNCTION ノードなら custom_args_ を辿る
+    if (node->op() == ExpressionImpl::CUSTOM_FUNCTION) {
+        for (const Expression& arg : node->custom_args()) {
+            if (arg) {
+                collect_nodes_dfs(arg.get(), visited);
+            }
+        }
+    } else {
+        // 通常どおり left/right/third を辿る
+        if (node->left()) {
+            collect_nodes_dfs(node->left().get(), visited);
+        }
+        if (node->right()) {
+            collect_nodes_dfs(node->right().get(), visited);
+        }
+        if (node->third()) {
+            collect_nodes_dfs(node->third().get(), visited);
+        }
     }
 }
 
