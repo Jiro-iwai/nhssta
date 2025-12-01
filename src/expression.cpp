@@ -94,6 +94,8 @@ static Expression null(nullptr);
 static const Const zero(0.0);
 static const Const one(1.0);
 static const Const minus_one(-1.0);
+static const Const two(2.0);
+static const Const half(0.5);
 
 ExpressionImpl::ExpressionImpl()
     : id_(current_id_++)
@@ -754,7 +756,7 @@ Expression phi2_expr(const Expression& x, const Expression& y, const Expression&
     }
     
     size_t nodes_before_Q = ExpressionImpl::node_count();
-    Expression Q = (x * x - Const(2.0) * rho * x * y + y * y) / one_minus_rho2_local;
+    Expression Q = (x * x - two * rho * x * y + y * y) / one_minus_rho2_local;
     size_t nodes_after_Q = ExpressionImpl::node_count();
     
     if (nodes_after_Q - nodes_before_Q > 0) {
@@ -763,7 +765,7 @@ Expression phi2_expr(const Expression& x, const Expression& y, const Expression&
     }
     
     size_t nodes_before_result = ExpressionImpl::node_count();
-    Expression result = coeff * exp(-Q / Const(2.0));
+    Expression result = coeff * exp(-Q / two);
     size_t nodes_after_result = ExpressionImpl::node_count();
     
     if (nodes_after_result - nodes_before_result > 0) {
@@ -1057,10 +1059,10 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
     // When a0 < a1: c = -a0, when a0 >= a1: c = -a1
     double a0_val = a0->value();
     double a1_val = a1->value();
-    Expression c = (a0_val < a1_val) ? (Const(-1.0) * a0) : (Const(-1.0) * a1);
+    Expression c = (a0_val < a1_val) ? (minus_one * a0) : (minus_one * a1);
 
     // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
-    Expression Phi_neg_c = Phi_expr(Const(-1.0) * c);
+    Expression Phi_neg_c = Phi_expr(minus_one * c);
     Expression phi_c = phi_expr(c);
 
     Expression result = sigma0 * sigma1 *
