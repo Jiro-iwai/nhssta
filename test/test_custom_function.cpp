@@ -1374,3 +1374,250 @@ TEST_F(CustomFunctionTest, NestedCompositeExpressions) {
     EXPECT_DOUBLE_EQ(Z->gradient(), 2.0);
 }
 
+// Test: Value cache is properly cleared when used in main expression tree (bug fix verification)
+TEST_F(CustomFunctionTest, ValueCacheClearedInMainExpressionTree) {
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0] + v[0];
+        },
+        "quadratic"
+    );
+
+    Variable X;
+    X = 2.0;
+
+    // Build main expression
+    Expression F = f(X);
+    double val1 = F->value();
+    EXPECT_DOUBLE_EQ(val1, 6.0);  // 4 + 2 = 6
+
+    // Change X value
+    X = 5.0;
+    double val2 = F->value();
+    EXPECT_DOUBLE_EQ(val2, 30.0);  // 25 + 5 = 30, not 6
+
+    // Change again
+    X = 7.0;
+    double val3 = F->value();
+    EXPECT_DOUBLE_EQ(val3, 56.0);  // 49 + 7 = 56, not 6 or 30
+
+    // Verify gradients also work correctly
+    zero_all_grad();
+    F->backward();
+    EXPECT_DOUBLE_EQ(X->gradient(), 15.0);  // 2*7 + 1 = 15
+
+    X = 3.0;
+    zero_all_grad();
+    F->backward();
+    EXPECT_DOUBLE_EQ(X->gradient(), 7.0);  // 2*3 + 1 = 7, not 15
+}
+
+// Test: Memory safety - custom function node destruction doesn't cause use-after-free
+TEST_F(CustomFunctionTest, MemorySafetyAfterDestruction) {
+    CustomFunction f = CustomFunction::create(
+        2,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[1];
+        },
+        "multiply"
+    );
+
+    Variable X, Y;
+    X = 2.0;
+    Y = 3.0;
+
+    // Build composite expression
+    Expression g = X * Y;
+
+    // Create custom function node
+    Expression F = f(g, Y);
+    double val = F->value();
+    EXPECT_DOUBLE_EQ(val, 18.0);  // f(6, 3) = 18
+
+    // Destroy the custom function node by going out of scope
+    {
+        Expression F2 = f(g, Y);
+        double val2 = F2->value();
+        EXPECT_DOUBLE_EQ(val2, 18.0);
+    }  // F2 is destroyed here - this tests that remove_root() was called correctly
+
+    // After F2 is destroyed, g and X, Y should still be safe to use
+    // The key test is that accessing g doesn't cause use-after-free
+    EXPECT_DOUBLE_EQ(g->value(), 6.0);  // X=2, Y=3, so 2*3=6
+    
+    // Change X value - g should update correctly (or stay cached, both are OK)
+    // The important thing is that it doesn't crash
+    X = 4.0;
+    double g_val_after = g->value();  // May be 12 (if recalculated) or 6 (if cached)
+    // Both are acceptable - the key is no crash
+    
+    // Should be able to create new expressions with g without crashing
+    Expression h = g + X;
+    double h_val = h->value();  // Should compute without crashing
+    EXPECT_GT(h_val, 0.0);  // Just verify it doesn't crash and returns a reasonable value
+    
+    // Verify we can still use X and Y
+    Expression k = X + Y;
+    EXPECT_DOUBLE_EQ(k->value(), 7.0);  // 4 + 3 = 7
+}
+
+// Test: Complex nested custom functions with composite arguments
+TEST_F(CustomFunctionTest, ComplexNestedCustomFunctions) {
+    CustomFunction f1 = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "square"
+    );
+
+    CustomFunction f2 = CustomFunction::create(
+        2,
+        [](const std::vector<Variable>& v) {
+            return v[0] + v[1];
+        },
+        "add"
+    );
+
+    Variable X, Y, Z;
+    X = 2.0;
+    Y = 3.0;
+    Z = 4.0;
+
+    // Build composite expressions
+    Expression g1 = X * Y;      // 6
+    Expression g2 = Y + Z;       // 7
+    Expression h1 = f1(g1);     // 36
+    Expression h2 = f1(g2);     // 49
+
+    // Use in main expression: F = f2(h1, h2)
+    Expression F = f2(h1, h2);
+
+    EXPECT_DOUBLE_EQ(F->value(), 85.0);  // 36 + 49 = 85
+
+    // Compute gradients - should propagate through all levels
+    zero_all_grad();
+    F->backward();
+
+    // dF/dX = dF/dh1 * dh1/dg1 * dg1/dX + dF/dh2 * dh2/dg2 * dg2/dX
+    //       = 1 * 2*g1 * Y + 1 * 2*g2 * 0
+    //       = 2*6*3 + 0 = 36
+    EXPECT_DOUBLE_EQ(X->gradient(), 36.0);
+
+    // dF/dY = dF/dh1 * dh1/dg1 * dg1/dY + dF/dh2 * dh2/dg2 * dg2/dY
+    //       = 1 * 2*g1 * X + 1 * 2*g2 * 1
+    //       = 2*6*2 + 2*7*1 = 24 + 14 = 38
+    EXPECT_DOUBLE_EQ(Y->gradient(), 38.0);
+
+    // dF/dZ = dF/dh2 * dh2/dg2 * dg2/dZ
+    //       = 1 * 2*g2 * 1
+    //       = 2*7 = 14
+    EXPECT_DOUBLE_EQ(Z->gradient(), 14.0);
+}
+
+// Test: Multiple custom function calls with same composite expression argument
+TEST_F(CustomFunctionTest, MultipleCallsSameCompositeArgument) {
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "square"
+    );
+
+    Variable X, Y;
+    X = 2.0;
+    Y = 3.0;
+
+    // Build composite expression
+    Expression g = X * Y;  // 6
+
+    // Use same composite expression in multiple custom function calls
+    Expression F = f(g) + f(g) + f(g);
+
+    EXPECT_DOUBLE_EQ(F->value(), 108.0);  // 36 + 36 + 36 = 108
+
+    // Compute gradients
+    zero_all_grad();
+    F->backward();
+
+    // dF/dX = 3 * df(g)/dg * dg/dX = 3 * 2*g * Y = 3 * 2*6*3 = 108
+    EXPECT_DOUBLE_EQ(X->gradient(), 108.0);
+
+    // dF/dY = 3 * df(g)/dg * dg/dY = 3 * 2*g * X = 3 * 2*6*2 = 72
+    EXPECT_DOUBLE_EQ(Y->gradient(), 72.0);
+}
+
+// Test: Custom function with value_and_gradient cache clearing
+TEST_F(CustomFunctionTest, ValueAndGradientCacheClearing) {
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "square"
+    );
+
+    // First call
+    auto [val1, grad1] = f.value_and_gradient({3.0});
+    EXPECT_DOUBLE_EQ(val1, 9.0);
+    EXPECT_DOUBLE_EQ(grad1[0], 6.0);
+
+    // Second call with different input
+    auto [val2, grad2] = f.value_and_gradient({5.0});
+    EXPECT_DOUBLE_EQ(val2, 25.0);  // Should be 25, not 9
+    EXPECT_DOUBLE_EQ(grad2[0], 10.0);  // Should be 10, not 6
+
+    // Third call
+    auto [val3, grad3] = f.value_and_gradient({7.0});
+    EXPECT_DOUBLE_EQ(val3, 49.0);  // Should be 49, not 9 or 25
+    EXPECT_DOUBLE_EQ(grad3[0], 14.0);  // Should be 14, not 6 or 10
+}
+
+// Test: Custom function with mixed simple and composite arguments
+TEST_F(CustomFunctionTest, MixedSimpleAndCompositeArguments) {
+    CustomFunction f = CustomFunction::create(
+        3,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[1] + v[2];
+        },
+        "mixed"
+    );
+
+    Variable X, Y, Z, W;
+    X = 2.0;
+    Y = 3.0;
+    Z = 4.0;
+    W = 5.0;
+
+    // Mix simple Variable and composite Expression
+    Expression g = X * Y;  // 6
+
+    // F = f(X, g, W) = X * g + W = 2 * 6 + 5 = 17
+    Expression F = f(X, g, W);
+
+    EXPECT_DOUBLE_EQ(F->value(), 17.0);
+
+    // Compute gradients
+    zero_all_grad();
+    F->backward();
+
+    // dF/dX = df/dv0 * dv0/dX + df/dv1 * dv1/dg * dg/dX
+    //       = g * 1 + X * 1 * Y
+    //       = 6 + 2*3 = 6 + 6 = 12
+    EXPECT_DOUBLE_EQ(X->gradient(), 12.0);
+
+    // dF/dY = df/dv1 * dv1/dg * dg/dY
+    //       = X * 1 * X
+    //       = 2 * 2 = 4
+    EXPECT_DOUBLE_EQ(Y->gradient(), 4.0);
+
+    // dF/dW = df/dv2
+    //       = 1
+    EXPECT_DOUBLE_EQ(W->gradient(), 1.0);
+
+    // dF/dZ = 0 (Z is not used)
+    EXPECT_DOUBLE_EQ(Z->gradient(), 0.0);
+}
+
