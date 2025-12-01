@@ -175,4 +175,20 @@ s27.bench（10ゲート）で Expression ノード数が異常に多い（4,063�
 - `docs/issue_188_node_count_summary.md`: 各関数での現状のノード数を表でまとめ
 - `docs/issue_188_optimization_effect.md`: s27.bench でのノード数削減効果
 - `docs/issue_188_constant_optimization.md`: 定数関連の最適化の詳細
+- `docs/issue_188_five_arg_operator_proposal.md`: 5項演算子導入の開発方針と注意点
+
+## 今後の最適化: 5項演算子の導入
+
+### 提案: `expected_prod_pos_expr()` を5項演算子として実装
+
+**概要**: `expected_prod_pos_expr()` を5項演算子 `EXPECTED_PROD_POS(mu0, sigma0, mu1, sigma1, rho)` として実装することで、ノード数を大幅に削減します。
+
+**期待される効果**:
+- **ノード数の削減**: 79ノード → 1ノード（**98.7%削減**）
+- **s27.bench での削減**: 948ノード → 12ノード（**936ノード削減**）
+- **全体への影響**: 3,481ノード → 2,545ノード（**26.9%削減**）
+
+**実装の難易度**: 中〜高（勾配計算の実装が複雑）
+
+**詳細**: `docs/issue_188_five_arg_operator_proposal.md` を参照
 
