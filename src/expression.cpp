@@ -844,7 +844,7 @@ Expression Phi_expr(const Expression& x) {
     Phi_expr_cache_misses++;
     
     static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
-    Expression result = 0.5 * (1.0 + erf(x * INV_SQRT_2));
+    Expression result = half * (one + erf(x * INV_SQRT_2));
     
     // Cache the result
     Phi_expr_cache[x.get()] = result;
