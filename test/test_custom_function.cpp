@@ -115,7 +115,6 @@ TEST_F(CustomFunctionTest, FiveVariableFunction) {
 
     // Test with random inputs
     std::vector<double> x = {1.5, 2.0, 0.5, 1.0, 3.0};
-    double val = f.value(x);
     std::vector<double> grad = f.gradient(x);
 
     ASSERT_EQ(grad.size(), 5);
@@ -372,17 +371,12 @@ TEST_F(CustomFunctionTest, InternalTreeIsolation) {
     X = 3.0;
 
     // Get node count before
-    size_t initial_count = ExpressionImpl::node_count();
-
     // Create main expression
     Expression F = f(X);
-    size_t after_main = ExpressionImpl::node_count();
-    size_t main_nodes = after_main - initial_count;
 
     // Independent evaluation
     double f_val = f.value({5.0});
     EXPECT_DOUBLE_EQ(f_val, 30.0);  // 25 + 5 = 30
-    size_t after_independent = ExpressionImpl::node_count();
 
     // Independent evaluation should not create new nodes in main tree's eTbl
     // (or if it does, they should be isolated)
@@ -607,7 +601,6 @@ TEST_F(CustomFunctionTest, ComplexExpressions) {
     );
 
     std::vector<double> x = {2.0, 4.0};
-    double val = f.value(x);
     std::vector<double> grad = f.gradient(x);
 
     ASSERT_EQ(grad.size(), 2);
@@ -749,9 +742,9 @@ TEST_F(CustomFunctionTest, ManyVariables) {
     const size_t n = 10;
     CustomFunction f = CustomFunction::create(
         n,
-        [n](const std::vector<Variable>& v) {
+        [](const std::vector<Variable>& v) {
             Expression sum = Const(0.0);
-            for (size_t i = 0; i < n; ++i) {
+            for (size_t i = 0; i < v.size(); ++i) {
                 sum = sum + v[i] * v[i];
             }
             return sum;
@@ -980,7 +973,6 @@ TEST_F(CustomFunctionTest, AllOperationsCombined) {
     );
 
     std::vector<double> x = {4.0, 9.0, 1.0};
-    double val = f.value(x);
     std::vector<double> grad = f.gradient(x);
 
     ASSERT_EQ(grad.size(), 3);
@@ -1449,7 +1441,7 @@ TEST_F(CustomFunctionTest, MemorySafetyAfterDestruction) {
     // Change X value - g should update correctly (or stay cached, both are OK)
     // The important thing is that it doesn't crash
     X = 4.0;
-    double g_val_after = g->value();  // May be 12 (if recalculated) or 6 (if cached)
+    (void)g->value();  // May be 12 (if recalculated) or 6 (if cached)
     // Both are acceptable - the key is no crash
     
     // Should be able to create new expressions with g without crashing
