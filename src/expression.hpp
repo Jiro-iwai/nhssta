@@ -518,7 +518,7 @@ Expression Phi2_expr(const Expression& h, const Expression& k, const Expression&
  * E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ) 
  *            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
  *            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
- *            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + φ₂(a0, a1; ρ)]
+ *            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + (1-ρ²) φ₂(a0, a1; ρ)]
  * 
  * where a0 = μ0/σ0, a1 = μ1/σ1
  * 
