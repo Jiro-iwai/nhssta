@@ -661,7 +661,7 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     // E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ)
     //            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
     //            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
-    //            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + φ₂(a0, a1; ρ)]
+    //            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + (1-ρ²) φ₂(a0, a1; ρ)]
     //
     // where a0 = μ0/σ0, a1 = μ1/σ1
 
@@ -689,7 +689,7 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     Expression term1 = mu0 * mu1 * Phi2_a0_a1;
     Expression term2 = mu0 * sigma1 * phi_a1 * Phi_cond_0;
     Expression term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
-    Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + phi2_a0_a1);
+    Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
 
     return term1 + term2 + term3 + term4;
 }
