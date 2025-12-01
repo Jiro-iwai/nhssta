@@ -75,10 +75,16 @@ double compute_Phi2(double h, double k, double rho, int n_points = 128) {
 
 int ExpressionImpl::current_id_ = 0;
 
+// Flag to track if eTbl has been destroyed
+static bool eTbl_destroyed = false;
+
 // Function-local static to avoid static destruction order issues
 // This ensures eTbl is not destroyed while ExpressionImpl objects still exist
 ExpressionImpl::Expressions& ExpressionImpl::eTbl() {
     static Expressions tbl;
+    static struct Guard {
+        ~Guard() { eTbl_destroyed = true; }
+    } guard;
     return tbl;
 }
 
@@ -154,7 +160,10 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& first, const Expr
 }
 
 ExpressionImpl::~ExpressionImpl() {
-    eTbl().erase(this);
+    // Check if eTbl is still valid (not destroyed during static destruction)
+    if (!eTbl_destroyed) {
+        eTbl().erase(this);
+    }
     if (left() != null) {
         left()->remove_root(this);
     }
