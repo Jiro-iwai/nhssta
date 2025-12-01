@@ -3,11 +3,13 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <nhssta/exception.hpp>
 
 #include "add.hpp"
 #include "covariance.hpp"
+#include "expression.hpp"
 #include "max.hpp"
 #include "statistics.hpp"
 #include "sub.hpp"
@@ -184,26 +186,57 @@ static Expression cov_x_max0_expr_impl(const RandomVariable& x, const RandomVari
 
 // Helper: Cov(MAX0(D0), MAX0(D1)) as Expression
 static Expression cov_max0_max0_expr_impl(const RandomVariable& a, const RandomVariable& b) {
+    static size_t call_count = 0;
+    call_count++;
+    
+    size_t nodes_before = ExpressionImpl::node_count();
+    
     const RandomVariable& d0 = a->left();
     const RandomVariable& d1 = b->left();
 
+    size_t nodes_before_params = ExpressionImpl::node_count();
     // Get parameters as Expression
     Expression mu0 = d0->mean_expr();
     Expression sigma0 = d0->std_expr();
     Expression mu1 = d1->mean_expr();
     Expression sigma1 = d1->std_expr();
+    size_t nodes_after_params = ExpressionImpl::node_count();
+    
+    if (nodes_after_params - nodes_before_params > 50) {
+        std::cerr << "[DEBUG] cov_max0_max0_expr_impl call #" << call_count 
+                  << ": params (mean_expr, std_expr) created " 
+                  << (nodes_after_params - nodes_before_params) << " nodes" << std::endl;
+    }
 
     // ρ = Cov(D0, D1) / (σ0 * σ1)
+    size_t nodes_before_cov = ExpressionImpl::node_count();
     Expression cov_d0d1 = cov_expr(d0, d1);
+    size_t nodes_after_cov = ExpressionImpl::node_count();
+    
+    if (nodes_after_cov - nodes_before_cov > 50) {
+        std::cerr << "[DEBUG] cov_max0_max0_expr_impl call #" << call_count 
+                  << ": cov_expr(d0, d1) created " 
+                  << (nodes_after_cov - nodes_before_cov) << " nodes" << std::endl;
+    }
+    
     double rho_val = cov_d0d1->value() / (sigma0->value() * sigma1->value());
 
     // E[D0⁺] and E[D1⁺]
+    size_t nodes_before_E = ExpressionImpl::node_count();
     Expression E_D0_pos = max0_mean_expr(mu0, sigma0);
     Expression E_D1_pos = max0_mean_expr(mu1, sigma1);
+    size_t nodes_after_E = ExpressionImpl::node_count();
+    
+    if (nodes_after_E - nodes_before_E > 10) {
+        std::cerr << "[DEBUG] cov_max0_max0_expr_impl call #" << call_count 
+                  << ": max0_mean_expr() created " 
+                  << (nodes_after_E - nodes_before_E) << " nodes" << std::endl;
+    }
 
     // Use specialized formulas for ρ ≈ ±1 to avoid numerical issues with 1/√(1-ρ²)
     constexpr double RHO_THRESHOLD = 0.9999;
 
+    size_t nodes_before_prod = ExpressionImpl::node_count();
     Expression E_prod;
     if (rho_val > RHO_THRESHOLD) {
         // ρ ≈ 1: Use analytical formula for perfectly correlated case
@@ -216,33 +249,105 @@ static Expression cov_max0_max0_expr_impl(const RandomVariable& a, const RandomV
         Expression rho = cov_d0d1 / (sigma0 * sigma1);
         E_prod = expected_prod_pos_expr(mu0, sigma0, mu1, sigma1, rho);
     }
+    size_t nodes_after_prod = ExpressionImpl::node_count();
+    
+    if (nodes_after_prod - nodes_before_prod > 50) {
+        std::cerr << "[DEBUG] cov_max0_max0_expr_impl call #" << call_count 
+                  << ": expected_prod_pos_expr() created " 
+                  << (nodes_after_prod - nodes_before_prod) << " nodes" << std::endl;
+    }
 
     // Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]
-    return E_prod - E_D0_pos * E_D1_pos;
+    Expression result = E_prod - E_D0_pos * E_D1_pos;
+    
+    size_t nodes_after = ExpressionImpl::node_count();
+    if (nodes_after - nodes_before > 100) {
+        std::cerr << "[DEBUG] cov_max0_max0_expr_impl call #" << call_count 
+                  << ": total created " << (nodes_after - nodes_before) << " nodes" << std::endl;
+    }
+    
+    return result;
 }
 
 Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
+    static size_t cov_expr_call_count = 0;
+    static size_t cov_expr_cache_hits = 0;
+    static size_t cov_expr_cache_misses = 0;
+    
+    cov_expr_call_count++;
+    
+    size_t nodes_before_cov = ExpressionImpl::node_count();
+    
     // Check cache first (with symmetry)
     auto it = cov_expr_cache.find({a, b});
     if (it != cov_expr_cache.end()) {
+        cov_expr_cache_hits++;
+        if (cov_expr_call_count % 100 == 0) {
+            std::cerr << "[DEBUG] cov_expr: calls=" << cov_expr_call_count 
+                      << ", hits=" << cov_expr_cache_hits 
+                      << ", misses=" << cov_expr_cache_misses << std::endl;
+        }
         return it->second;
     }
     it = cov_expr_cache.find({b, a});
     if (it != cov_expr_cache.end()) {
+        cov_expr_cache_hits++;
+        if (cov_expr_call_count % 100 == 0) {
+            std::cerr << "[DEBUG] cov_expr: calls=" << cov_expr_call_count 
+                      << ", hits=" << cov_expr_cache_hits 
+                      << ", misses=" << cov_expr_cache_misses << std::endl;
+        }
         return it->second;
     }
+    
+    cov_expr_cache_misses++;
 
     Expression result;
 
     // C-5.2: Same variable → Variance
     if (a == b) {
+        size_t nodes_before_var = ExpressionImpl::node_count();
         result = a->var_expr();
+        size_t nodes_after_var = ExpressionImpl::node_count();
+        if (nodes_after_var - nodes_before_var > 10) {
+            std::cerr << "[DEBUG] cov_expr call #" << cov_expr_call_count 
+                      << " (same var) var_expr() created " 
+                      << (nodes_after_var - nodes_before_var) << " nodes" << std::endl;
+        }
     }
     // C-5.3: ADD linear expansion - Cov(A+B, X) = Cov(A,X) + Cov(B,X)
     else if (dynamic_cast<const OpADD*>(a.get()) != nullptr) {
-        result = cov_expr(a->left(), b) + cov_expr(a->right(), b);
+        size_t nodes_before_left = ExpressionImpl::node_count();
+        Expression cov_left = cov_expr(a->left(), b);
+        size_t nodes_after_left = ExpressionImpl::node_count();
+        
+        size_t nodes_before_right = ExpressionImpl::node_count();
+        Expression cov_right = cov_expr(a->right(), b);
+        size_t nodes_after_right = ExpressionImpl::node_count();
+        
+        if (nodes_after_left - nodes_before_left > 100 || nodes_after_right - nodes_before_right > 100) {
+            std::cerr << "[DEBUG] cov_expr call #" << cov_expr_call_count 
+                      << " (ADD expansion): left=" << (nodes_after_left - nodes_before_left)
+                      << " nodes, right=" << (nodes_after_right - nodes_before_right) << " nodes" << std::endl;
+        }
+        
+        result = cov_left + cov_right;
     } else if (dynamic_cast<const OpADD*>(b.get()) != nullptr) {
-        result = cov_expr(a, b->left()) + cov_expr(a, b->right());
+        size_t nodes_before_left = ExpressionImpl::node_count();
+        Expression cov_left = cov_expr(a, b->left());
+        size_t nodes_after_left = ExpressionImpl::node_count();
+        
+        size_t nodes_before_right = ExpressionImpl::node_count();
+        Expression cov_right = cov_expr(a, b->right());
+        size_t nodes_after_right = ExpressionImpl::node_count();
+        
+        if (nodes_after_left - nodes_before_left > 100 || nodes_after_right - nodes_before_right > 100) {
+            std::cerr << "[DEBUG] cov_expr call #" << cov_expr_call_count 
+                      << " (ADD expansion): left=" << (nodes_after_left - nodes_before_left)
+                      << " nodes, right=" << (nodes_after_right - nodes_before_right) << " nodes" << std::endl;
+        }
+        
+        result = cov_left + cov_right;
     }
     // C-5.3: SUB linear expansion - Cov(A-B, X) = Cov(A,X) - Cov(B,X)
     else if (dynamic_cast<const OpSUB*>(a.get()) != nullptr) {
@@ -275,9 +380,23 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
              dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
         if (a->left() == b->left()) {
             // max0(D) with itself: Cov = Var(max0(D))
+            size_t nodes_before_var = ExpressionImpl::node_count();
             result = a->var_expr();
+            size_t nodes_after_var = ExpressionImpl::node_count();
+            if (nodes_after_var - nodes_before_var > 10) {
+                std::cerr << "[DEBUG] cov_expr call #" << cov_expr_call_count 
+                          << " (max0 same) var_expr() created " 
+                          << (nodes_after_var - nodes_before_var) << " nodes" << std::endl;
+            }
         } else {
+            size_t nodes_before_max0_max0 = ExpressionImpl::node_count();
             result = cov_max0_max0_expr_impl(a, b);
+            size_t nodes_after_max0_max0 = ExpressionImpl::node_count();
+            if (nodes_after_max0_max0 - nodes_before_max0_max0 > 50) {
+                std::cerr << "[DEBUG] cov_expr call #" << cov_expr_call_count 
+                          << " (max0×max0) cov_max0_max0_expr_impl() created " 
+                          << (nodes_after_max0_max0 - nodes_before_max0_max0) << " nodes" << std::endl;
+            }
         }
     }
     // C-5.4: MAX0 × X (X is not MAX0)
@@ -299,6 +418,14 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
 
     // Cache the result
     cov_expr_cache[{a, b}] = result;
+    
+    size_t nodes_after_cov = ExpressionImpl::node_count();
+    size_t nodes_created = nodes_after_cov - nodes_before_cov;
+    
+    if (cov_expr_call_count <= 20 || nodes_created > 50) {
+        std::cerr << "[DEBUG] cov_expr call #" << cov_expr_call_count 
+                  << " created " << nodes_created << " nodes" << std::endl;
+    }
 
     return result;
 }
