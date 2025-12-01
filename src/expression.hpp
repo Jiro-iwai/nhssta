@@ -242,7 +242,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
 
     /// static data menber
     static int current_id_;
-    static Expressions eTbl_;
+    
+    /// Access to expression table via function to avoid static destruction order issues
+    /// Using function-local static ensures proper lifetime management
+    static Expressions& eTbl();
 };
 
 // print all expression infomation

@@ -74,7 +74,13 @@ double compute_Phi2(double h, double k, double rho, int n_points = 128) {
 }  // anonymous namespace
 
 int ExpressionImpl::current_id_ = 0;
-ExpressionImpl::Expressions ExpressionImpl::eTbl_;
+
+// Function-local static to avoid static destruction order issues
+// This ensures eTbl is not destroyed while ExpressionImpl objects still exist
+ExpressionImpl::Expressions& ExpressionImpl::eTbl() {
+    static Expressions tbl;
+    return tbl;
+}
 
 static Expression null(nullptr);
 static const Const zero(0.0);
@@ -90,7 +96,7 @@ ExpressionImpl::ExpressionImpl()
     , op_(PARAM)
     , left_(null)
     , right_(null) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
 }
 
 ExpressionImpl::ExpressionImpl(double value)
@@ -102,7 +108,7 @@ ExpressionImpl::ExpressionImpl(double value)
     , op_(CONST)
     , left_(null)
     , right_(null) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
 }
 
 ExpressionImpl::ExpressionImpl(const Op& op, const Expression& left, const Expression& right)
@@ -115,7 +121,7 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& left, const Expre
     , left_(left)
     , right_(right)
     , third_(null) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
     if (left_ != null) {
         left_->add_root(this);
     }
@@ -135,7 +141,7 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& first, const Expr
     , left_(first)
     , right_(second)
     , third_(third) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
     if (left_ != null) {
         left_->add_root(this);
     }
@@ -148,7 +154,7 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& first, const Expr
 }
 
 ExpressionImpl::~ExpressionImpl() {
-    eTbl_.erase(this);
+    eTbl().erase(this);
     if (left() != null) {
         left()->remove_root(this);
     }
@@ -254,11 +260,11 @@ void ExpressionImpl::zero_grad() {
 }
 
 void ExpressionImpl::zero_all_grad() {
-    for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&ExpressionImpl::zero_grad));
+    for_each(eTbl().begin(), eTbl().end(), std::mem_fn(&ExpressionImpl::zero_grad));
 }
 
 size_t ExpressionImpl::node_count() {
-    return eTbl_.size();
+    return eTbl().size();
 }
 
 // Helper: propagate gradient from this node to its children (called once per node)
@@ -450,7 +456,7 @@ void ExpressionImpl::print() {
 }
 
 void ExpressionImpl::print_all() {
-    for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&ExpressionImpl::print));
+    for_each(eTbl().begin(), eTbl().end(), std::mem_fn(&ExpressionImpl::print));
 }
 
 void print_all() {
