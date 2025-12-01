@@ -426,6 +426,41 @@ TEST_F(CovMax0Max0ExprTest, ExpectedProdPos_GradientRho) {
     EXPECT_NEAR(rho->gradient(), expected_grad, 1e-3);
 }
 
+TEST_F(CovMax0Max0ExprTest, ExpectedProdPos_HighCorrelation) {
+    // Issue #189: Test with high ρ to detect missing (1-ρ²) coefficient
+    // ρ = 0.9 → (1-ρ²) = 0.19
+    // φ₂ term coefficient bug becomes significant
+    Variable mu0, sigma0, mu1, sigma1, rho;
+    mu0 = 1.0;   // Small μ/σ to make φ₂ contribution significant
+    sigma0 = 1.0;
+    mu1 = 1.0;
+    sigma1 = 1.0;
+    rho = 0.9;
+
+    Expression result = expected_prod_pos_expr(mu0, sigma0, mu1, sigma1, rho);
+    double rv_result = RandomVariable::expected_prod_pos(1.0, 1.0, 1.0, 1.0, 0.9);
+
+    // Should match numerical result within 1%
+    EXPECT_NEAR(result->value(), rv_result, rv_result * 0.01);
+}
+
+TEST_F(CovMax0Max0ExprTest, ExpectedProdPos_VeryHighCorrelation) {
+    // Issue #189: Test with very high ρ
+    // ρ = 0.95 → (1-ρ²) = 0.0975
+    Variable mu0, sigma0, mu1, sigma1, rho;
+    mu0 = 0.5;
+    sigma0 = 1.0;
+    mu1 = 0.5;
+    sigma1 = 1.0;
+    rho = 0.95;
+
+    Expression result = expected_prod_pos_expr(mu0, sigma0, mu1, sigma1, rho);
+    double rv_result = RandomVariable::expected_prod_pos(0.5, 1.0, 0.5, 1.0, 0.95);
+
+    // Should match numerical result within 1%
+    EXPECT_NEAR(result->value(), rv_result, rv_result * 0.01);
+}
+
 // ============================================================================
 // 5-6: cov_max0_max0_expr Tests
 // ============================================================================
