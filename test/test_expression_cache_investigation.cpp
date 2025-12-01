@@ -14,6 +14,7 @@
 #include "add.hpp"
 #include "max.hpp"
 #include "covariance.hpp"
+#include "test_expression_helpers.hpp"
 
 namespace RandomVariable {
 
@@ -189,12 +190,12 @@ TEST_F(ExpressionCacheInvestigation, ExpectedProdPos_Breakdown) {
     Expression a1 = mu1 / sigma1;
     Expression one_minus_rho2 = Const(1.0) - rho * rho;
     Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
-    Expression Phi2_a0_a1 = Phi2_expr(a0, a1, rho);
+    Expression Phi2_a0_a1 = Phi2_expr_test(a0, a1, rho);
     Expression phi_a0 = phi_expr(a0);
     Expression phi_a1 = phi_expr(a1);
     Expression Phi_cond_0 = Phi_expr((a0 - rho * a1) / sqrt_one_minus_rho2);
     Expression Phi_cond_1 = Phi_expr((a1 - rho * a0) / sqrt_one_minus_rho2);
-    Expression phi2_a0_a1 = phi2_expr(a0, a1, rho);
+    Expression phi2_a0_a1 = phi2_expr_test(a0, a1, rho);
     
     size_t intermediate = ::ExpressionImpl::node_count() - before;
     std::cout << "Intermediate expressions: " << intermediate << " nodes" << std::endl;

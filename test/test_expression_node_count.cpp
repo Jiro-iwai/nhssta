@@ -8,6 +8,7 @@
 #include <iomanip>
 
 #include "expression.hpp"
+#include "test_expression_helpers.hpp"
 #include "random_variable.hpp"
 #include "normal.hpp"
 #include "add.hpp"
@@ -97,7 +98,7 @@ TEST_F(ExpressionNodeCountTest, Max0Expr) {
 }
 
 TEST_F(ExpressionNodeCountTest, Phi2Expr) {
-    std::cout << "\n=== Phi2_expr ===" << std::endl;
+    std::cout << "\n=== Phi2_expr_test ===" << std::endl;
     
     ::Variable a0, a1, rho;
     a0 = 1.0;
@@ -105,8 +106,8 @@ TEST_F(ExpressionNodeCountTest, Phi2Expr) {
     rho = 0.5;
     
     size_t before = ::ExpressionImpl::node_count();
-    ::Expression e = Phi2_expr(a0, a1, rho);
-    std::cout << "Phi2_expr(a0, a1, rho): " << (::ExpressionImpl::node_count() - before) << " nodes" << std::endl;
+    ::Expression e = Phi2_expr_test(a0, a1, rho);
+    std::cout << "Phi2_expr_test(a0, a1, rho): " << (::ExpressionImpl::node_count() - before) << " nodes" << std::endl;
 }
 
 TEST_F(ExpressionNodeCountTest, ExpectedProdPosExpr) {
@@ -123,7 +124,7 @@ TEST_F(ExpressionNodeCountTest, ExpectedProdPosExpr) {
 }
 
 TEST_F(ExpressionNodeCountTest, CovMax0Max0Expr) {
-    std::cout << "\n=== cov_max0_max0_expr ===" << std::endl;
+    std::cout << "\n=== cov_max0_max0_expr_test ===" << std::endl;
     
     ::Variable mu0, sigma0, mu1, sigma1, rho;
     mu0 = 5.0; sigma0 = 1.0;
@@ -131,8 +132,8 @@ TEST_F(ExpressionNodeCountTest, CovMax0Max0Expr) {
     rho = 0.5;
     
     size_t before = ::ExpressionImpl::node_count();
-    ::Expression e = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
-    std::cout << "cov_max0_max0_expr: " << (::ExpressionImpl::node_count() - before) << " nodes" << std::endl;
+    ::Expression e = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
+    std::cout << "cov_max0_max0_expr_test: " << (::ExpressionImpl::node_count() - before) << " nodes" << std::endl;
 }
 
 // Note: RandomVariable tests commented out due to crash during investigation

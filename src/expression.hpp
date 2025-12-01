@@ -409,112 +409,17 @@ inline Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
 // ADD/SUB mean and variance expressions (Phase 3 of #167)
 // =============================================================================
 
-/**
- * @brief Mean of sum: E[A + B] = μ_A + μ_B
- */
-inline Expression add_mean_expr(const Expression& mu1, const Expression& mu2) {
-    return mu1 + mu2;
-}
-
-/**
- * @brief Variance of sum: Var[A + B] = σ_A² + σ_B² + 2×Cov(A,B)
- * 
- * @param sigma1 Standard deviation of A
- * @param sigma2 Standard deviation of B
- * @param cov Covariance between A and B
- */
-inline Expression add_var_expr(const Expression& sigma1, const Expression& sigma2,
-                               const Expression& cov) {
-    return sigma1 * sigma1 + sigma2 * sigma2 + Const(2.0) * cov;
-}
-
-/**
- * @brief Mean of difference: E[A - B] = μ_A - μ_B
- */
-inline Expression sub_mean_expr(const Expression& mu1, const Expression& mu2) {
-    return mu1 - mu2;
-}
-
-/**
- * @brief Variance of difference: Var[A - B] = σ_A² + σ_B² - 2×Cov(A,B)
- * 
- * @param sigma1 Standard deviation of A
- * @param sigma2 Standard deviation of B
- * @param cov Covariance between A and B
- */
-inline Expression sub_var_expr(const Expression& sigma1, const Expression& sigma2,
-                               const Expression& cov) {
-    return sigma1 * sigma1 + sigma2 * sigma2 - Const(2.0) * cov;
-}
 
 // =============================================================================
 // Covariance expressions (Phase 4 of #167)
 // =============================================================================
 
-/**
- * @brief Cov(X, max0(Z)) where X and Z are jointly Gaussian
- * 
- * Formula: Cov(X, max0(Z)) = Cov(X, Z) × Φ(μ_Z/σ_Z)
- * 
- * This is used when computing variance of MAX operations:
- * Var[MAX(A,B)] = Var[A + MAX0(B-A)] requires Cov terms involving MAX0.
- * 
- * @param cov_xz Covariance between X and Z: Cov(X, Z)
- * @param mu_z Mean of Z
- * @param sigma_z Standard deviation of Z (NOT variance)
- * @return Expression representing Cov(X, max0(Z))
- */
-inline Expression cov_x_max0_expr(const Expression& cov_xz,
-                                  const Expression& mu_z,
-                                  const Expression& sigma_z) {
-    // Cov(X, max0(Z)) = Cov(X, Z) × Φ(μ_Z/σ_Z)
-    // Using MeanPhiMax(-μ/σ) = Φ(μ/σ)
-    return cov_xz * Phi_expr(mu_z / sigma_z);
-}
 
 // =============================================================================
 // Bivariate normal distribution expressions (Phase 5 of #167)
 // =============================================================================
 
-/**
- * @brief Bivariate standard normal PDF φ₂(x, y; ρ)
- * 
- * Formula: φ₂(x, y; ρ) = 1/(2π√(1-ρ²)) × exp(-(x² - 2ρxy + y²)/(2(1-ρ²)))
- * 
- * Gradients (derived from the formula):
- * - ∂φ₂/∂x = φ₂ × (-(x - ρy)/(1-ρ²))
- * - ∂φ₂/∂y = φ₂ × (-(y - ρx)/(1-ρ²))
- * - ∂φ₂/∂ρ = φ₂ × [ρ/(1-ρ²) + (x² - 2ρxy + y²)×ρ/(1-ρ²)² - xy/(1-ρ²)]
- * 
- * @param x First variable
- * @param y Second variable
- * @param rho Correlation coefficient (-1 < ρ < 1)
- * @param one_minus_rho2 Precomputed (1-ρ²) expression (for optimization, Issue #188)
- * @param sqrt_one_minus_rho2 Precomputed √(1-ρ²) expression (for optimization, Issue #188)
- * 
- * @note If one_minus_rho2 and sqrt_one_minus_rho2 are not provided (empty Expression),
- *       they will be computed internally. Providing them avoids redundant computation.
- */
-Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho,
-                     const Expression& one_minus_rho2 = Expression(),
-                     const Expression& sqrt_one_minus_rho2 = Expression());
 
-/**
- * @brief Bivariate standard normal CDF Φ₂(h, k; ρ)
- * 
- * Φ₂(h, k; ρ) = P(X ≤ h, Y ≤ k) where (X, Y) ~ N(0, 0, 1, 1, ρ)
- * 
- * Value: Computed using numerical integration (Gauss-Hermite)
- * Gradients (analytical):
- * - ∂Φ₂/∂h = φ(h) × Φ((k - ρh)/√(1-ρ²))
- * - ∂Φ₂/∂k = φ(k) × Φ((h - ρk)/√(1-ρ²))
- * - ∂Φ₂/∂ρ = φ₂(h, k; ρ)
- * 
- * @param h First threshold
- * @param k Second threshold
- * @param rho Correlation coefficient (-1 < ρ < 1)
- */
-Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho);
 
 /**
  * @brief E[D0⁺ × D1⁺] where D0, D1 are bivariate normal
@@ -558,20 +463,6 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
 Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,
                                            const Expression& mu1, const Expression& sigma1);
 
-/**
- * @brief Cov(max(0,D0), max(0,D1)) where D0, D1 are bivariate normal
- * 
- * Formula: Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]
- * 
- * @param mu0 Mean of D0
- * @param sigma0 Standard deviation of D0 (> 0)
- * @param mu1 Mean of D1
- * @param sigma1 Standard deviation of D1 (> 0)
- * @param rho Correlation between D0 and D1
- */
-Expression cov_max0_max0_expr(const Expression& mu0, const Expression& sigma0,
-                              const Expression& mu1, const Expression& sigma1,
-                              const Expression& rho);
 
 // assignment to (double)
 double& operator<<(double& a, const Expression& b);

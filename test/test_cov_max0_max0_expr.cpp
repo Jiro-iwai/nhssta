@@ -1,12 +1,12 @@
 /**
- * @file test_cov_max0_max0_expr.cpp
+ * @file test_cov_max0_max0_expr_test.cpp
  * @brief Tests for Cov(max0, max0) Expression implementation (Issue #167 Phase 5)
  *
  * Tests for:
  * - φ₂(a, b; ρ) - bivariate normal PDF
  * - Φ₂(a, b; ρ) - bivariate normal CDF
  * - expected_prod_pos_expr - E[D0⁺ × D1⁺]
- * - cov_max0_max0_expr - Cov(max(0,D0), max(0,D1))
+ * - cov_max0_max0_expr_test - Cov(max(0,D0), max(0,D1))
  */
 
 #include <gtest/gtest.h>
@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "expression.hpp"
+#include "test_expression_helpers.hpp"
 #include "util_numerical.hpp"
 
 namespace {
@@ -90,7 +91,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Pdf_ValueAtOrigin) {
     y = 0.0;
     rho = 0.0;
 
-    Expression result = phi2_expr(x, y, rho);
+    Expression result = phi2_expr_test(x, y, rho);
     double expected = 1.0 / (2.0 * M_PI);  // ρ=0 case
     EXPECT_NEAR(result->value(), expected, 1e-10);
 }
@@ -101,7 +102,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Pdf_ValueWithCorrelation) {
     y = 1.0;
     rho = 0.5;
 
-    Expression result = phi2_expr(x, y, rho);
+    Expression result = phi2_expr_test(x, y, rho);
     double expected = phi2_reference(1.0, 1.0, 0.5);
     EXPECT_NEAR(result->value(), expected, 1e-10);
 }
@@ -112,7 +113,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Pdf_ValueNegativeCorrelation) {
     y = -0.5;
     rho = -0.3;
 
-    Expression result = phi2_expr(x, y, rho);
+    Expression result = phi2_expr_test(x, y, rho);
     double expected = phi2_reference(0.5, -0.5, -0.3);
     EXPECT_NEAR(result->value(), expected, 1e-10);
 }
@@ -124,7 +125,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Pdf_GradientX) {
     y = y_val;
     rho = rho_val;
 
-    Expression result = phi2_expr(x, y, rho);
+    Expression result = phi2_expr_test(x, y, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -143,7 +144,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Pdf_GradientY) {
     y = y_val;
     rho = rho_val;
 
-    Expression result = phi2_expr(x, y, rho);
+    Expression result = phi2_expr_test(x, y, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -161,7 +162,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Pdf_GradientRho) {
     y = y_val;
     rho = rho_val;
 
-    Expression result = phi2_expr(x, y, rho);
+    Expression result = phi2_expr_test(x, y, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -183,7 +184,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_IndependentCase) {
     k = 1.0;
     rho = 0.0;
 
-    Expression result = Phi2_expr(h, k, rho);
+    Expression result = Phi2_expr_test(h, k, rho);
     double expected = RandomVariable::normal_cdf(1.0) * RandomVariable::normal_cdf(1.0);
     EXPECT_NEAR(result->value(), expected, 1e-6);
 }
@@ -195,7 +196,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_AtOrigin) {
     k = 0.0;
     rho = 0.5;
 
-    Expression result = Phi2_expr(h, k, rho);
+    Expression result = Phi2_expr_test(h, k, rho);
     double expected = 0.25 + std::asin(0.5) / (2.0 * M_PI);
     EXPECT_NEAR(result->value(), expected, 1e-5);
 }
@@ -206,7 +207,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_WithCorrelation) {
     k = 0.5;
     rho = 0.3;
 
-    Expression result = Phi2_expr(h, k, rho);
+    Expression result = Phi2_expr_test(h, k, rho);
     double expected = Phi2_reference(1.0, 0.5, 0.3);
     EXPECT_NEAR(result->value(), expected, 1e-4);
 }
@@ -217,7 +218,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_NegativeCorrelation) {
     k = 0.5;
     rho = -0.5;
 
-    Expression result = Phi2_expr(h, k, rho);
+    Expression result = Phi2_expr_test(h, k, rho);
     double expected = Phi2_reference(0.5, 0.5, -0.5);
     EXPECT_NEAR(result->value(), expected, 1e-4);
 }
@@ -230,7 +231,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_GradientH) {
     k = k_val;
     rho = rho_val;
 
-    Expression result = Phi2_expr(h, k, rho);
+    Expression result = Phi2_expr_test(h, k, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -251,7 +252,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_GradientK) {
     k = k_val;
     rho = rho_val;
 
-    Expression result = Phi2_expr(h, k, rho);
+    Expression result = Phi2_expr_test(h, k, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -271,7 +272,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_GradientRho) {
     k = k_val;
     rho = rho_val;
 
-    Expression result = Phi2_expr(h, k, rho);
+    Expression result = Phi2_expr_test(h, k, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -462,7 +463,7 @@ TEST_F(CovMax0Max0ExprTest, ExpectedProdPos_VeryHighCorrelation) {
 }
 
 // ============================================================================
-// 5-6: cov_max0_max0_expr Tests
+// 5-6: cov_max0_max0_expr_test Tests
 // ============================================================================
 
 TEST_F(CovMax0Max0ExprTest, CovMax0Max0_IndependentCase) {
@@ -475,7 +476,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_IndependentCase) {
     sigma1 = 1.0;
     rho = 0.0;
 
-    Expression result = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
+    Expression result = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
     double rv_result = RandomVariable::covariance_max0_max0(5.0, 1.0, 5.0, 1.0, 0.0);
     // For large μ, both should be very close to 0
     EXPECT_NEAR(result->value(), 0.0, 1e-3);
@@ -491,7 +492,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_PositiveCorrelation) {
     sigma1 = 1.0;
     rho = 0.5;
 
-    Expression result = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
+    Expression result = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
     double rv_result = RandomVariable::covariance_max0_max0(5.0, 1.0, 5.0, 1.0, 0.5);
     // For large μ, Cov(D0⁺, D1⁺) ≈ Cov(D0, D1) = ρσ0σ1 = 0.5
     EXPECT_NEAR(result->value(), 0.5, 0.01);
@@ -508,7 +509,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_NegativeCorrelation) {
     sigma1 = 1.0;
     rho = -0.5;
 
-    Expression result = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
+    Expression result = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
     double rv_result = RandomVariable::covariance_max0_max0(5.0, 1.0, 5.0, 1.0, -0.5);
     // For large μ, Cov ≈ ρσ0σ1 = -0.5
     EXPECT_NEAR(result->value(), -0.5, 0.01);
@@ -524,7 +525,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_LargeMeans) {
     sigma1 = 1.0;
     rho = 0.5;
 
-    Expression result = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
+    Expression result = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
     double rv_result = RandomVariable::covariance_max0_max0(10.0, 1.0, 10.0, 1.0, 0.5);
     double approx = 0.5 * 1.0 * 1.0;  // ρσ0σ1
 
@@ -541,7 +542,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_GradientMu0) {
     sigma1 = sigma1_val;
     rho = rho_val;
 
-    Expression result = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
+    Expression result = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -553,7 +554,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_GradientMu0) {
         v_mu1 = mu1_val;
         v_sigma1 = sigma1_val;
         v_rho = rho_val;
-        Expression e = cov_max0_max0_expr(v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho);
+        Expression e = cov_max0_max0_expr_test(v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho);
         return e->value();
     };
     double expected_grad = numerical_gradient(f, mu0_val);
@@ -570,7 +571,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_GradientRho) {
     sigma1 = sigma1_val;
     rho = rho_val;
 
-    Expression result = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
+    Expression result = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
     result->value();
     zero_all_grad();
     result->backward();
@@ -582,7 +583,7 @@ TEST_F(CovMax0Max0ExprTest, CovMax0Max0_GradientRho) {
         v_mu1 = mu1_val;
         v_sigma1 = sigma1_val;
         v_rho = r;
-        Expression e = cov_max0_max0_expr(v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho);
+        Expression e = cov_max0_max0_expr_test(v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho);
         return e->value();
     };
     double expected_grad = numerical_gradient(f, rho_val);
@@ -621,7 +622,7 @@ TEST_F(CovMax0Max0ExprTest, ConsistencyWithRandomVariable) {
         sigma1 = sigma1_val;
         rho = rho_val;
 
-        Expression expr_result = cov_max0_max0_expr(mu0, sigma0, mu1, sigma1, rho);
+        Expression expr_result = cov_max0_max0_expr_test(mu0, sigma0, mu1, sigma1, rho);
         double rv_result = RandomVariable::covariance_max0_max0(
             mu0_val, sigma0_val, mu1_val, sigma1_val, rho_val);
 
@@ -666,7 +667,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_SimpsonAccuracy) {
         k = 0.0;
         rho = rho_val;
 
-        Expression result = Phi2_expr(h, k, rho);
+        Expression result = Phi2_expr_test(h, k, rho);
         double exact = 0.25 + std::asin(rho_val) / (2.0 * M_PI);
         double error = std::abs(result->value() - exact);
         max_error_origin = std::max(max_error_origin, error);
@@ -696,7 +697,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_SimpsonAccuracy) {
         k = hk.second;
         rho = 0.0;
 
-        Expression result = Phi2_expr(h, k, rho);
+        Expression result = Phi2_expr_test(h, k, rho);
         double exact = RandomVariable::normal_cdf(hk.first) *
                        RandomVariable::normal_cdf(hk.second);
         double error = std::abs(result->value() - exact);
@@ -735,7 +736,7 @@ TEST_F(CovMax0Max0ExprTest, Phi2Cdf_SimpsonAccuracy) {
         k = k_val;
         rho = rho_val;
 
-        Expression result = Phi2_expr(h, k, rho);
+        Expression result = Phi2_expr_test(h, k, rho);
         double ref = Phi2_reference(h_val, k_val, rho_val);  // 1000pt
         double diff = std::abs(result->value() - ref);
         max_diff_500_1000 = std::max(max_diff_500_1000, diff);
