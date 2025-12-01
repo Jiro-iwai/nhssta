@@ -522,8 +522,8 @@ TEST_F(CustomFunctionTest, InvalidInputSize) {
     );
 
     // Should throw when calling with wrong input size
-    EXPECT_THROW(f.value({1.0}), Nh::RuntimeException);
-    EXPECT_THROW(f.gradient({1.0, 2.0, 3.0}), Nh::RuntimeException);
+    EXPECT_THROW((void)f.value({1.0}), Nh::RuntimeException);
+    EXPECT_THROW((void)f.gradient({1.0, 2.0, 3.0}), Nh::RuntimeException);
 }
 
 // Test: Default name generation
@@ -667,10 +667,10 @@ TEST_F(CustomFunctionTest, InvalidCustomFunction) {
     EXPECT_FALSE(static_cast<bool>(f));
 
     // Should throw when accessing methods
-    EXPECT_THROW(f.input_dim(), Nh::RuntimeException);
-    EXPECT_THROW(f.name(), Nh::RuntimeException);
-    EXPECT_THROW(f.value({1.0}), Nh::RuntimeException);
-    EXPECT_THROW(f.gradient({1.0}), Nh::RuntimeException);
+    EXPECT_THROW((void)f.input_dim(), Nh::RuntimeException);
+    EXPECT_THROW((void)f.name(), Nh::RuntimeException);
+    EXPECT_THROW((void)f.value({1.0}), Nh::RuntimeException);
+    EXPECT_THROW((void)f.gradient({1.0}), Nh::RuntimeException);
 }
 
 // Test: Custom function with division (potential division by zero)
@@ -691,7 +691,7 @@ TEST_F(CustomFunctionTest, DivisionInCustomFunction) {
     EXPECT_DOUBLE_EQ(grad[1], -1.5);  // df/dy = -x/y² = -6/4 = -1.5
 
     // Division by zero should throw
-    EXPECT_THROW(f.value({1.0, 0.0}), Nh::RuntimeException);
+    EXPECT_THROW((void)f.value({1.0, 0.0}), Nh::RuntimeException);
 }
 
 // Test: Custom function with logarithm (potential log of negative)
@@ -711,7 +711,7 @@ TEST_F(CustomFunctionTest, LogarithmInCustomFunction) {
     EXPECT_NEAR(grad[0], 1.0 / std::exp(1.0), 1e-10);
 
     // Log of negative should throw
-    EXPECT_THROW(f.value({-1.0}), Nh::RuntimeException);
+    EXPECT_THROW((void)f.value({-1.0}), Nh::RuntimeException);
 }
 
 // Test: Custom function reuse (same function, different inputs)
