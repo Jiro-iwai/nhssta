@@ -818,7 +818,7 @@ Expression phi_expr(const Expression& x) {
     phi_expr_cache_misses++;
     
     static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
-    Expression result = INV_SQRT_2PI * exp(-(x * x) / 2.0);
+    Expression result = INV_SQRT_2PI * exp(-(x * x) / two);
     
     // Cache the result
     phi_expr_cache[x.get()] = result;
