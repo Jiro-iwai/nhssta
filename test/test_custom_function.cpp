@@ -1799,3 +1799,110 @@ TEST_F(CustomFunctionTest, DeeplyNestedCustomFunctions) {
     }
 }
 
+// Test: Multiple calls with random inputs (recommended by reviewer)
+// Verifies that value/gradient/value_and_gradient return consistent results
+// even when called multiple times with random inputs
+TEST_F(CustomFunctionTest, MultipleCallsWithRandomInputs) {
+    CustomFunction f = CustomFunction::create(
+        1,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[0];
+        },
+        "square"
+    );
+
+    // Test with multiple random inputs
+    std::vector<double> test_inputs = {0.5, 1.0, 2.5, -1.5, 3.0, -2.0, 0.0, 10.0, -10.0, 0.001};
+
+    for (double x : test_inputs) {
+        // Call value multiple times - should return same result
+        double val1 = f.value({x});
+        double val2 = f.value({x});
+        double val3 = f.value({x});
+        EXPECT_DOUBLE_EQ(val1, x * x);
+        EXPECT_DOUBLE_EQ(val1, val2);
+        EXPECT_DOUBLE_EQ(val2, val3);
+
+        // Call gradient multiple times - should return same result
+        std::vector<double> grad1 = f.gradient({x});
+        std::vector<double> grad2 = f.gradient({x});
+        std::vector<double> grad3 = f.gradient({x});
+        ASSERT_EQ(grad1.size(), 1);
+        EXPECT_DOUBLE_EQ(grad1[0], 2.0 * x);
+        EXPECT_DOUBLE_EQ(grad1[0], grad2[0]);
+        EXPECT_DOUBLE_EQ(grad2[0], grad3[0]);
+
+        // Call value_and_gradient multiple times - should return same result
+        auto [val_vg1, grad_vg1] = f.value_and_gradient({x});
+        auto [val_vg2, grad_vg2] = f.value_and_gradient({x});
+        auto [val_vg3, grad_vg3] = f.value_and_gradient({x});
+        EXPECT_DOUBLE_EQ(val_vg1, x * x);
+        EXPECT_DOUBLE_EQ(val_vg1, val_vg2);
+        EXPECT_DOUBLE_EQ(val_vg2, val_vg3);
+        ASSERT_EQ(grad_vg1.size(), 1);
+        EXPECT_DOUBLE_EQ(grad_vg1[0], 2.0 * x);
+        EXPECT_DOUBLE_EQ(grad_vg1[0], grad_vg2[0]);
+        EXPECT_DOUBLE_EQ(grad_vg2[0], grad_vg3[0]);
+    }
+}
+
+// Test: Composite expression arguments with finite difference verification (recommended by reviewer)
+// F(X, Y) = f(X * Y, Y) where f(u, v) = u * v
+// Verifies gradient correctness using finite difference
+TEST_F(CustomFunctionTest, CompositeExpressionArgumentsWithFiniteDifference) {
+    CustomFunction f = CustomFunction::create(
+        2,
+        [](const std::vector<Variable>& v) {
+            return v[0] * v[1];  // f(u, v) = u * v
+        },
+        "multiply"
+    );
+
+    Variable X, Y;
+    X = 2.0;
+    Y = 3.0;
+
+    // Build composite expression: F(X, Y) = f(X * Y, Y)
+    Expression F = f(X * Y, Y);
+
+    // Expected value: f(6, 3) = 6 * 3 = 18
+    EXPECT_DOUBLE_EQ(F->value(), 18.0);
+
+    // Compute gradients using AD
+    zero_all_grad();
+    F->backward();
+    double grad_X_ad = X->gradient();
+    double grad_Y_ad = Y->gradient();
+
+    // Expected gradients:
+    // dF/dX = df/du * du/dX = v * Y = 3 * 3 = 9
+    // dF/dY = df/du * du/dY + df/dv = v * X + u = 3 * 2 + 6 = 6 + 6 = 12
+    EXPECT_DOUBLE_EQ(grad_X_ad, 9.0);
+    EXPECT_DOUBLE_EQ(grad_Y_ad, 12.0);
+
+    // Verify using finite difference
+    const double h = 1e-6;
+
+    // dF/dX using finite difference
+    X = 2.0 + h;
+    Y = 3.0;
+    double F_plus_X = F->value();
+    X = 2.0 - h;
+    double F_minus_X = F->value();
+    double grad_X_fd = (F_plus_X - F_minus_X) / (2.0 * h);
+
+    EXPECT_NEAR(grad_X_ad, grad_X_fd, 1e-5)
+        << "Gradient dF/dX mismatch: AD=" << grad_X_ad << ", FD=" << grad_X_fd;
+
+    // dF/dY using finite difference
+    X = 2.0;
+    Y = 3.0 + h;
+    double F_plus_Y = F->value();
+    Y = 3.0 - h;
+    double F_minus_Y = F->value();
+    double grad_Y_fd = (F_plus_Y - F_minus_Y) / (2.0 * h);
+
+    EXPECT_NEAR(grad_Y_ad, grad_Y_fd, 1e-5)
+        << "Gradient dF/dY mismatch: AD=" << grad_Y_ad << ", FD=" << grad_Y_fd;
+}
+
