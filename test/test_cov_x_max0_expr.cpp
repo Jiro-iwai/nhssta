@@ -1,5 +1,5 @@
 /**
- * @file test_cov_x_max0_expr.cpp
+ * @file test_cov_x_max0_expr_test.cpp
  * @brief Tests for Cov(X, max0(Z)) Expression function (Phase 4 of #167)
  *
  * Formula: Cov(X, max0(Z)) = Cov(X, Z) × MeanPhiMax(-μ_Z/σ_Z)
@@ -18,6 +18,7 @@
 #include "expression.hpp"
 #include "max.hpp"
 #include "normal.hpp"
+#include "test_expression_helpers.hpp"
 #include "util_numerical.hpp"
 
 // Numerical gradient using central difference
@@ -35,11 +36,11 @@ class CovXMax0ExprTest : public ::testing::Test {
 };
 
 // =============================================================================
-// cov_x_max0_expr value tests
+// cov_x_max0_expr_test value tests
 // =============================================================================
 
 TEST_F(CovXMax0ExprTest, CovXMax0ExprValue_BasicCases) {
-    // Test that cov_x_max0_expr matches the RandomVariable implementation
+    // Test that cov_x_max0_expr_test matches the RandomVariable implementation
 
     // Test cases: {cov_xz, mu_z, sigma_z}
     std::vector<std::tuple<double, double, double>> test_cases = {
@@ -59,7 +60,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprValue_BasicCases) {
         mu_expr = mu_z;
         sigma_expr = sigma_z;
 
-        Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+        Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
         double expr_value = result->value();
 
         // Analytical: Cov(X, max0(Z)) = Cov(X,Z) × Φ(μ/σ)
@@ -89,7 +90,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprValue_MatchesRandomVariable) {
     mu_expr = 5.0;       // μ_Z
     sigma_expr = 3.0;    // σ_Z
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
 
     EXPECT_NEAR(result->value(), rv_cov, 1e-10);
     EXPECT_NEAR(result->value(), 0.0, 1e-10);  // Independent → 0
@@ -111,14 +112,14 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprValue_WithCorrelation) {
     mu_expr = 2.0;       // μ_X
     sigma_expr = 2.0;    // σ_X
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
 
     // Allow small tolerance for table lookup vs analytical
     EXPECT_NEAR(result->value(), rv_cov, 0.01);
 }
 
 // =============================================================================
-// cov_x_max0_expr gradient tests
+// cov_x_max0_expr_test gradient tests
 // =============================================================================
 
 TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Cov) {
@@ -133,7 +134,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Cov) {
     mu_expr = mu_z;
     sigma_expr = sigma_z;
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
     result->backward();
 
     double expected_grad = RandomVariable::normal_cdf(mu_z / sigma_z);
@@ -152,7 +153,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Mu) {
     mu_expr = mu_z;
     sigma_expr = sigma_z;
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
     result->backward();
 
     double t = mu_z / sigma_z;
@@ -172,7 +173,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Sigma) {
     mu_expr = mu_z;
     sigma_expr = sigma_z;
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
     result->backward();
 
     double t = mu_z / sigma_z;
@@ -189,7 +190,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Numerical) {
         cv = c;
         mu = mu_z;
         sigma = sigma_z;
-        return cov_x_max0_expr(cv, mu, sigma)->value();
+        return cov_x_max0_expr_test(cv, mu, sigma)->value();
     };
 
     auto f_mu = [cov_xz, sigma_z](double m) {
@@ -197,7 +198,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Numerical) {
         cv = cov_xz;
         mu = m;
         sigma = sigma_z;
-        return cov_x_max0_expr(cv, mu, sigma)->value();
+        return cov_x_max0_expr_test(cv, mu, sigma)->value();
     };
 
     auto f_sigma = [cov_xz, mu_z](double s) {
@@ -205,7 +206,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Numerical) {
         cv = cov_xz;
         mu = mu_z;
         sigma = s;
-        return cov_x_max0_expr(cv, mu, sigma)->value();
+        return cov_x_max0_expr_test(cv, mu, sigma)->value();
     };
 
     Variable cov_expr, mu_expr, sigma_expr;
@@ -213,7 +214,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0ExprGradient_Numerical) {
     mu_expr = mu_z;
     sigma_expr = sigma_z;
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
     result->backward();
 
     EXPECT_NEAR(cov_expr->gradient(), numerical_gradient(f_cov, cov_xz), 1e-6);
@@ -234,7 +235,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0Expr_LargeMu) {
     mu_expr = mu_z;
     sigma_expr = sigma_z;
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
 
     // Φ(10/1) ≈ 1, so result ≈ cov_xz
     EXPECT_NEAR(result->value(), cov_xz, 0.01);
@@ -249,7 +250,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0Expr_LargeNegativeMu) {
     mu_expr = mu_z;
     sigma_expr = sigma_z;
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
 
     // Φ(-10/1) ≈ 0, so result ≈ 0
     EXPECT_NEAR(result->value(), 0.0, 0.01);
@@ -264,7 +265,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0Expr_ZeroMu) {
     mu_expr = mu_z;
     sigma_expr = sigma_z;
 
-    Expression result = cov_x_max0_expr(cov_expr, mu_expr, sigma_expr);
+    Expression result = cov_x_max0_expr_test(cov_expr, mu_expr, sigma_expr);
 
     EXPECT_NEAR(result->value(), cov_xz * 0.5, 1e-10);
 }
@@ -274,7 +275,7 @@ TEST_F(CovXMax0ExprTest, CovXMax0Expr_ZeroMu) {
 // =============================================================================
 
 TEST_F(CovXMax0ExprTest, SensitivityAnalysisExample) {
-    // Demonstrate how cov_x_max0_expr enables sensitivity analysis
+    // Demonstrate how cov_x_max0_expr_test enables sensitivity analysis
     // for path delays involving MAX operations
 
     // Scenario: Two gates with delays X ~ N(μ_X, σ_X²), Z ~ N(μ_Z, σ_Z²)
@@ -286,7 +287,7 @@ TEST_F(CovXMax0ExprTest, SensitivityAnalysisExample) {
     mu_z = 2.0;      // μ_Z
     sigma_z = 1.5;   // σ_Z
 
-    Expression cov_result = cov_x_max0_expr(cov_xz, mu_z, sigma_z);
+    Expression cov_result = cov_x_max0_expr_test(cov_xz, mu_z, sigma_z);
 
     std::cout << "\n=== Sensitivity Analysis Example ===\n";
     std::cout << "Cov(X, max0(Z)) = " << cov_result->value() << "\n";

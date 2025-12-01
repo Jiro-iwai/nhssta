@@ -3,10 +3,10 @@
  * @brief Tests for ADD/SUB Expression functions (Phase 3 of #167)
  *
  * Tests:
- * - add_mean_expr: E[A + B] = μ_A + μ_B
- * - add_var_expr: Var[A + B] = σ_A² + σ_B² + 2×Cov(A,B)
- * - sub_mean_expr: E[A - B] = μ_A - μ_B
- * - sub_var_expr: Var[A - B] = σ_A² + σ_B² - 2×Cov(A,B)
+ * - add_mean_expr_test: E[A + B] = μ_A + μ_B
+ * - add_var_expr_test: Var[A + B] = σ_A² + σ_B² + 2×Cov(A,B)
+ * - sub_mean_expr_test: E[A - B] = μ_A - μ_B
+ * - sub_var_expr_test: Var[A - B] = σ_A² + σ_B² - 2×Cov(A,B)
  * - Comparison with RandomVariable implementation
  * - Gradient verification
  */
@@ -22,6 +22,7 @@
 #include "expression.hpp"
 #include "normal.hpp"
 #include "sub.hpp"
+#include "test_expression_helpers.hpp"
 
 // Numerical gradient using central difference
 namespace {
@@ -38,11 +39,11 @@ class AddSubExprTest : public ::testing::Test {
 };
 
 // =============================================================================
-// add_mean_expr tests
+// add_mean_expr_test tests
 // =============================================================================
 
 TEST_F(AddSubExprTest, AddMeanExprValue) {
-    // Test that add_mean_expr matches the RandomVariable implementation
+    // Test that add_mean_expr_test matches the RandomVariable implementation
 
     std::vector<std::pair<double, double>> test_cases = {
         {0.0, 0.0},
@@ -66,7 +67,7 @@ TEST_F(AddSubExprTest, AddMeanExprValue) {
         Variable mu1_expr, mu2_expr;
         mu1_expr = mu1;
         mu2_expr = mu2;
-        Expression mean_expr = add_mean_expr(mu1_expr, mu2_expr);
+        Expression mean_expr = add_mean_expr_test(mu1_expr, mu2_expr);
         double expr_mean = mean_expr->value();
 
         EXPECT_DOUBLE_EQ(expr_mean, rv_mean) << "at μ1=" << mu1 << ", μ2=" << mu2;
@@ -84,7 +85,7 @@ TEST_F(AddSubExprTest, AddMeanExprGradientMu1) {
 
         mu1_expr = mu1;
         mu2_expr = mu2;
-        Expression mean_expr = add_mean_expr(mu1_expr, mu2_expr);
+        Expression mean_expr = add_mean_expr_test(mu1_expr, mu2_expr);
         mean_expr->backward();
 
         // Analytical: ∂(μ1+μ2)/∂μ1 = 1
@@ -94,11 +95,11 @@ TEST_F(AddSubExprTest, AddMeanExprGradientMu1) {
 }
 
 // =============================================================================
-// add_var_expr tests
+// add_var_expr_test tests
 // =============================================================================
 
 TEST_F(AddSubExprTest, AddVarExprValue) {
-    // Test that add_var_expr matches the RandomVariable implementation
+    // Test that add_var_expr_test matches the RandomVariable implementation
 
     std::vector<std::tuple<double, double, double>> test_cases = {
         // {σ1, σ2, cov}
@@ -117,7 +118,7 @@ TEST_F(AddSubExprTest, AddVarExprValue) {
         sigma1_expr = sigma1;
         sigma2_expr = sigma2;
         cov_expr = cov;
-        Expression var_expr = add_var_expr(sigma1_expr, sigma2_expr, cov_expr);
+        Expression var_expr = add_var_expr_test(sigma1_expr, sigma2_expr, cov_expr);
         double expr_var = var_expr->value();
 
         // Analytical: Var = σ1² + σ2² + 2×cov
@@ -141,7 +142,7 @@ TEST_F(AddSubExprTest, AddVarExprGradients) {
     sigma1_expr = sigma1;
     sigma2_expr = sigma2;
     cov_expr = cov;
-    Expression var_expr = add_var_expr(sigma1_expr, sigma2_expr, cov_expr);
+    Expression var_expr = add_var_expr_test(sigma1_expr, sigma2_expr, cov_expr);
     var_expr->backward();
 
     EXPECT_DOUBLE_EQ(sigma1_expr->gradient(), 2.0 * sigma1);
@@ -158,7 +159,7 @@ TEST_F(AddSubExprTest, AddVarExprNumericalGradient) {
         s1_v = s1;
         s2_v = sigma2;
         cov_v = cov;
-        return add_var_expr(s1_v, s2_v, cov_v)->value();
+        return add_var_expr_test(s1_v, s2_v, cov_v)->value();
     };
 
     auto f_sigma2 = [sigma1, cov](double s2) {
@@ -166,7 +167,7 @@ TEST_F(AddSubExprTest, AddVarExprNumericalGradient) {
         s1_v = sigma1;
         s2_v = s2;
         cov_v = cov;
-        return add_var_expr(s1_v, s2_v, cov_v)->value();
+        return add_var_expr_test(s1_v, s2_v, cov_v)->value();
     };
 
     auto f_cov = [sigma1, sigma2](double c) {
@@ -174,14 +175,14 @@ TEST_F(AddSubExprTest, AddVarExprNumericalGradient) {
         s1_v = sigma1;
         s2_v = sigma2;
         cov_v = c;
-        return add_var_expr(s1_v, s2_v, cov_v)->value();
+        return add_var_expr_test(s1_v, s2_v, cov_v)->value();
     };
 
     Variable sigma1_expr, sigma2_expr, cov_expr;
     sigma1_expr = sigma1;
     sigma2_expr = sigma2;
     cov_expr = cov;
-    Expression var_expr = add_var_expr(sigma1_expr, sigma2_expr, cov_expr);
+    Expression var_expr = add_var_expr_test(sigma1_expr, sigma2_expr, cov_expr);
     var_expr->backward();
 
     EXPECT_NEAR(sigma1_expr->gradient(), numerical_gradient(f_sigma1, sigma1), 1e-6);
@@ -190,11 +191,11 @@ TEST_F(AddSubExprTest, AddVarExprNumericalGradient) {
 }
 
 // =============================================================================
-// sub_mean_expr tests
+// sub_mean_expr_test tests
 // =============================================================================
 
 TEST_F(AddSubExprTest, SubMeanExprValue) {
-    // Test that sub_mean_expr matches the RandomVariable implementation
+    // Test that sub_mean_expr_test matches the RandomVariable implementation
 
     std::vector<std::pair<double, double>> test_cases = {
         {0.0, 0.0},
@@ -218,7 +219,7 @@ TEST_F(AddSubExprTest, SubMeanExprValue) {
         Variable mu1_expr, mu2_expr;
         mu1_expr = mu1;
         mu2_expr = mu2;
-        Expression mean_expr = sub_mean_expr(mu1_expr, mu2_expr);
+        Expression mean_expr = sub_mean_expr_test(mu1_expr, mu2_expr);
         double expr_mean = mean_expr->value();
 
         EXPECT_DOUBLE_EQ(expr_mean, rv_mean) << "at μ1=" << mu1 << ", μ2=" << mu2;
@@ -236,7 +237,7 @@ TEST_F(AddSubExprTest, SubMeanExprGradientMu1) {
 
         mu1_expr = mu1;
         mu2_expr = mu2;
-        Expression mean_expr = sub_mean_expr(mu1_expr, mu2_expr);
+        Expression mean_expr = sub_mean_expr_test(mu1_expr, mu2_expr);
         mean_expr->backward();
 
         // Analytical: ∂(μ1-μ2)/∂μ1 = 1, ∂(μ1-μ2)/∂μ2 = -1
@@ -246,11 +247,11 @@ TEST_F(AddSubExprTest, SubMeanExprGradientMu1) {
 }
 
 // =============================================================================
-// sub_var_expr tests
+// sub_var_expr_test tests
 // =============================================================================
 
 TEST_F(AddSubExprTest, SubVarExprValue) {
-    // Test that sub_var_expr matches the RandomVariable implementation
+    // Test that sub_var_expr_test matches the RandomVariable implementation
 
     std::vector<std::tuple<double, double, double>> test_cases = {
         // {σ1, σ2, cov}
@@ -269,7 +270,7 @@ TEST_F(AddSubExprTest, SubVarExprValue) {
         sigma1_expr = sigma1;
         sigma2_expr = sigma2;
         cov_expr = cov;
-        Expression var_expr = sub_var_expr(sigma1_expr, sigma2_expr, cov_expr);
+        Expression var_expr = sub_var_expr_test(sigma1_expr, sigma2_expr, cov_expr);
         double expr_var = var_expr->value();
 
         // Analytical: Var = σ1² + σ2² - 2×cov
@@ -293,7 +294,7 @@ TEST_F(AddSubExprTest, SubVarExprGradients) {
     sigma1_expr = sigma1;
     sigma2_expr = sigma2;
     cov_expr = cov;
-    Expression var_expr = sub_var_expr(sigma1_expr, sigma2_expr, cov_expr);
+    Expression var_expr = sub_var_expr_test(sigma1_expr, sigma2_expr, cov_expr);
     var_expr->backward();
 
     EXPECT_DOUBLE_EQ(sigma1_expr->gradient(), 2.0 * sigma1);
@@ -310,7 +311,7 @@ TEST_F(AddSubExprTest, SubVarExprNumericalGradient) {
         s1_v = s1;
         s2_v = sigma2;
         cov_v = cov;
-        return sub_var_expr(s1_v, s2_v, cov_v)->value();
+        return sub_var_expr_test(s1_v, s2_v, cov_v)->value();
     };
 
     auto f_sigma2 = [sigma1, cov](double s2) {
@@ -318,7 +319,7 @@ TEST_F(AddSubExprTest, SubVarExprNumericalGradient) {
         s1_v = sigma1;
         s2_v = s2;
         cov_v = cov;
-        return sub_var_expr(s1_v, s2_v, cov_v)->value();
+        return sub_var_expr_test(s1_v, s2_v, cov_v)->value();
     };
 
     auto f_cov = [sigma1, sigma2](double c) {
@@ -326,14 +327,14 @@ TEST_F(AddSubExprTest, SubVarExprNumericalGradient) {
         s1_v = sigma1;
         s2_v = sigma2;
         cov_v = c;
-        return sub_var_expr(s1_v, s2_v, cov_v)->value();
+        return sub_var_expr_test(s1_v, s2_v, cov_v)->value();
     };
 
     Variable sigma1_expr, sigma2_expr, cov_expr;
     sigma1_expr = sigma1;
     sigma2_expr = sigma2;
     cov_expr = cov;
-    Expression var_expr = sub_var_expr(sigma1_expr, sigma2_expr, cov_expr);
+    Expression var_expr = sub_var_expr_test(sigma1_expr, sigma2_expr, cov_expr);
     var_expr->backward();
 
     EXPECT_NEAR(sigma1_expr->gradient(), numerical_gradient(f_sigma1, sigma1), 1e-6);
@@ -364,8 +365,8 @@ TEST_F(AddSubExprTest, AddExprMatchesRandomVariable) {
     sigma2 = 3.0;
     cov = 0.0;  // Independent
 
-    Expression mean_expr = add_mean_expr(mu1, mu2);
-    Expression var_expr = add_var_expr(sigma1, sigma2, cov);
+    Expression mean_expr = add_mean_expr_test(mu1, mu2);
+    Expression var_expr = add_var_expr_test(sigma1, sigma2, cov);
 
     EXPECT_DOUBLE_EQ(mean_expr->value(), rv_mean);
     EXPECT_NEAR(var_expr->value(), rv_var, 1e-10);
@@ -389,8 +390,8 @@ TEST_F(AddSubExprTest, SubExprMatchesRandomVariable) {
     sigma2 = 3.0;
     cov = 0.0;  // Independent
 
-    Expression mean_expr = sub_mean_expr(mu1, mu2);
-    Expression var_expr = sub_var_expr(sigma1, sigma2, cov);
+    Expression mean_expr = sub_mean_expr_test(mu1, mu2);
+    Expression var_expr = sub_var_expr_test(sigma1, sigma2, cov);
 
     EXPECT_DOUBLE_EQ(mean_expr->value(), rv_mean);
     EXPECT_NEAR(var_expr->value(), rv_var, 1e-10);
@@ -413,11 +414,11 @@ TEST_F(AddSubExprTest, PathDelaySensitivity) {
     cov12 = 0.5;   // Covariance between gate delays
 
     // Path mean = μ1 + μ2
-    Expression path_mean = add_mean_expr(mu1, mu2);
+    Expression path_mean = add_mean_expr_test(mu1, mu2);
     EXPECT_DOUBLE_EQ(path_mean->value(), 25.0);
 
     // Path variance = σ1² + σ2² + 2×cov
-    Expression path_var = add_var_expr(sigma1, sigma2, cov12);
+    Expression path_var = add_var_expr_test(sigma1, sigma2, cov12);
     EXPECT_DOUBLE_EQ(path_var->value(), 4.0 + 9.0 + 1.0);  // 14.0
 
     // Sensitivity of path mean
@@ -443,8 +444,8 @@ TEST_F(AddSubExprTest, ZeroCovarianceCase) {
     sigma2 = 3.0;
     cov = 0.0;
 
-    Expression add_var = add_var_expr(sigma1, sigma2, cov);
-    Expression sub_var = sub_var_expr(sigma1, sigma2, cov);
+    Expression add_var = add_var_expr_test(sigma1, sigma2, cov);
+    Expression sub_var = sub_var_expr_test(sigma1, sigma2, cov);
 
     // When cov = 0, ADD and SUB have same variance
     EXPECT_DOUBLE_EQ(add_var->value(), sub_var->value());
@@ -457,8 +458,8 @@ TEST_F(AddSubExprTest, PerfectCorrelationCase) {
     sigma2 = 3.0;
     cov = 6.0;  // Perfect correlation: cov = σ1 × σ2
 
-    Expression add_var = add_var_expr(sigma1, sigma2, cov);
-    Expression sub_var = sub_var_expr(sigma1, sigma2, cov);
+    Expression add_var = add_var_expr_test(sigma1, sigma2, cov);
+    Expression sub_var = sub_var_expr_test(sigma1, sigma2, cov);
 
     // Var[A+B] = σ1² + σ2² + 2×σ1×σ2 = (σ1 + σ2)²
     EXPECT_DOUBLE_EQ(add_var->value(), 25.0);  // (2 + 3)² = 25

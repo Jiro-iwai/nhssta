@@ -172,20 +172,19 @@ void clear_cov_expr_cache() {
 
 // Helper: Cov(X, MAX0(Z)) as Expression
 // X must be jointly Gaussian with Z (X is not MAX/MAX0)
-static Expression cov_x_max0_expr_impl(const RandomVariable& x, const RandomVariable& y_max0) {
+static Expression cov_x_max0_expr(const RandomVariable& x, const RandomVariable& y_max0) {
     const RandomVariable& z = y_max0->left();
 
-    // Cov(X, max0(Z)) = Cov(X, Z) * Φ(-μ_Z/σ_Z)
-    // Using cov_x_max0_expr from expression.hpp
+    // Cov(X, max0(Z)) = Cov(X, Z) × Φ(μ_Z/σ_Z)
     Expression cov_xz = cov_expr(x, z);
     Expression mu_z = z->mean_expr();
     Expression sigma_z = z->std_expr();
 
-    return cov_x_max0_expr(cov_xz, mu_z, sigma_z);
+    return cov_xz * Phi_expr(mu_z / sigma_z);
 }
 
 // Helper: Cov(MAX0(D0), MAX0(D1)) as Expression
-static Expression cov_max0_max0_expr_impl(const RandomVariable& a, const RandomVariable& b) {
+static Expression cov_max0_max0_expr(const RandomVariable& a, const RandomVariable& b) {
     const RandomVariable& d0 = a->left();
     const RandomVariable& d1 = b->left();
 
@@ -285,14 +284,14 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
             // max0(D) with itself: Cov = Var(max0(D))
             result = a->var_expr();
         } else {
-            result = cov_max0_max0_expr_impl(a, b);
+            result = cov_max0_max0_expr(a, b);
         }
     }
     // C-5.4: MAX0 × X (X is not MAX0)
     else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr) {
-        result = cov_x_max0_expr_impl(b, a);
+        result = cov_x_max0_expr(b, a);
     } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
-        result = cov_x_max0_expr_impl(a, b);
+        result = cov_x_max0_expr(a, b);
     }
     // C-5.2: Normal × Normal (independent)
     else if (dynamic_cast<const NormalImpl*>(a.get()) != nullptr &&
