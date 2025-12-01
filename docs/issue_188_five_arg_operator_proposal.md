@@ -129,9 +129,55 @@ double ExpressionImpl::value() {
 
 ### 5. `propagate_gradient()` メソッドの実装
 
-**最も重要な実装部分**: 解析的勾配を実装する必要があります。
+**最も重要な実装部分**: 勾配計算の実装方法を選択する必要があります。
 
-#### オプション1: 解析的勾配（推奨）
+#### オプション1: Expression を利用した勾配計算（推奨）
+
+勾配計算時だけ Expression tree を構築して自動微分を利用する方法：
+
+```cpp
+void ExpressionImpl::propagate_gradient() {
+    if (op_ == EXPECTED_PROD_POS) {
+        // 勾配計算時だけ Expression tree を構築
+        // 値計算時は既に完了しているため、値を使用して Expression を構築
+        Variable v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho;
+        v_mu0 = left()->value();
+        v_sigma0 = right()->value();
+        v_mu1 = third()->value();
+        v_sigma1 = fourth()->value();
+        v_rho = fifth()->value();
+        
+        // 既存の expected_prod_pos_expr() を使用して Expression tree を構築
+        // この時点で Expression tree が作成されるが、値計算時には作成されない
+        Expression e = expected_prod_pos_expr(v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho);
+        
+        // 自動微分で勾配を計算
+        e->backward();
+        
+        // 勾配を伝播
+        left()->gradient_ += upstream * v_mu0->gradient();
+        right()->gradient_ += upstream * v_sigma0->gradient();
+        third()->gradient_ += upstream * v_mu1->gradient();
+        fourth()->gradient_ += upstream * v_sigma1->gradient();
+        fifth()->gradient_ += upstream * v_rho->gradient();
+    }
+}
+```
+
+**利点**:
+- **実装が簡単**: 既存の `expected_prod_pos_expr()` を再利用できる
+- **自動微分**: 解析的勾配が自動的に計算される（バグのリスクが低い）
+- **値計算時のノード削減**: 値計算時は5項演算子で1ノードのみ
+- **既存のテストがそのまま使える**: 既存の実装と同じ動作
+
+**注意点**:
+- 勾配計算時に Expression tree が作成される（約79ノード）
+- しかし、値計算時のノード削減効果は維持される
+- 多くの場合、値計算の方が頻繁に呼ばれるため、全体としては効果的
+
+**実装の簡潔さ**: この方法は既存のコードを最大限に活用でき、実装が最も簡単です。
+
+#### オプション2: 解析的勾配（手動実装）
 
 `E[D0⁺ D1⁺]` の公式から各パラメータに対する偏微分を導出：
 
@@ -183,7 +229,9 @@ void ExpressionImpl::propagate_gradient() {
 
 **参考**: 既存の `PHI2` 演算子の勾配実装（`src/expression.cpp:298-308`）を参考にする
 
-#### オプション2: 数値微分（実装が簡単だが精度・速度のトレードオフ）
+**実装の難易度**: 高（複雑な偏微分の実装が必要）
+
+#### オプション3: 数値微分（実装が簡単だが精度・速度のトレードオフ）
 
 ```cpp
 void ExpressionImpl::propagate_gradient() {
@@ -212,36 +260,7 @@ void ExpressionImpl::propagate_gradient() {
 - **速度**: 各パラメータごとに2回の関数評価が必要（合計10回の関数評価）
 - **数値安定性**: `eps` の値の選択が難しい
 
-#### オプション3: ハイブリッド（Expression を内部で使用）
-
-勾配計算時だけ Expression tree を構築する方法：
-
-```cpp
-void ExpressionImpl::propagate_gradient() {
-    if (op_ == EXPECTED_PROD_POS) {
-        // 一時的に Expression tree を構築して勾配を計算
-        Variable v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho;
-        v_mu0 = left()->value();
-        v_sigma0 = right()->value();
-        v_mu1 = third()->value();
-        v_sigma1 = fourth()->value();
-        v_rho = fifth()->value();
-        
-        Expression e = expected_prod_pos_expr_old(v_mu0, v_sigma0, v_mu1, v_sigma1, v_rho);
-        e->backward();
-        
-        left()->gradient_ += upstream * v_mu0->gradient();
-        right()->gradient_ += upstream * v_sigma0->gradient();
-        third()->gradient_ += upstream * v_mu1->gradient();
-        fourth()->gradient_ += upstream * v_sigma1->gradient();
-        fifth()->gradient_ += upstream * v_rho->gradient();
-    }
-}
-```
-
-**問題点**:
-- ノード削減の効果が薄れる（勾配計算時にノードが作成される）
-- 値計算時は1ノードだが、勾配計算時に79ノードが作成される可能性がある
+**実装の難易度**: 低（実装は簡単だが、精度と速度のトレードオフがある）
 
 ### 6. `expected_prod_pos_expr()` 関数の変更
 
@@ -303,7 +322,8 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
 ### フェーズ3: 勾配計算の実装
 
 7. **`propagate_gradient()` メソッドに `EXPECTED_PROD_POS` の処理を追加**
-   - 解析的勾配を実装（推奨）
+   - Expression を利用した勾配計算を実装（推奨）
+   - または解析的勾配を手動実装（高難易度）
    - または数値微分を実装（簡単だが精度・速度のトレードオフ）
 
 8. **テストの追加・更新**
@@ -323,14 +343,23 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
 
 ## 注意点とリスク
 
-### 1. 勾配計算の実装の複雑さ
+### 1. 勾配計算の実装方法の選択
 
-**リスク**: 解析的勾配の実装が複雑で、バグが混入する可能性がある
+**推奨**: Expression を利用した勾配計算（オプション1）
+
+**理由**:
+- 実装が簡単で、既存のコードを再利用できる
+- 自動微分により、解析的勾配が自動的に計算される
+- バグのリスクが低い
+- 値計算時のノード削減効果は維持される
+
+**代替案**: 
+- 解析的勾配を手動実装する場合（オプション2）は、実装が複雑でバグのリスクが高い
+- 数値微分（オプション3）は精度と速度のトレードオフがある
 
 **対策**:
 - 既存のテスト（`test_cov_max0_max0_expr.cpp`）で勾配計算を検証
-- 数値微分との比較テストを追加
-- 段階的に実装し、各段階でテストを実行
+- Expression を利用する方法なら、既存の実装と同じ動作が保証される
 
 ### 2. 既存コードへの影響
 
@@ -422,16 +451,21 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
 
 ## 実装の難易度
 
-**中〜高**: 
+**中**: 
 - 基本構造の実装は中程度の難易度
-- 勾配計算の実装は高難易度（解析的勾配の場合）
+- 勾配計算の実装は中程度の難易度（Expression を利用する場合）
+- 解析的勾配を手動実装する場合は高難易度
 
 ## 実装の推奨順序
 
 1. **フェーズ1**: 基本構造の実装（1-2日）
 2. **フェーズ2**: 値計算の実装（1日）
-3. **フェーズ3**: 勾配計算の実装（2-3日、解析的勾配の場合）
+3. **フェーズ3**: 勾配計算の実装（1日、Expression を利用する場合）
+   - 既存の `expected_prod_pos_expr()` を再利用
+   - 自動微分で勾配を計算
 4. **フェーズ4**: 検証と最適化（1-2日）
 
-**合計**: 約5-8日
+**合計**: 約4-6日（Expression を利用する場合）
+
+**注意**: 解析的勾配を手動実装する場合は、フェーズ3が2-3日追加で必要
 
