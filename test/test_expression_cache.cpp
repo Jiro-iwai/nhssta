@@ -32,8 +32,6 @@ protected:
 TEST_F(ExpressionCacheTest, MeanExprCached) {
     Normal a(10.0, 4.0);  // μ=10, σ²=4
     
-    size_t before = ExpressionImpl::node_count();
-    
     Expression expr1 = a->mean_expr();
     size_t after_first = ExpressionImpl::node_count();
     
@@ -51,8 +49,6 @@ TEST_F(ExpressionCacheTest, MeanExprCached) {
 TEST_F(ExpressionCacheTest, VarExprCached) {
     Normal a(10.0, 4.0);
     
-    size_t before = ExpressionImpl::node_count();
-    
     Expression expr1 = a->var_expr();
     size_t after_first = ExpressionImpl::node_count();
     
@@ -69,8 +65,6 @@ TEST_F(ExpressionCacheTest, OpADD_MeanExprCached) {
     Normal b(20.0, 9.0);
     ::RandomVariable::RandomVariable sum = a + b;
     
-    size_t before = ExpressionImpl::node_count();
-    
     Expression expr1 = sum->mean_expr();
     size_t after_first = ExpressionImpl::node_count();
     
@@ -86,8 +80,6 @@ TEST_F(ExpressionCacheTest, OpMAX_MeanExprCached) {
     Normal a(10.0, 4.0);
     Normal b(20.0, 9.0);
     ::RandomVariable::RandomVariable m = MAX(a, b);
-    
-    size_t before = ExpressionImpl::node_count();
     
     Expression expr1 = m->mean_expr();
     size_t after_first = ExpressionImpl::node_count();
@@ -169,7 +161,6 @@ TEST_F(ExpressionCacheTest, BackwardCompletesQuickly) {
     
     // Check that gradients are set
     double grad_mu_a = a->mean_expr()->gradient();
-    double grad_sigma_a = a->std_expr()->gradient();
     
     // For sum = a + b, mean(sum) = mean(a) + mean(b)
     // ∂mean(sum)/∂mean(a) = 1
