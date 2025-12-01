@@ -217,6 +217,33 @@ nhssta 0.3.0
 OK
 ```
 
+感度解析を実行する場合：
+
+```bash
+$ ../build/bin/nhssta -s -n 5 -d ex4_gauss.dlib -b ex4.bench
+nhssta 0.3.0
+
+#
+# Sensitivity Analysis
+#
+# Objective: log(Σ exp(LAT + σ)) = 22.15
+#
+# Top 5 Endpoints (by LAT + σ):
+#
+#node              LAT     sigma     score
+#-----------------------------------------
+...
+#-----------------------------------------
+#
+# Gate Sensitivities (∂F/∂μ, ∂F/∂σ):
+#
+#instance    output    input   type        dF/dmu    dF/dsigma
+#-------------------------------------------------------------
+...
+#-------------------------------------------------------------
+OK
+```
+
 ## 3. 使用上の注意
 
 - **デフォルトはノード遅延（LAT）と相関を主対象**: パス遅延は `-p` オプションを指定した場合に、クリティカルパスとして別途報告します
