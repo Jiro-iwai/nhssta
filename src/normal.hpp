@@ -24,9 +24,9 @@ class NormalImpl : public RandomVariableImpl {
     [[nodiscard]] Normal clone() const;
 
     // Sensitivity analysis: Expression-based accessors
-    [[nodiscard]] Expression mean_expr() const override;
-    [[nodiscard]] Expression var_expr() const override;
-    [[nodiscard]] Expression std_expr() const override;
+    [[nodiscard]] Expression calc_mean_expr() const override;
+    [[nodiscard]] Expression calc_var_expr() const override;
+    [[nodiscard]] Expression calc_std_expr() const override;
 
    private:
     [[nodiscard]] const RandomVariable& left() const;

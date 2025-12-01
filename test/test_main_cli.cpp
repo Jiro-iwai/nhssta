@@ -298,3 +298,38 @@ TEST_F(CommandLineTest, TestShortAndLongPathOptionsEquivalent) {
     EXPECT_EQ(count_paths(output_short), count_paths(output_long))
         << "-p and --path should produce same number of paths for same count";
 }
+
+// Test: sensitivity analysis option (-s)
+TEST_F(CommandLineTest, TestSensitivityShort) {
+    std::string output =
+        run_nhssta({"-s", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Should contain sensitivity analysis section
+    EXPECT_NE(output.find("Sensitivity Analysis"), std::string::npos)
+        << "Output should contain 'Sensitivity Analysis'. Got: " << output.substr(0, 500);
+    EXPECT_NE(output.find("Objective:"), std::string::npos)
+        << "Output should contain 'Objective:'";
+    EXPECT_NE(output.find("Gate Sensitivities"), std::string::npos)
+        << "Output should contain 'Gate Sensitivities'";
+}
+
+TEST_F(CommandLineTest, TestSensitivityLong) {
+    std::string output =
+        run_nhssta({"--sensitivity", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Should contain sensitivity analysis section
+    EXPECT_NE(output.find("Sensitivity Analysis"), std::string::npos)
+        << "Output should contain 'Sensitivity Analysis'. Got: " << output.substr(0, 500);
+}
+
+// Test: top N option (-n) for sensitivity
+TEST_F(CommandLineTest, TestSensitivityTopN) {
+    std::string output_n2 =
+        run_nhssta({"-s", "-n", "2", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    std::string output_n3 =
+        run_nhssta({"-s", "-n", "3", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Both should contain sensitivity analysis
+    EXPECT_NE(output_n2.find("Sensitivity Analysis"), std::string::npos);
+    EXPECT_NE(output_n3.find("Sensitivity Analysis"), std::string::npos);
+}

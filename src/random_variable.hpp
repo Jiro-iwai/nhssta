@@ -91,9 +91,16 @@ class RandomVariableImpl {
     // Sensitivity analysis: Expression-based accessors
     // These return Expression objects that can be used for automatic differentiation.
     // Call backward() on the result, then gradient() on the leaf expressions.
-    [[nodiscard]] virtual Expression mean_expr() const;
-    [[nodiscard]] virtual Expression var_expr() const;
-    [[nodiscard]] virtual Expression std_expr() const;
+    // Results are cached to avoid creating duplicate Expression nodes.
+    [[nodiscard]] Expression mean_expr() const;
+    [[nodiscard]] Expression var_expr() const;
+    [[nodiscard]] Expression std_expr() const;
+    
+protected:
+    // Override these in derived classes to implement Expression-based computations
+    [[nodiscard]] virtual Expression calc_mean_expr() const;
+    [[nodiscard]] virtual Expression calc_var_expr() const;
+    [[nodiscard]] virtual Expression calc_std_expr() const;
 
    protected:
     RandomVariableImpl(double mean, double variance, const std::string& name = "");
@@ -119,6 +126,11 @@ class RandomVariableImpl {
     mutable double variance_;
     mutable bool is_set_mean_;
     mutable bool is_set_variance_;
+    
+    // Expression cache for sensitivity analysis (default-initialized to null)
+    mutable Expression cached_mean_expr_;
+    mutable Expression cached_var_expr_;
+    mutable Expression cached_std_expr_;
     
     int level_;
 };

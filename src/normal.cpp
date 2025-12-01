@@ -67,19 +67,19 @@ void NormalImpl::init_expr() const {
     }
 }
 
-Expression NormalImpl::mean_expr() const {
+Expression NormalImpl::calc_mean_expr() const {
     init_expr();
     // E[D] = μ
     return mu_expr_;
 }
 
-Expression NormalImpl::var_expr() const {
+Expression NormalImpl::calc_var_expr() const {
     init_expr();
     // Var[D] = σ²
     return sigma_expr_ * sigma_expr_;
 }
 
-Expression NormalImpl::std_expr() const {
+Expression NormalImpl::calc_std_expr() const {
     init_expr();
     // Std[D] = σ
     return sigma_expr_;

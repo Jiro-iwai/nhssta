@@ -31,12 +31,12 @@ double OpSUB::calc_variance() const {
     return (r);
 }
 
-Expression OpSUB::mean_expr() const {
+Expression OpSUB::calc_mean_expr() const {
     // E[A - B] = E[A] - E[B]
     return left()->mean_expr() - right()->mean_expr();
 }
 
-Expression OpSUB::var_expr() const {
+Expression OpSUB::calc_var_expr() const {
     // Var[A - B] = Var[A] - 2*Cov(A,B) + Var[B]
     Expression var_left = left()->var_expr();
     Expression var_right = right()->var_expr();

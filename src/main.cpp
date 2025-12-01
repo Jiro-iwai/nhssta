@@ -18,15 +18,17 @@ void usage(const char* first, const char* last) {
     std::cerr << " -l, --lat          prints all LAT data" << std::endl;
     std::cerr << " -c, --correlation  prints correlation matrix of LAT" << std::endl;
     std::cerr << " -p, --path [N]     prints top N critical paths (default: 5)" << std::endl;
+    std::cerr << " -s, --sensitivity  prints sensitivity analysis" << std::endl;
+    std::cerr << " -n, --top [N]      specifies top N paths for sensitivity (default: 5)" << std::endl;
     std::cerr << " -h, --help         gives this help" << std::endl;
     throw Nh::RuntimeException("Invalid command-line arguments");
 }
 
-// Helper function to parse optional numeric argument for -p/--path options
+// Helper function to parse optional numeric argument for -p/--path and -n/--top options
 // Returns the parsed count, or default if no valid number is available
 // Updates index i if a number argument was consumed
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-size_t parse_path_count(int argc, char* argv[], int& i) {
+size_t parse_count(int argc, char* argv[], int& i, size_t default_value) {
     if (i + 1 < argc) {
         std::string next_arg = argv[i + 1];
         // Check if it's a number (not another option starting with '-')
@@ -40,7 +42,12 @@ size_t parse_path_count(int argc, char* argv[], int& i) {
             }
         }
     }
-    return Nh::DEFAULT_CRITICAL_PATH_COUNT;
+    return default_value;
+}
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+size_t parse_path_count(int argc, char* argv[], int& i) {
+    return parse_count(argc, argv, i, Nh::DEFAULT_CRITICAL_PATH_COUNT);
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
@@ -57,6 +64,10 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
             ssta->set_correlation();
         } else if (arg == "--path") {
             ssta->set_critical_path(parse_path_count(argc, argv, i));
+        } else if (arg == "--sensitivity") {
+            ssta->set_sensitivity();
+        } else if (arg == "--top") {
+            ssta->set_sensitivity_top_n(parse_count(argc, argv, i, Nh::DEFAULT_CRITICAL_PATH_COUNT));
         } else if (arg == "--dlib") {
             if (i + 1 < argc) {
                 ssta->set_dlib(std::string(argv[++i]));
@@ -84,6 +95,12 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
                     break;
                 case 'p':
                     ssta->set_critical_path(parse_path_count(argc, argv, i));
+                    break;
+                case 's':
+                    ssta->set_sensitivity();
+                    break;
+                case 'n':
+                    ssta->set_sensitivity_top_n(parse_count(argc, argv, i, Nh::DEFAULT_CRITICAL_PATH_COUNT));
                     break;
                 case 'd':
                     if (i + 1 < argc) {
@@ -121,7 +138,7 @@ std::string get_version_string() {
 #endif
     
     std::ostringstream oss;
-    oss << "nhssta 0.2.4 (";
+    oss << "nhssta 0.3.0 (";
     oss << std::put_time(&timeinfo, "%a %b %d %H:%M:%S %Y");
     oss << ")";
     return oss.str();
@@ -186,6 +203,58 @@ std::string formatCorrelationMatrix(const Nh::CorrelationMatrix& matrix) {
     }
     oss << "-----" << std::endl;
 
+    return oss.str();
+}
+
+// Helper function to format sensitivity analysis results
+std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
+    std::ostringstream oss;
+    oss << "#" << std::endl;
+    oss << "# Sensitivity Analysis" << std::endl;
+    oss << "#" << std::endl;
+    oss << "# Objective: log(Σ exp(LAT + σ)) = " << std::fixed << std::setprecision(3) 
+        << results.objective_value << std::endl;
+    oss << "#" << std::endl;
+    oss << "# Top " << results.top_paths.size() << " Endpoints (by LAT + σ):" << std::endl;
+    oss << "#" << std::endl;
+    
+    oss << std::left << std::setw(18) << "#node" 
+        << std::right << std::setw(10) << "LAT" 
+        << std::setw(9) << "sigma" 
+        << std::setw(10) << "score" << std::endl;
+    oss << "#-----------------------------------------" << std::endl;
+    
+    for (const auto& path : results.top_paths) {
+        oss << std::left << std::setw(18) << path.endpoint;
+        oss << std::right << std::setw(10) << std::fixed << std::setprecision(3) << path.lat;
+        oss << std::setw(9) << std::fixed << std::setprecision(3) << path.std_dev;
+        oss << std::setw(10) << std::fixed << std::setprecision(3) << path.score << std::endl;
+    }
+    
+    oss << "#-----------------------------------------" << std::endl;
+    oss << "#" << std::endl;
+    oss << "# Gate Sensitivities (∂F/∂μ, ∂F/∂σ):" << std::endl;
+    oss << "#" << std::endl;
+    
+    oss << std::left << std::setw(12) << "#instance" 
+        << std::setw(10) << "output"
+        << std::setw(8) << "input"
+        << std::setw(8) << "type"
+        << std::right << std::setw(12) << "dF/dmu" 
+        << std::setw(12) << "dF/dsigma" << std::endl;
+    oss << "#-------------------------------------------------------------" << std::endl;
+    
+    for (const auto& sens : results.gate_sensitivities) {
+        oss << std::left << std::setw(12) << sens.instance;
+        oss << std::setw(10) << sens.output_node;
+        oss << std::setw(8) << sens.input_signal;
+        oss << std::setw(8) << sens.gate_type;
+        oss << std::right << std::setw(12) << std::fixed << std::setprecision(6) << sens.grad_mu;
+        oss << std::setw(12) << std::fixed << std::setprecision(6) << sens.grad_sigma << std::endl;
+    }
+    
+    oss << "#-------------------------------------------------------------" << std::endl;
+    
     return oss.str();
 }
 
@@ -258,6 +327,12 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
             Nh::CriticalPaths paths = ssta.getCriticalPaths();
             std::cout << formatCriticalPaths(paths);
+        }
+
+        if (ssta.is_sensitivity()) {
+            std::cout << std::endl;
+            Nh::SensitivityResults sens_results = ssta.getSensitivityResults();
+            std::cout << formatSensitivityResults(sens_results);
         }
 
         // CLI layer: Output success message

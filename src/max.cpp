@@ -43,13 +43,13 @@ double OpMAX::calc_variance() const {
     return (r);
 }
 
-Expression OpMAX::mean_expr() const {
+Expression OpMAX::calc_mean_expr() const {
     // MAX(A, B) = A + MAX0(B - A)
     // E[MAX(A,B)] = E[A] + E[MAX0(B-A)]
     return left()->mean_expr() + max0()->mean_expr();
 }
 
-Expression OpMAX::var_expr() const {
+Expression OpMAX::calc_var_expr() const {
     // Var[MAX(A,B)] = Var[A] + 2*Cov(A, MAX0(B-A)) + Var[MAX0(B-A)]
     Expression var_left = left()->var_expr();
     Expression var_max0 = max0()->var_expr();
@@ -114,7 +114,7 @@ const RandomVariable& OpMAX0::right() const {
     return right_;
 }
 
-Expression OpMAX0::mean_expr() const {
+Expression OpMAX0::calc_mean_expr() const {
     // E[max(0,D)] = μ + σ·MeanMax(-μ/σ)
     // Use max0_mean_expr from expression.hpp
     Expression mu = left()->mean_expr();
@@ -122,7 +122,7 @@ Expression OpMAX0::mean_expr() const {
     return max0_mean_expr(mu, sigma);
 }
 
-Expression OpMAX0::var_expr() const {
+Expression OpMAX0::calc_var_expr() const {
     // Var[max(0,D)] = σ²·(MeanMax2(-μ/σ) - MeanMax(-μ/σ)²)
     // Use max0_var_expr from expression.hpp
     Expression mu = left()->mean_expr();

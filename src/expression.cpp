@@ -11,6 +11,9 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
 
 // Local helper functions for bivariate normal distribution
 namespace {
@@ -73,12 +76,26 @@ double compute_Phi2(double h, double k, double rho, int n_points = 128) {
 }  // anonymous namespace
 
 int ExpressionImpl::current_id_ = 0;
-ExpressionImpl::Expressions ExpressionImpl::eTbl_;
+
+// Flag to track if eTbl has been destroyed
+static bool eTbl_destroyed = false;
+
+// Function-local static to avoid static destruction order issues
+// This ensures eTbl is not destroyed while ExpressionImpl objects still exist
+ExpressionImpl::Expressions& ExpressionImpl::eTbl() {
+    static Expressions tbl;
+    static struct Guard {
+        ~Guard() { eTbl_destroyed = true; }
+    } guard;
+    return tbl;
+}
 
 static Expression null(nullptr);
 static const Const zero(0.0);
 static const Const one(1.0);
 static const Const minus_one(-1.0);
+static const Const two(2.0);
+static const Const half(0.5);
 
 ExpressionImpl::ExpressionImpl()
     : id_(current_id_++)
@@ -89,7 +106,7 @@ ExpressionImpl::ExpressionImpl()
     , op_(PARAM)
     , left_(null)
     , right_(null) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
 }
 
 ExpressionImpl::ExpressionImpl(double value)
@@ -101,7 +118,7 @@ ExpressionImpl::ExpressionImpl(double value)
     , op_(CONST)
     , left_(null)
     , right_(null) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
 }
 
 ExpressionImpl::ExpressionImpl(const Op& op, const Expression& left, const Expression& right)
@@ -114,7 +131,7 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& left, const Expre
     , left_(left)
     , right_(right)
     , third_(null) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
     if (left_ != null) {
         left_->add_root(this);
     }
@@ -134,7 +151,7 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& first, const Expr
     , left_(first)
     , right_(second)
     , third_(third) {
-    eTbl_.insert(this);
+    eTbl().insert(this);
     if (left_ != null) {
         left_->add_root(this);
     }
@@ -147,7 +164,10 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& first, const Expr
 }
 
 ExpressionImpl::~ExpressionImpl() {
-    eTbl_.erase(this);
+    // Check if eTbl is still valid (not destroyed during static destruction)
+    if (!eTbl_destroyed) {
+        eTbl().erase(this);
+    }
     if (left() != null) {
         left()->remove_root(this);
     }
@@ -253,19 +273,22 @@ void ExpressionImpl::zero_grad() {
 }
 
 void ExpressionImpl::zero_all_grad() {
-    for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&ExpressionImpl::zero_grad));
+    for_each(eTbl().begin(), eTbl().end(), std::mem_fn(&ExpressionImpl::zero_grad));
 }
 
-void ExpressionImpl::backward(double upstream) {
-    // Accumulate gradient (for nodes used multiple times in the graph)
-    gradient_ += upstream;
-    is_gradient_set_ = true;
+size_t ExpressionImpl::node_count() {
+    return eTbl().size();
+}
 
-    // For leaf nodes (CONST, PARAM/Variable), stop here
+// Helper: propagate gradient from this node to its children (called once per node)
+void ExpressionImpl::propagate_gradient() {
+    // For leaf nodes, nothing to propagate
     if (op_ == CONST || op_ == PARAM) {
         return;
     }
-
+    
+    double upstream = gradient_;
+    
     // Check 3-argument operations first
     if (left() != null && right() != null && third() != null) {
         double h = left()->value();
@@ -273,10 +296,6 @@ void ExpressionImpl::backward(double upstream) {
         double rho = third()->value();
 
         if (op_ == PHI2) {
-            // Φ₂(h, k; ρ) gradients (analytical):
-            // ∂Φ₂/∂h = φ(h) × Φ((k - ρh)/√(1-ρ²))
-            // ∂Φ₂/∂k = φ(k) × Φ((h - ρk)/√(1-ρ²))
-            // ∂Φ₂/∂ρ = φ₂(h, k; ρ)
             double one_minus_rho2 = 1.0 - (rho * rho);
             double sigma = std::sqrt(std::max(1e-12, one_minus_rho2));
 
@@ -284,9 +303,9 @@ void ExpressionImpl::backward(double upstream) {
             double grad_k = normal_pdf(k) * normal_cdf((h - rho * k) / sigma);
             double grad_rho = compute_phi2(h, k, rho);
 
-            left()->backward(upstream * grad_h);
-            right()->backward(upstream * grad_k);
-            third()->backward(upstream * grad_rho);
+            left()->gradient_ += upstream * grad_h;
+            right()->gradient_ += upstream * grad_k;
+            third()->gradient_ += upstream * grad_rho;
         }
         return;
     }
@@ -297,67 +316,81 @@ void ExpressionImpl::backward(double upstream) {
         double r = right()->value();
 
         if (op_ == PLUS) {
-            // f = l + r
-            // ∂f/∂l = 1, ∂f/∂r = 1
-            left()->backward(upstream);
-            right()->backward(upstream);
-
+            left()->gradient_ += upstream;
+            right()->gradient_ += upstream;
         } else if (op_ == MINUS) {
-            // f = l - r
-            // ∂f/∂l = 1, ∂f/∂r = -1
-            left()->backward(upstream);
-            right()->backward(-upstream);
-
+            left()->gradient_ += upstream;
+            right()->gradient_ += -upstream;
         } else if (op_ == MUL) {
-            // f = l * r
-            // ∂f/∂l = r, ∂f/∂r = l
-            left()->backward(upstream * r);
-            right()->backward(upstream * l);
-
+            left()->gradient_ += upstream * r;
+            right()->gradient_ += upstream * l;
         } else if (op_ == DIV) {
-            // f = l / r
-            // ∂f/∂l = 1/r, ∂f/∂r = -l/r²
-            left()->backward(upstream / r);
-            right()->backward(-upstream * l / (r * r));
-
+            left()->gradient_ += upstream / r;
+            right()->gradient_ += -upstream * l / (r * r);
         } else if (op_ == POWER) {
-            // f = l^r
-            // ∂f/∂l = r * l^(r-1)
-            // ∂f/∂r = l^r * log(l)
-            double f_val = value();  // l^r
-            left()->backward(upstream * r * std::pow(l, r - 1));
+            double f_val = value();
+            left()->gradient_ += upstream * r * std::pow(l, r - 1);
             if (l > 0) {
-                right()->backward(upstream * f_val * std::log(l));
+                right()->gradient_ += upstream * f_val * std::log(l);
             }
-            // Note: if l <= 0, gradient w.r.t. r is undefined
         }
-
     } else if (left() != null) {
         // Unary operations
         double l = left()->value();
 
         if (op_ == EXP) {
-            // f = exp(l)
-            // ∂f/∂l = exp(l)
-            left()->backward(upstream * value());
-
+            left()->gradient_ += upstream * value();
         } else if (op_ == LOG) {
-            // f = log(l)
-            // ∂f/∂l = 1/l
-            left()->backward(upstream / l);
-
+            left()->gradient_ += upstream / l;
         } else if (op_ == ERF) {
-            // f = erf(l)
-            // ∂f/∂l = 2/√π × exp(-l²)
-            static constexpr double TWO_OVER_SQRT_PI = 1.1283791670955126;  // 2/√π
-            left()->backward(upstream * TWO_OVER_SQRT_PI * std::exp(-l * l));
-
+            static constexpr double TWO_OVER_SQRT_PI = 1.1283791670955126;
+            left()->gradient_ += upstream * TWO_OVER_SQRT_PI * std::exp(-l * l);
         } else if (op_ == SQRT) {
-            // f = sqrt(l)
-            // ∂f/∂l = 1/(2√l)
             double sqrt_l = value();
-            left()->backward(upstream / (2.0 * sqrt_l));
+            left()->gradient_ += upstream / (2.0 * sqrt_l);
         }
+    }
+}
+
+// Topological sort helper: DFS to build reverse topological order
+static void topo_sort_dfs(ExpressionImpl* node, 
+                          std::set<ExpressionImpl*>& visited,
+                          std::vector<ExpressionImpl*>& order) {
+    if (visited.count(node) > 0) {
+        return;
+    }
+    visited.insert(node);
+    
+    // Visit children first
+    if (node->left().get() != nullptr) {
+        topo_sort_dfs(node->left().get(), visited, order);
+    }
+    if (node->right().get() != nullptr) {
+        topo_sort_dfs(node->right().get(), visited, order);
+    }
+    if (node->third().get() != nullptr) {
+        topo_sort_dfs(node->third().get(), visited, order);
+    }
+    
+    // Add this node after children (reverse topological order)
+    order.push_back(node);
+}
+
+void ExpressionImpl::backward(double upstream) {
+    // Build topological order (children before parents)
+    std::set<ExpressionImpl*> visited;
+    std::vector<ExpressionImpl*> topo_order;
+    topo_sort_dfs(this, visited, topo_order);
+    
+    // Set initial gradient at the root
+    gradient_ += upstream;
+    is_gradient_set_ = true;
+    
+    // Process in reverse order (parents before children)
+    // This ensures all upstream gradients are accumulated before propagation
+    for (auto it = topo_order.rbegin(); it != topo_order.rend(); ++it) {
+        (*it)->propagate_gradient();
+        (*it)->is_gradient_set_ = true;
     }
 }
 
@@ -438,7 +471,7 @@ void ExpressionImpl::print() {
 }
 
 void ExpressionImpl::print_all() {
-    for_each(eTbl_.begin(), eTbl_.end(), std::mem_fn(&ExpressionImpl::print));
+    for_each(eTbl().begin(), eTbl().end(), std::mem_fn(&ExpressionImpl::print));
 }
 
 void print_all() {
@@ -638,18 +671,160 @@ void zero_all_grad() {
 //////////////////////////
 // Bivariate normal distribution expressions (Phase 5 of #167)
 
-Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho) {
+// Cache for expected_prod_pos_expr (pointer-based)
+// Key: tuple of ExpressionImpl pointers (mu0, sigma0, mu1, sigma1, rho)
+using ExpectedProdPosCacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
+
+// Hash function for tuple of pointers
+struct ExpectedProdPosCacheKeyHash {
+    std::size_t operator()(const ExpectedProdPosCacheKey& key) const {
+        std::size_t h1 = std::hash<ExpressionImpl*>{}(std::get<0>(key));
+        std::size_t h2 = std::hash<ExpressionImpl*>{}(std::get<1>(key));
+        std::size_t h3 = std::hash<ExpressionImpl*>{}(std::get<2>(key));
+        std::size_t h4 = std::hash<ExpressionImpl*>{}(std::get<3>(key));
+        std::size_t h5 = std::hash<ExpressionImpl*>{}(std::get<4>(key));
+        return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3) ^ (h5 << 4);
+    }
+};
+
+static std::unordered_map<ExpectedProdPosCacheKey, Expression, ExpectedProdPosCacheKeyHash>
+    expected_prod_pos_expr_cache;
+
+// Cache statistics
+static size_t expected_prod_pos_cache_hits = 0;
+static size_t expected_prod_pos_cache_misses = 0;
+
+// Cache for phi2_expr (pointer-based)
+using Phi2PDFCacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
+
+struct Phi2PDFCacheKeyHash {
+    std::size_t operator()(const Phi2PDFCacheKey& key) const {
+        std::size_t h1 = std::hash<ExpressionImpl*>{}(std::get<0>(key));
+        std::size_t h2 = std::hash<ExpressionImpl*>{}(std::get<1>(key));
+        std::size_t h3 = std::hash<ExpressionImpl*>{}(std::get<2>(key));
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
+static std::unordered_map<Phi2PDFCacheKey, Expression, Phi2PDFCacheKeyHash> phi2_pdf_expr_cache;
+
+Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho,
+                     const Expression& one_minus_rho2, const Expression& sqrt_one_minus_rho2) {
     // φ₂(x, y; ρ) = 1/(2π√(1-ρ²)) × exp(-(x² - 2ρxy + y²)/(2(1-ρ²)))
-    Expression one_minus_rho2 = Const(1.0) - rho * rho;
-    Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
-    Expression coeff = Const(1.0) / (Const(2.0 * M_PI) * sqrt_one_minus_rho2);
-    Expression Q = (x * x - Const(2.0) * rho * x * y + y * y) / one_minus_rho2;
-    return coeff * exp(-Q / Const(2.0));
+    
+    // Check cache first
+    auto key = std::make_tuple(x.get(), y.get(), rho.get());
+    auto it = phi2_pdf_expr_cache.find(key);
+    if (it != phi2_pdf_expr_cache.end()) {
+        return it->second;
+    }
+    
+    // Use provided one_minus_rho2 and sqrt_one_minus_rho2 if available, otherwise compute them
+    Expression one_minus_rho2_local;
+    Expression sqrt_one_minus_rho2_local;
+    
+    if (one_minus_rho2 && sqrt_one_minus_rho2) {
+        // Use provided values (optimization: avoid redundant computation)
+        one_minus_rho2_local = one_minus_rho2;
+        sqrt_one_minus_rho2_local = sqrt_one_minus_rho2;
+    } else {
+        // Compute internally (backward compatibility)
+        one_minus_rho2_local = one - rho * rho;
+        sqrt_one_minus_rho2_local = sqrt(one_minus_rho2_local);
+    }
+    
+    Expression coeff = one / (Const(2.0 * M_PI) * sqrt_one_minus_rho2_local);
+    Expression Q = (x * x - two * rho * x * y + y * y) / one_minus_rho2_local;
+    Expression result = coeff * exp(-Q / two);
+    
+    // Cache the result
+    phi2_pdf_expr_cache[key] = result;
+    
+    return result;
+}
+
+// Cache for Phi2_expr (pointer-based)
+using Phi2CacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
+
+struct Phi2CacheKeyHash {
+    std::size_t operator()(const Phi2CacheKey& key) const {
+        std::size_t h1 = std::hash<ExpressionImpl*>{}(std::get<0>(key));
+        std::size_t h2 = std::hash<ExpressionImpl*>{}(std::get<1>(key));
+        std::size_t h3 = std::hash<ExpressionImpl*>{}(std::get<2>(key));
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
+static std::unordered_map<Phi2CacheKey, Expression, Phi2CacheKeyHash> phi2_expr_cache;
+
+// Cache for phi_expr (pointer-based)
+static std::unordered_map<ExpressionImpl*, Expression> phi_expr_cache;
+static size_t phi_expr_cache_hits = 0;
+static size_t phi_expr_cache_misses = 0;
+
+Expression phi_expr(const Expression& x) {
+    // φ(x) = exp(-x²/2) / √(2π)
+    
+    // Check cache first
+    auto it = phi_expr_cache.find(x.get());
+    if (it != phi_expr_cache.end()) {
+        phi_expr_cache_hits++;
+        return it->second;
+    }
+    
+    phi_expr_cache_misses++;
+    
+    static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
+    Expression result = INV_SQRT_2PI * exp(-(x * x) / two);
+    
+    // Cache the result
+    phi_expr_cache[x.get()] = result;
+    
+    return result;
+}
+
+// Cache for Phi_expr (pointer-based)
+static std::unordered_map<ExpressionImpl*, Expression> Phi_expr_cache;
+static size_t Phi_expr_cache_hits = 0;
+static size_t Phi_expr_cache_misses = 0;
+
+Expression Phi_expr(const Expression& x) {
+    // Φ(x) = 0.5 × (1 + erf(x/√2))
+    
+    // Check cache first
+    auto it = Phi_expr_cache.find(x.get());
+    if (it != Phi_expr_cache.end()) {
+        Phi_expr_cache_hits++;
+        return it->second;
+    }
+    
+    Phi_expr_cache_misses++;
+    
+    static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
+    Expression result = half * (one + erf(x * INV_SQRT_2));
+    
+    // Cache the result
+    Phi_expr_cache[x.get()] = result;
+    
+    return result;
 }
 
 Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho) {
     // Φ₂(h, k; ρ) using numerical integration for value, analytical gradients
-    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, h, k, rho));
+    
+    // Check cache first
+    auto key = std::make_tuple(h.get(), k.get(), rho.get());
+    auto it = phi2_expr_cache.find(key);
+    if (it != phi2_expr_cache.end()) {
+        return it->second;
+    }
+    
+    Expression result = Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, h, k, rho));
+    
+    // Cache the result
+    phi2_expr_cache[key] = result;
+    
+    return result;
 }
 
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
@@ -665,10 +840,19 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     //
     // where a0 = μ0/σ0, a1 = μ1/σ1
 
+    // Check cache first (pointer-based)
+    auto key = std::make_tuple(mu0.get(), sigma0.get(), mu1.get(), sigma1.get(), rho.get());
+    auto it = expected_prod_pos_expr_cache.find(key);
+    if (it != expected_prod_pos_expr_cache.end()) {
+        expected_prod_pos_cache_hits++;
+        return it->second;
+    }
+    
+    expected_prod_pos_cache_misses++;
+
     Expression a0 = mu0 / sigma0;
     Expression a1 = mu1 / sigma1;
-
-    Expression one_minus_rho2 = Const(1.0) - rho * rho;
+    Expression one_minus_rho2 = one - rho * rho;
     Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
 
     // Φ₂(a0, a1; ρ)
@@ -682,16 +866,45 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     Expression Phi_cond_0 = Phi_expr((a0 - rho * a1) / sqrt_one_minus_rho2);
     Expression Phi_cond_1 = Phi_expr((a1 - rho * a0) / sqrt_one_minus_rho2);
 
-    // φ₂(a0, a1; ρ)
-    Expression phi2_a0_a1 = phi2_expr(a0, a1, rho);
+    // φ₂(a0, a1; ρ) - use precomputed one_minus_rho2 and sqrt_one_minus_rho2
+    Expression phi2_a0_a1 = phi2_expr(a0, a1, rho, one_minus_rho2, sqrt_one_minus_rho2);
 
     // Build the formula
     Expression term1 = mu0 * mu1 * Phi2_a0_a1;
     Expression term2 = mu0 * sigma1 * phi_a1 * Phi_cond_0;
     Expression term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
     Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
+    Expression result = term1 + term2 + term3 + term4;
+    
+    // Cache the result
+    expected_prod_pos_expr_cache[key] = result;
+    
+    return result;
+}
 
-    return term1 + term2 + term3 + term4;
+// Expose cache statistics for debugging
+size_t get_expected_prod_pos_cache_hits() {
+    return expected_prod_pos_cache_hits;
+}
+
+size_t get_expected_prod_pos_cache_misses() {
+    return expected_prod_pos_cache_misses;
+}
+
+size_t get_phi_expr_cache_hits() {
+    return phi_expr_cache_hits;
+}
+
+size_t get_phi_expr_cache_misses() {
+    return phi_expr_cache_misses;
+}
+
+size_t get_Phi_expr_cache_hits() {
+    return Phi_expr_cache_hits;
+}
+
+size_t get_Phi_expr_cache_misses() {
+    return Phi_expr_cache_misses;
 }
 
 // E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
@@ -708,14 +921,14 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
     // When a0 < a1: c = -a0, when a0 >= a1: c = -a1
     double a0_val = a0->value();
     double a1_val = a1->value();
-    Expression c = (a0_val < a1_val) ? (Const(-1.0) * a0) : (Const(-1.0) * a1);
+    Expression c = (a0_val < a1_val) ? (minus_one * a0) : (minus_one * a1);
 
     // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
-    Expression Phi_neg_c = Phi_expr(Const(-1.0) * c);
+    Expression Phi_neg_c = Phi_expr(minus_one * c);
     Expression phi_c = phi_expr(c);
 
     Expression result = sigma0 * sigma1 *
-                        ((a0 * a1 + Const(1.0)) * Phi_neg_c + (a0 + a1 + c) * phi_c);
+                        ((a0 * a1 + one) * Phi_neg_c + (a0 + a1 + c) * phi_c);
 
     return result;
 }
@@ -746,7 +959,7 @@ Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expressi
     Expression phi_a1 = phi_expr(a1);
 
     Expression result = sigma0 * sigma1 *
-                        ((a0 * a1 - Const(1.0)) * (Phi_a0 + Phi_a1 - Const(1.0)) +
+                        ((a0 * a1 - one) * (Phi_a0 + Phi_a1 - one) +
                          a1 * phi_a0 + a0 * phi_a1);
 
     return result;

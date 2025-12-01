@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
@@ -11,6 +12,8 @@
 #include <vector>
 
 #include "add.hpp"
+#include "covariance.hpp"
+#include "expression.hpp"
 #include "parser.hpp"
 #include "util_numerical.hpp"
 
@@ -24,7 +27,13 @@ static constexpr double DFF_CLOCK_ARRIVAL_TIME = 0.0;
 
 Ssta::Ssta() = default;
 
-Ssta::~Ssta() = default;
+Ssta::~Ssta() {
+    // Clear static caches to prevent crash during static destruction
+    // The cov_expr_cache contains Expression objects (shared_ptr to ExpressionImpl)
+    // If destroyed after eTbl_ (static in expression.cpp), the ExpressionImpl
+    // destructors will crash when trying to erase from an already-destroyed set
+    ::RandomVariable::clear_cov_expr_cache();
+}
 
 void Ssta::check() {
     // Validate configuration and throw exception if invalid
@@ -150,7 +159,11 @@ void Ssta::read_bench() {
 
     connect_instances();
 
-    gates_.clear();
+    // Clear gates_ to free memory, unless sensitivity analysis is enabled
+    // (sensitivity analysis needs the gate delays for gradient computation)
+    if (!is_sensitivity_) {
+        gates_.clear();
+    }
 }
 
 void Ssta::read_bench_input(Parser& parser) {
@@ -259,8 +272,8 @@ void Ssta::connect_instances() {
                 signals_[out_signal_name] = out;
                 out->set_name(out_signal_name);
 
-                // Track path information if critical path analysis is enabled
-                if (is_critical_path_) {
+                // Track path information if critical path or sensitivity analysis is enabled
+                if (is_critical_path_ || is_sensitivity_) {
                     track_path(out_signal_name, inst, ins, gate_name);
                 }
 
@@ -430,18 +443,16 @@ void Ssta::track_path(const std::string& signal_name, const Instance& inst, cons
     // Map instance to gate type (gate_type is already lowercased in read_bench_net)
     instance_to_gate_type_[instance_name] = gate_type;
     
-    // Save gate delays for this instance (before gates_ is cleared)
-    // gate_type is already lowercased in read_bench_net()
-    auto gate_it = gates_.find(gate_type);
-    if (gate_it != gates_.end()) {
-        const Gate& gate = gate_it->second;
-        const auto& gate_delays = gate->delays();
-        std::unordered_map<std::string, Normal> delays_map;
-        for (const auto& delay_pair : gate_delays) {
-            delays_map[delay_pair.first.first] = delay_pair.second;  // pin_name -> delay
-        }
-        instance_to_delays_[instance_name] = delays_map;
+    // Save cloned delays for this instance (for sensitivity analysis)
+    // Use inst->used_delays() which contains the actual cloned delays
+    // that are used in the Expression tree
+    const auto& used_delays = inst->used_delays();
+    std::unordered_map<std::string, Normal> delays_map;
+    for (const auto& delay_pair : used_delays) {
+        // Key is (input_pin, output_pin), store by input_pin for now
+        delays_map[delay_pair.first.first] = delay_pair.second;
     }
+    instance_to_delays_[instance_name] = delays_map;
 }
 
 CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
@@ -637,6 +648,147 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
     }
     
     return paths;
+}
+
+SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
+    using namespace RandomVariable;
+    
+    SensitivityResults results;
+    
+    // Step 1: Collect output signals for objective function
+    // Note: DFF D terminals are not included due to Expression tree complexity
+    // TODO: Issue for future improvement - optimize Expression tree for deep RandomVariables
+    std::vector<SensitivityPath> endpoint_paths;
+    for (const auto& endpoint : outputs_) {
+        auto sig_it = signals_.find(endpoint);
+        if (sig_it == signals_.end()) {
+            continue;
+        }
+        const RandomVariable& lat = sig_it->second;
+        double mean = lat->mean();
+        double stddev = std::sqrt(lat->variance());
+        endpoint_paths.emplace_back(endpoint, mean, stddev);
+    }
+    
+    // Step 2: Sort by score (LAT + σ) descending
+    std::sort(endpoint_paths.begin(), endpoint_paths.end(),
+              [](const SensitivityPath& a, const SensitivityPath& b) {
+                  return a.score > b.score;
+              });
+    
+    // Step 3: Select top N endpoints for objective function
+    if (endpoint_paths.size() > top_n) {
+        endpoint_paths.resize(top_n);
+    }
+    results.top_paths = endpoint_paths;
+    
+    if (endpoint_paths.empty()) {
+        return results;
+    }
+    
+    // Step 4: Build objective function F = log(Σ exp(LAT + σ))
+    // First, clear all gradients
+    zero_all_grad();
+    
+    // Build Expression for each endpoint's score
+    Expression sum_exp = Const(0.0);
+    for (const auto& path : endpoint_paths) {
+        auto sig_it = signals_.find(path.endpoint);
+        if (sig_it == signals_.end()) {
+            continue;
+        }
+        const RandomVariable& lat = sig_it->second;
+        
+        Expression mean_expr = lat->mean_expr();
+        Expression std_expr = lat->std_expr();
+        Expression score_expr = mean_expr + std_expr;
+        sum_exp = sum_exp + exp(score_expr);
+    }
+    
+    Expression objective = log(sum_exp);
+    results.objective_value = objective->value();
+    
+    // Step 5: Compute gradients via backward pass
+    objective->backward();
+    
+    // Step 6: Collect gate sensitivities from cloned delays
+    // instance_to_delays_ contains the actual cloned delays used in the Expression tree
+    
+    // Build reverse mapping: instance name -> output signal name
+    std::unordered_map<std::string, std::string> instance_to_output;
+    for (const auto& sig_inst : signal_to_instance_) {
+        instance_to_output[sig_inst.second] = sig_inst.first;
+    }
+    
+    constexpr double MIN_VARIANCE = 1e-10;  // Skip const delays (Issue #184)
+    for (const auto& inst_pair : instance_to_delays_) {
+        const std::string& instance_name = inst_pair.first;
+        const auto& delays = inst_pair.second;
+        
+        // Get output node name for this instance
+        std::string output_node;
+        auto out_it = instance_to_output.find(instance_name);
+        if (out_it != instance_to_output.end()) {
+            output_node = out_it->second;
+        }
+        
+        // Get gate type for this instance
+        std::string gate_type;
+        auto type_it = instance_to_gate_type_.find(instance_name);
+        if (type_it != instance_to_gate_type_.end()) {
+            gate_type = type_it->second;
+        }
+        
+        // Get input signal names for this instance
+        std::vector<std::string> input_signals;
+        auto inputs_it = instance_to_inputs_.find(instance_name);
+        if (inputs_it != instance_to_inputs_.end()) {
+            input_signals = inputs_it->second;
+        }
+        
+        for (const auto& delay_pair : delays) {
+            const std::string& pin_name = delay_pair.first;
+            const Normal& delay = delay_pair.second;
+            
+            // Skip const delays (σ ≈ 0) to avoid numerical issues
+            // See Issue #184 for future improvement
+            if (delay->variance() < MIN_VARIANCE) {
+                continue;
+            }
+            
+            // Map pin number to input signal name
+            std::string input_signal = pin_name;  // fallback to pin name
+            try {
+                size_t pin_idx = std::stoul(pin_name);
+                if (pin_idx < input_signals.size()) {
+                    input_signal = input_signals[pin_idx];
+                }
+            } catch (...) {
+                // Keep pin_name if not a number
+            }
+            
+            // Get gradients from the cloned Expression
+            double grad_mu = delay->mean_expr()->gradient();
+            double grad_sigma = delay->std_expr()->gradient();
+            
+            // Only include gates with non-zero gradients
+            if (std::abs(grad_mu) > 1e-10 || std::abs(grad_sigma) > 1e-10) {
+                results.gate_sensitivities.emplace_back(
+                    instance_name, output_node, input_signal, gate_type,
+                    grad_mu, grad_sigma);
+            }
+        }
+    }
+    
+    // Sort by absolute gradient magnitude (descending)
+    std::sort(results.gate_sensitivities.begin(), results.gate_sensitivities.end(),
+              [](const GateSensitivity& a, const GateSensitivity& b) {
+                  double mag_a = std::abs(a.grad_mu) + std::abs(a.grad_sigma);
+                  double mag_b = std::abs(b.grad_mu) + std::abs(b.grad_sigma);
+                  return mag_a > mag_b;
+              });
+    
+    return results;
 }
 
 }  // namespace Nh

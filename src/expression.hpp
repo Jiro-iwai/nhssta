@@ -116,7 +116,10 @@ class ExpressionHandle : public HandleBase<ExpressionImpl> {
    public:
     using element_type = ExpressionImpl;
 
-    // Inherit all constructors from HandleBase
+    // Default constructor: creates null handle
+    ExpressionHandle() = default;
+    
+    // Inherit other constructors from HandleBase
     using HandleBase<ExpressionImpl>::HandleBase;
 };
 
@@ -189,11 +192,12 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     [[nodiscard]] double gradient() const { return gradient_; }
     void zero_grad();
     static void zero_all_grad();
+    static size_t node_count();
 
     // Value computation
     virtual double value();
-
-   protected:
+    
+    // Public accessors for children (needed for topological sort in backward)
     [[nodiscard]] const Expression& left() const {
         return left_;
     }
@@ -203,6 +207,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     [[nodiscard]] const Expression& third() const {
         return third_;
     }
+
+   protected:
+    // Helper for topological sort backward
+    void propagate_gradient();
     void set_value(double value);
     void _set_value(double value);
     void unset_value();
@@ -234,7 +242,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
 
     /// static data menber
     static int current_id_;
-    static Expressions eTbl_;
+    
+    /// Access to expression table via function to avoid static destruction order issues
+    /// Using function-local static ensures proper lifetime management
+    static Expressions& eTbl();
 };
 
 // print all expression infomation
@@ -311,22 +322,20 @@ Expression sqrt(const Expression& a);
  * 
  * @param x Expression to evaluate
  * @return Expression representing φ(x)
+ * 
+ * @note This function is cached for performance optimization (Issue #188)
  */
-inline Expression phi_expr(const Expression& x) {
-    static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
-    return INV_SQRT_2PI * exp(-(x * x) / 2.0);
-}
+Expression phi_expr(const Expression& x);
 
 /**
  * @brief Standard normal CDF: Φ(x) = 0.5 × (1 + erf(x/√2))
  * 
  * @param x Expression to evaluate
  * @return Expression representing Φ(x)
+ * 
+ * @note This function is cached for performance optimization (Issue #188)
  */
-inline Expression Phi_expr(const Expression& x) {
-    static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
-    return 0.5 * (1.0 + erf(x * INV_SQRT_2));
-}
+Expression Phi_expr(const Expression& x);
 
 /**
  * @brief MeanMax function: E[max(a, x)] where x ~ N(0,1)
@@ -480,8 +489,15 @@ inline Expression cov_x_max0_expr(const Expression& cov_xz,
  * @param x First variable
  * @param y Second variable
  * @param rho Correlation coefficient (-1 < ρ < 1)
+ * @param one_minus_rho2 Precomputed (1-ρ²) expression (for optimization, Issue #188)
+ * @param sqrt_one_minus_rho2 Precomputed √(1-ρ²) expression (for optimization, Issue #188)
+ * 
+ * @note If one_minus_rho2 and sqrt_one_minus_rho2 are not provided (empty Expression),
+ *       they will be computed internally. Providing them avoids redundant computation.
  */
-Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho);
+Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho,
+                     const Expression& one_minus_rho2 = Expression(),
+                     const Expression& sqrt_one_minus_rho2 = Expression());
 
 /**
  * @brief Bivariate standard normal CDF Φ₂(h, k; ρ)
@@ -507,7 +523,7 @@ Expression Phi2_expr(const Expression& h, const Expression& k, const Expression&
  * E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ) 
  *            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
  *            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
- *            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + φ₂(a0, a1; ρ)]
+ *            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + (1-ρ²) φ₂(a0, a1; ρ)]
  * 
  * where a0 = μ0/σ0, a1 = μ1/σ1
  * 
@@ -536,6 +552,7 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
  *
  * When ρ = -1: D0 = μ0 + σ0·Z, D1 = μ1 - σ1·Z (opposite signs)
  * Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
+ * E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
  * Returns 0 if a0 + a1 <= 0 (interval is empty)
  */
 Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,
@@ -561,5 +578,13 @@ double& operator<<(double& a, const Expression& b);
 
 // Automatic differentiation utilities
 void zero_all_grad();
+
+// Cache statistics (for debugging)
+size_t get_expected_prod_pos_cache_hits();
+size_t get_expected_prod_pos_cache_misses();
+size_t get_phi_expr_cache_hits();
+size_t get_phi_expr_cache_misses();
+size_t get_Phi_expr_cache_hits();
+size_t get_Phi_expr_cache_misses();
 
 #endif  // EXPRESSION__H
