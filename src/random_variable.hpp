@@ -127,10 +127,10 @@ protected:
     mutable bool is_set_mean_;
     mutable bool is_set_variance_;
     
-    // Expression cache for sensitivity analysis (initialized to null)
-    mutable Expression cached_mean_expr_ = {};
-    mutable Expression cached_var_expr_ = {};
-    mutable Expression cached_std_expr_ = {};
+    // Expression cache for sensitivity analysis (default-initialized to null)
+    mutable Expression cached_mean_expr_;
+    mutable Expression cached_var_expr_;
+    mutable Expression cached_std_expr_;
     
     int level_;
 };

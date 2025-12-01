@@ -343,17 +343,19 @@ void ExpressionImpl::propagate_gradient() {
 static void topo_sort_dfs(ExpressionImpl* node, 
                           std::set<ExpressionImpl*>& visited,
                           std::vector<ExpressionImpl*>& order) {
-    if (visited.count(node) > 0) return;
+    if (visited.count(node) > 0) {
+        return;
+    }
     visited.insert(node);
     
     // Visit children first
-    if (node->left().get()) {
+    if (node->left().get() != nullptr) {
         topo_sort_dfs(node->left().get(), visited, order);
     }
-    if (node->right().get()) {
+    if (node->right().get() != nullptr) {
         topo_sort_dfs(node->right().get(), visited, order);
     }
-    if (node->third().get()) {
+    if (node->third().get() != nullptr) {
         topo_sort_dfs(node->third().get(), visited, order);
     }
     

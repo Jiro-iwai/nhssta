@@ -34,8 +34,8 @@ class NormalImpl : public RandomVariableImpl {
     
     // Expression versions of parameters (for sensitivity analysis)
     // These are lazily initialized when first accessed
-    mutable Expression mu_expr_{};     // Expression for μ
-    mutable Expression sigma_expr_{};  // Expression for σ
+    mutable Expression mu_expr_;     // Expression for μ
+    mutable Expression sigma_expr_;  // Expression for σ
     
     void init_expr() const;  // Lazy initialization of expressions
 };
