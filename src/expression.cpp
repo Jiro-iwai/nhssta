@@ -709,6 +709,11 @@ static std::unordered_map<Phi2PDFCacheKey, Expression, Phi2PDFCacheKeyHash> phi2
 Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho) {
     // φ₂(x, y; ρ) = 1/(2π√(1-ρ²)) × exp(-(x² - 2ρxy + y²)/(2(1-ρ²)))
     
+    static size_t call_count = 0;
+    call_count++;
+    
+    size_t nodes_before = ExpressionImpl::node_count();
+    
     // Check cache first
     auto key = std::make_tuple(x.get(), y.get(), rho.get());
     auto it = phi2_pdf_expr_cache.find(key);
@@ -716,11 +721,50 @@ Expression phi2_expr(const Expression& x, const Expression& y, const Expression&
         return it->second;
     }
     
+    size_t nodes_before_one_minus_rho2 = ExpressionImpl::node_count();
     Expression one_minus_rho2 = Const(1.0) - rho * rho;
     Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
+    size_t nodes_after_one_minus_rho2 = ExpressionImpl::node_count();
+    
+    if (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2 > 0) {
+        std::cerr << "[DEBUG] phi2_expr call #" << call_count 
+                  << ": one_minus_rho2, sqrt created " 
+                  << (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2) << " nodes" << std::endl;
+    }
+    
+    size_t nodes_before_coeff = ExpressionImpl::node_count();
     Expression coeff = Const(1.0) / (Const(2.0 * M_PI) * sqrt_one_minus_rho2);
+    size_t nodes_after_coeff = ExpressionImpl::node_count();
+    
+    if (nodes_after_coeff - nodes_before_coeff > 0) {
+        std::cerr << "[DEBUG] phi2_expr call #" << call_count 
+                  << ": coeff created " << (nodes_after_coeff - nodes_before_coeff) << " nodes" << std::endl;
+    }
+    
+    size_t nodes_before_Q = ExpressionImpl::node_count();
     Expression Q = (x * x - Const(2.0) * rho * x * y + y * y) / one_minus_rho2;
+    size_t nodes_after_Q = ExpressionImpl::node_count();
+    
+    if (nodes_after_Q - nodes_before_Q > 0) {
+        std::cerr << "[DEBUG] phi2_expr call #" << call_count 
+                  << ": Q created " << (nodes_after_Q - nodes_before_Q) << " nodes" << std::endl;
+    }
+    
+    size_t nodes_before_result = ExpressionImpl::node_count();
     Expression result = coeff * exp(-Q / Const(2.0));
+    size_t nodes_after_result = ExpressionImpl::node_count();
+    
+    if (nodes_after_result - nodes_before_result > 0) {
+        std::cerr << "[DEBUG] phi2_expr call #" << call_count 
+                  << ": result (coeff * exp) created " 
+                  << (nodes_after_result - nodes_before_result) << " nodes" << std::endl;
+    }
+    
+    size_t nodes_after = ExpressionImpl::node_count();
+    if (nodes_after - nodes_before > 10) {
+        std::cerr << "[DEBUG] phi2_expr call #" << call_count 
+                  << ": TOTAL created " << (nodes_after - nodes_before) << " nodes" << std::endl;
+    }
     
     // Cache the result
     phi2_pdf_expr_cache[key] = result;
@@ -782,34 +826,127 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     }
     
     expected_prod_pos_cache_misses++;
+    
+    static size_t call_count = 0;
+    call_count++;
+    
+    size_t nodes_before = ExpressionImpl::node_count();
 
+    size_t nodes_before_a = ExpressionImpl::node_count();
     Expression a0 = mu0 / sigma0;
     Expression a1 = mu1 / sigma1;
+    size_t nodes_after_a = ExpressionImpl::node_count();
+    
+    if (nodes_after_a - nodes_before_a > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": a0, a1 created " << (nodes_after_a - nodes_before_a) << " nodes" << std::endl;
+    }
 
+    size_t nodes_before_one_minus_rho2 = ExpressionImpl::node_count();
     Expression one_minus_rho2 = Const(1.0) - rho * rho;
     Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
+    size_t nodes_after_one_minus_rho2 = ExpressionImpl::node_count();
+    
+    if (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2 > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": one_minus_rho2, sqrt created " 
+                  << (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2) << " nodes" << std::endl;
+    }
 
     // Φ₂(a0, a1; ρ)
+    size_t nodes_before_Phi2 = ExpressionImpl::node_count();
     Expression Phi2_a0_a1 = Phi2_expr(a0, a1, rho);
+    size_t nodes_after_Phi2 = ExpressionImpl::node_count();
+    
+    if (nodes_after_Phi2 - nodes_before_Phi2 > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": Phi2_expr() created " << (nodes_after_Phi2 - nodes_before_Phi2) << " nodes" << std::endl;
+    }
 
     // φ(a0) and φ(a1)
+    size_t nodes_before_phi = ExpressionImpl::node_count();
     Expression phi_a0 = phi_expr(a0);
     Expression phi_a1 = phi_expr(a1);
+    size_t nodes_after_phi = ExpressionImpl::node_count();
+    
+    if (nodes_after_phi - nodes_before_phi > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": phi_expr() created " << (nodes_after_phi - nodes_before_phi) << " nodes" << std::endl;
+    }
 
     // Φ((a0 - ρa1)/√(1-ρ²)) and Φ((a1 - ρa0)/√(1-ρ²))
+    size_t nodes_before_Phi_cond = ExpressionImpl::node_count();
     Expression Phi_cond_0 = Phi_expr((a0 - rho * a1) / sqrt_one_minus_rho2);
     Expression Phi_cond_1 = Phi_expr((a1 - rho * a0) / sqrt_one_minus_rho2);
+    size_t nodes_after_Phi_cond = ExpressionImpl::node_count();
+    
+    if (nodes_after_Phi_cond - nodes_before_Phi_cond > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": Phi_expr(cond) created " 
+                  << (nodes_after_Phi_cond - nodes_before_Phi_cond) << " nodes" << std::endl;
+    }
 
     // φ₂(a0, a1; ρ)
+    size_t nodes_before_phi2 = ExpressionImpl::node_count();
     Expression phi2_a0_a1 = phi2_expr(a0, a1, rho);
+    size_t nodes_after_phi2 = ExpressionImpl::node_count();
+    
+    if (nodes_after_phi2 - nodes_before_phi2 > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": phi2_expr() created " << (nodes_after_phi2 - nodes_before_phi2) << " nodes" << std::endl;
+    }
 
     // Build the formula
+    size_t nodes_before_term1 = ExpressionImpl::node_count();
     Expression term1 = mu0 * mu1 * Phi2_a0_a1;
-    Expression term2 = mu0 * sigma1 * phi_a1 * Phi_cond_0;
-    Expression term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
-    Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
+    size_t nodes_after_term1 = ExpressionImpl::node_count();
+    
+    if (nodes_after_term1 - nodes_before_term1 > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": term1 created " << (nodes_after_term1 - nodes_before_term1) << " nodes" << std::endl;
+    }
 
+    size_t nodes_before_term2 = ExpressionImpl::node_count();
+    Expression term2 = mu0 * sigma1 * phi_a1 * Phi_cond_0;
+    size_t nodes_after_term2 = ExpressionImpl::node_count();
+    
+    if (nodes_after_term2 - nodes_before_term2 > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": term2 created " << (nodes_after_term2 - nodes_before_term2) << " nodes" << std::endl;
+    }
+
+    size_t nodes_before_term3 = ExpressionImpl::node_count();
+    Expression term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
+    size_t nodes_after_term3 = ExpressionImpl::node_count();
+    
+    if (nodes_after_term3 - nodes_before_term3 > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": term3 created " << (nodes_after_term3 - nodes_before_term3) << " nodes" << std::endl;
+    }
+
+    size_t nodes_before_term4 = ExpressionImpl::node_count();
+    Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
+    size_t nodes_after_term4 = ExpressionImpl::node_count();
+    
+    if (nodes_after_term4 - nodes_before_term4 > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": term4 created " << (nodes_after_term4 - nodes_before_term4) << " nodes" << std::endl;
+    }
+
+    size_t nodes_before_result = ExpressionImpl::node_count();
     Expression result = term1 + term2 + term3 + term4;
+    size_t nodes_after_result = ExpressionImpl::node_count();
+    
+    if (nodes_after_result - nodes_before_result > 0) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": result (sum) created " << (nodes_after_result - nodes_before_result) << " nodes" << std::endl;
+    }
+    
+    size_t nodes_after = ExpressionImpl::node_count();
+    if (nodes_after - nodes_before > 50) {
+        std::cerr << "[DEBUG] expected_prod_pos_expr call #" << call_count 
+                  << ": TOTAL created " << (nodes_after - nodes_before) << " nodes" << std::endl;
+    }
     
     // Cache the result
     expected_prod_pos_expr_cache[key] = result;
