@@ -690,63 +690,23 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     // First, clear all gradients
     zero_all_grad();
     
-    // Debug: Expression node count before building objective
-    size_t node_count_before_objective = ExpressionImpl::node_count();
-    std::cerr << "[DEBUG] Expression node count before building objective: " 
-              << node_count_before_objective << std::endl;
-    
     // Build Expression for each endpoint's score
     Expression sum_exp = Const(0.0);
-    size_t endpoint_index = 0;
     for (const auto& path : endpoint_paths) {
-        size_t nodes_before_endpoint = ExpressionImpl::node_count();
-        
         auto sig_it = signals_.find(path.endpoint);
         if (sig_it == signals_.end()) {
             continue;
         }
         const RandomVariable& lat = sig_it->second;
         
-        size_t nodes_before_mean = ExpressionImpl::node_count();
         Expression mean_expr = lat->mean_expr();
-        size_t nodes_after_mean = ExpressionImpl::node_count();
-        
-        size_t nodes_before_std = ExpressionImpl::node_count();
         Expression std_expr = lat->std_expr();
-        size_t nodes_after_std = ExpressionImpl::node_count();
-        
         Expression score_expr = mean_expr + std_expr;
         sum_exp = sum_exp + exp(score_expr);
-        
-        size_t nodes_after_endpoint = ExpressionImpl::node_count();
-        
-        std::cerr << "[DEBUG] Endpoint " << endpoint_index << " (" << path.endpoint 
-                  << "): mean_expr=" << (nodes_after_mean - nodes_before_mean)
-                  << " nodes, std_expr=" << (nodes_after_std - nodes_before_std)
-                  << " nodes, total=" << (nodes_after_endpoint - nodes_before_endpoint)
-                  << " nodes" << std::endl;
-        
-        endpoint_index++;
     }
     
     Expression objective = log(sum_exp);
     results.objective_value = objective->value();
-    
-    // Debug: Expression node count after building objective
-    size_t node_count_after_objective = ExpressionImpl::node_count();
-    std::cerr << "[DEBUG] Expression node count after building objective: " 
-              << node_count_after_objective << std::endl;
-    
-    // Debug: Cache statistics
-    std::cerr << "[DEBUG] expected_prod_pos_expr cache - hits: " 
-              << get_expected_prod_pos_cache_hits() 
-              << ", misses: " << get_expected_prod_pos_cache_misses() << std::endl;
-    std::cerr << "[DEBUG] phi_expr cache - hits: " 
-              << get_phi_expr_cache_hits() 
-              << ", misses: " << get_phi_expr_cache_misses() << std::endl;
-    std::cerr << "[DEBUG] Phi_expr cache - hits: " 
-              << get_Phi_expr_cache_hits() 
-              << ", misses: " << get_Phi_expr_cache_misses() << std::endl;
     
     // Step 5: Compute gradients via backward pass
     objective->backward();
