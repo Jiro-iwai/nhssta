@@ -7,6 +7,10 @@
 #include "expression.hpp"
 #include <unordered_map>
 #include <tuple>
+#include <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // Cache for phi2_expr_test (pointer-based)
 using Phi2PDFCacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
