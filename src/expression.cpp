@@ -5,14 +5,18 @@
 #include "util_numerical.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 // Local helper functions for bivariate normal distribution
@@ -177,10 +181,45 @@ ExpressionImpl::~ExpressionImpl() {
     if (third() != null) {
         third()->remove_root(this);
     }
+    // CUSTOM_FUNCTION ノードの場合、custom_args_ の親子関係も解除
+    if (op_ == CUSTOM_FUNCTION) {
+        for (const Expression& arg : custom_args_) {
+            if (arg != null) {
+                arg->remove_root(this);
+            }
+        }
+    }
 }
 
 double ExpressionImpl::value() {
     if (!is_set_value()) {
+        // Check CUSTOM_FUNCTION operation first
+        if (op_ == CUSTOM_FUNCTION) {
+            std::vector<double> args_values;
+            args_values.reserve(custom_args_.size());
+            for (const Expression& e : custom_args_) {
+                args_values.push_back(e->value());
+            }
+
+            double v = custom_func_->value(args_values);
+
+            value_ = v;
+            is_set_value_ = true;
+            return v;
+        }
+
+        // Check CONST and PARAM operations
+        if (op_ == CONST) {
+            // CONST nodes should always have is_set_value_ == true
+            // This branch should not be reached, but handle it for safety
+            return value_;
+        }
+        if (op_ == PARAM) {
+            // PARAM nodes (Variables) must have value set before calling value()
+            // This branch should not be reached if Variable::operator= was called
+            throw Nh::RuntimeException("Expression: variable value not set");
+        }
+
         // Check 3-argument operations first
         if (left() != null && right() != null && third() != null) {
             double h = left()->value();
@@ -233,6 +272,8 @@ double ExpressionImpl::value() {
                     throw Nh::RuntimeException("Expression: square root of negative number");
                 }
                 value_ = std::sqrt(l);
+            } else {
+                throw Nh::RuntimeException("Expression: invalid unary operation");
             }
 
         } else {
@@ -288,6 +329,29 @@ void ExpressionImpl::propagate_gradient() {
     }
     
     double upstream = gradient_;
+    
+    // Check CUSTOM_FUNCTION operation first
+    if (op_ == CUSTOM_FUNCTION) {
+        std::vector<double> args_values;
+        args_values.reserve(custom_args_.size());
+        for (const Expression& e : custom_args_) {
+            args_values.push_back(e->value());
+        }
+
+        auto [val, grad_vec] = custom_func_->eval_with_gradient(args_values);
+
+        const size_t n = custom_args_.size();
+        if (grad_vec.size() != n) {
+            throw Nh::RuntimeException(
+                "CustomFunction::eval_with_gradient: gradient size mismatch");
+        }
+
+        for (size_t i = 0; i < n; ++i) {
+            double contrib = upstream * grad_vec[i];
+            custom_args_[i]->gradient_ += contrib;
+        }
+        return;
+    }
     
     // Check 3-argument operations first
     if (left() != null && right() != null && third() != null) {
@@ -361,15 +425,24 @@ static void topo_sort_dfs(ExpressionImpl* node,
     }
     visited.insert(node);
     
-    // Visit children first
-    if (node->left().get() != nullptr) {
-        topo_sort_dfs(node->left().get(), visited, order);
-    }
-    if (node->right().get() != nullptr) {
-        topo_sort_dfs(node->right().get(), visited, order);
-    }
-    if (node->third().get() != nullptr) {
-        topo_sort_dfs(node->third().get(), visited, order);
+    // CUSTOM_FUNCTION ノードの場合は custom_args_ を子として辿る
+    if (node->op() == ExpressionImpl::CUSTOM_FUNCTION) {
+        for (const Expression& arg : node->custom_args()) {
+            if (arg.get() != nullptr) {
+                topo_sort_dfs(arg.get(), visited, order);
+            }
+        }
+    } else {
+        // 既存ロジック: left/right/third
+        if (node->left().get() != nullptr) {
+            topo_sort_dfs(node->left().get(), visited, order);
+        }
+        if (node->right().get() != nullptr) {
+            topo_sort_dfs(node->right().get(), visited, order);
+        }
+        if (node->third().get() != nullptr) {
+            topo_sort_dfs(node->third().get(), visited, order);
+        }
     }
     
     // Add this node after children (reverse topological order)
@@ -433,6 +506,13 @@ void ExpressionImpl::print() {
         std::cout << std::setw(10) << "sqrt";
     } else if (op_ == POWER) {
         std::cout << std::setw(10) << "^";
+    } else if (op_ == PHI2) {
+        std::cout << std::setw(10) << "PHI2";
+    } else if (op_ == CUSTOM_FUNCTION) {
+        std::ostringstream oss;
+        oss << "CUSTOM(" << custom_func_->name()
+            << ", n=" << custom_args_.size() << ")";
+        std::cout << std::setw(10) << oss.str();
     }
 
     if (left() != null) {
@@ -713,7 +793,9 @@ Expression phi_expr(const Expression& x) {
     phi_expr_cache_misses++;
     
     static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
-    Expression result = INV_SQRT_2PI * exp(-(x * x) / two);
+    // Create a new Const(2.0) each time to avoid issues with global 'two' being cleared
+    // in custom function internal expression trees
+    Expression result = INV_SQRT_2PI * exp(-(x * x) / Const(2.0));
     
     // Cache the result
     phi_expr_cache[x.get()] = result;
@@ -890,3 +972,225 @@ Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expressi
 
 
 //////////////////////////
+
+//////////////////////////
+// Custom Function Implementation
+
+ExpressionImpl::ExpressionImpl(const CustomFunctionHandle& func,
+                               const std::vector<Expression>& args)
+    : id_(current_id_++)
+    , is_set_value_(false)
+    , value_(0.0)
+    , gradient_(0.0)
+    , is_gradient_set_(false)
+    , op_(CUSTOM_FUNCTION)
+    , left_(null)
+    , right_(null)
+    , third_(null)
+    , custom_func_(func)
+    , custom_args_(args) {
+    eTbl().insert(this);
+    // Add this node as root to all argument expressions
+    for (const Expression& arg : custom_args_) {
+        if (arg) {
+            arg->add_root(this);
+        }
+    }
+}
+
+CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
+                                       const Builder& builder,
+                                       const std::string& name)
+    : input_dim_(input_dim) {
+    // Determine name
+    if (name.empty()) {
+        static std::atomic<size_t> counter{0};
+        size_t id = counter++;
+        name_ = "custom_f_" + std::to_string(id);
+    } else {
+        name_ = name;
+    }
+
+    // 1. Create local input variables
+    local_vars_.resize(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        local_vars_[i] = Variable();
+    }
+
+    // 2. Call builder to construct expression tree
+    output_ = builder(local_vars_);
+
+    // 3. Build list of all nodes in internal expression tree
+    build_nodes_list();
+}
+
+void CustomFunctionImpl::build_nodes_list() {
+    nodes_.clear();
+    std::unordered_set<ExpressionImpl*> visited;
+    if (output_) {
+        collect_nodes_dfs(output_.get(), visited);
+    }
+}
+
+void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
+                                           std::unordered_set<ExpressionImpl*>& visited) {
+    if (node == nullptr || visited.find(node) != visited.end()) {
+        return;
+    }
+
+    visited.insert(node);
+    nodes_.push_back(node);
+
+    // CUSTOM_FUNCTION ノードなら custom_args_ を辿る
+    if (node->op() == ExpressionImpl::CUSTOM_FUNCTION) {
+        for (const Expression& arg : node->custom_args()) {
+            if (arg) {
+                collect_nodes_dfs(arg.get(), visited);
+            }
+        }
+    } else {
+        // 通常どおり left/right/third を辿る
+        if (node->left()) {
+            collect_nodes_dfs(node->left().get(), visited);
+        }
+        if (node->right()) {
+            collect_nodes_dfs(node->right().get(), visited);
+        }
+        if (node->third()) {
+            collect_nodes_dfs(node->third().get(), visited);
+        }
+    }
+}
+
+void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
+    if (x.size() != input_dim_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl::set_inputs_and_clear: size mismatch");
+    }
+
+    // 1. Clear value cache and gradients in internal expression tree
+    for (auto* node : nodes_) {
+        // 1.1. 勾配は全ノードでクリア
+        node->zero_grad();
+
+        // 1.2. ローカル入力変数は value を直接上書きするので、
+        //      キャッシュクリアは上流側（root）からやればいい。
+        bool is_local_var = false;
+        for (size_t i = 0; i < input_dim_; ++i) {
+            if (node == local_vars_[i].get()) {
+                is_local_var = true;
+                break;
+            }
+        }
+        if (is_local_var) {
+            continue;
+        }
+
+        // 1.3. CONST ノードはグローバル共有なので value_ を触らない
+        if (node->op() == ExpressionImpl::CONST) {
+            continue;
+        }
+
+        // 1.4. それ以外のノードのキャッシュは無条件でクリア
+        //      unset_value() 側ですでに if (!is_set_value()) return; ガードが入っているので、
+        //      呼ぶ前に is_set_value() を見る必要はない
+        node->unset_value();
+    }
+
+    // 2. 最後にローカル入力変数に値を入れる
+    for (size_t i = 0; i < input_dim_; ++i) {
+        local_vars_[i] = x[i];
+    }
+}
+
+bool CustomFunctionImpl::args_equal(const std::vector<double>& a,
+                                    const std::vector<double>& b) {
+    if (a.size() != b.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+double CustomFunctionImpl::value(const std::vector<double>& x) {
+    set_inputs_and_clear(x);
+    double v = output_->value();
+    // Cache the value and arguments for potential reuse in eval_with_gradient
+    last_args_ = x;
+    last_value_ = v;
+    has_cached_value_ = true;
+    return v;
+}
+
+std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
+    set_inputs_and_clear(x);
+    output_->value();
+    output_->backward(1.0);
+
+    std::vector<double> grad(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        grad[i] = local_vars_[i]->gradient();
+    }
+    return grad;
+}
+
+std::pair<double, std::vector<double>>
+CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
+    set_inputs_and_clear(x);
+    double v = output_->value();
+    output_->backward(1.0);
+
+    std::vector<double> grad(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        grad[i] = local_vars_[i]->gradient();
+    }
+    return {v, std::move(grad)};
+}
+
+std::pair<double, std::vector<double>>
+CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
+    // Optimization: if value was already computed with the same arguments,
+    // reuse it and only compute gradient
+    double v = 0.0;
+    if (has_cached_value_ && args_equal(args_values, last_args_)) {
+        // Reuse cached value, only compute gradient
+        v = last_value_;
+        // Still need to set inputs for gradient computation
+        set_inputs_and_clear(args_values);
+        // Value is already computed, skip value() call
+        output_->backward(1.0);
+    } else {
+        // Compute both value and gradient
+        return value_and_gradient(args_values);
+    }
+
+    std::vector<double> grad(input_dim_);
+    for (size_t i = 0; i < input_dim_; ++i) {
+        grad[i] = local_vars_[i]->gradient();
+    }
+    return {v, std::move(grad)};
+}
+
+Expression CustomFunction::operator()(const std::vector<Expression>& args) const {
+    ensure_valid();
+    if (args.size() != impl_->input_dim()) {
+        throw Nh::RuntimeException(
+            "CustomFunction::operator(): argument count mismatch");
+    }
+    return make_custom_call(impl_, args);
+}
+
+Expression CustomFunction::operator()(std::initializer_list<Expression> args) const {
+    return (*this)(std::vector<Expression>(args));
+}
+
+Expression make_custom_call(const CustomFunctionHandle& func,
+                            const std::vector<Expression>& args) {
+    // Create a new ExpressionImpl node with CUSTOM_FUNCTION operation
+    auto impl = std::make_shared<ExpressionImpl>(func, args);
+    return Expression(impl);
+}

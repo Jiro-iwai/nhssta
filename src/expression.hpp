@@ -75,18 +75,25 @@
 #define EXPRESSION__H
 
 #include <cassert>
+#include <functional>
 #include <map>
 #include <memory>
 #include <nhssta/exception.hpp>
 #include <set>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <unordered_set>
+#include <vector>
 
 #include "handle.hpp"
 
 ////////////////////
 
-
+// Forward declarations
 class ExpressionImpl;
+class CustomFunctionImpl;
+using CustomFunctionHandle = std::shared_ptr<CustomFunctionImpl>;
 
 // Handle pattern for Expression: thin wrapper around std::shared_ptr
 //
@@ -167,7 +174,7 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     // print all expression infomation
     friend void print_all();
 
-    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG, ERF, SQRT, PHI2 };
+    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG, ERF, SQRT, PHI2, CUSTOM_FUNCTION };
 
     static void print_all();
     void print();
@@ -181,10 +188,18 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     ExpressionImpl(const Op& op, const Expression& first, const Expression& second,
                    const Expression& third);
 
+    // Constructor for CUSTOM_FUNCTION operation
+    ExpressionImpl(const CustomFunctionHandle& func,
+                   const std::vector<Expression>& args);
+
     virtual ~ExpressionImpl();
 
     [[nodiscard]] int id() const {
         return id_;
+    }
+
+    [[nodiscard]] Op op() const noexcept {
+        return op_;
     }
 
     // Automatic differentiation (reverse-mode)
@@ -207,14 +222,19 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     [[nodiscard]] const Expression& third() const {
         return third_;
     }
+    [[nodiscard]] const std::vector<Expression>& custom_args() const {
+        return custom_args_;
+    }
 
    protected:
     // Helper for topological sort backward
     void propagate_gradient();
     void set_value(double value);
     void _set_value(double value);
-    void unset_value();
     void unset_root_value();
+
+   public:
+    void unset_value();  // Made public for CustomFunctionImpl
     [[nodiscard]] bool is_set_value() const {
         return is_set_value_;
     }
@@ -239,6 +259,10 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     Expression right_;
     Expression third_;  // For 3-argument operations (e.g., PHI2: h, k, rho)
     Expressions roots_;
+
+    // Custom function fields (only valid when op_ == CUSTOM_FUNCTION)
+    CustomFunctionHandle custom_func_;
+    std::vector<Expression> custom_args_;  // Argument Expressions from main expression tree
 
     /// static data menber
     static int current_id_;
@@ -477,5 +501,167 @@ size_t get_phi_expr_cache_hits();
 size_t get_phi_expr_cache_misses();
 size_t get_Phi_expr_cache_hits();
 size_t get_Phi_expr_cache_misses();
+
+////////////////
+// Custom Function Support
+
+// Builder type: function that takes local Variables and returns an Expression
+using CustomFunctionBuilder =
+    std::function<Expression(const std::vector<Variable>&)>;
+
+// Internal implementation class for custom functions
+class CustomFunctionImpl {
+public:
+    using Builder = CustomFunctionBuilder;
+
+    CustomFunctionImpl(size_t input_dim,
+                       const Builder& builder,
+                       const std::string& name = "");
+
+    [[nodiscard]] size_t input_dim() const noexcept { return input_dim_; }
+    [[nodiscard]] const std::string& name() const noexcept { return name_; }
+
+    // Independent evaluation API
+    double value(const std::vector<double>& x);
+    std::vector<double> gradient(const std::vector<double>& x);
+    std::pair<double, std::vector<double>>
+    value_and_gradient(const std::vector<double>& x);
+
+    // Called from main expression tree
+    std::pair<double, std::vector<double>>
+    eval_with_gradient(const std::vector<double>& args_values);
+
+private:
+    size_t input_dim_;
+    std::string name_;
+    std::vector<Variable> local_vars_;  // Internal input variables
+    Expression output_;                  // Internal expression tree output
+
+    // List of all nodes in internal expression tree (built once)
+    std::vector<ExpressionImpl*> nodes_;
+
+    // Cache for last evaluated arguments and value to avoid re-evaluation
+    std::vector<double> last_args_;
+    double last_value_{0.0};
+    bool has_cached_value_{false};
+
+    // Helper methods
+    void build_nodes_list();
+    void collect_nodes_dfs(ExpressionImpl* node,
+                           std::unordered_set<ExpressionImpl*>& visited);
+    void set_inputs_and_clear(const std::vector<double>& x);
+    [[nodiscard]] static bool args_equal(const std::vector<double>& a,
+                                         const std::vector<double>& b);
+};
+
+// User-facing wrapper class
+using CustomFunctionHandle = std::shared_ptr<CustomFunctionImpl>;
+
+class CustomFunction {
+public:
+    using Builder = CustomFunctionImpl::Builder;
+
+    CustomFunction() = default;
+
+    explicit CustomFunction(CustomFunctionHandle impl)
+        : impl_(std::move(impl)) {}
+
+    // Factory method
+    static CustomFunction create(size_t input_dim,
+                                 const Builder& builder,
+                                 const std::string& name = "") {
+        return CustomFunction(
+            std::make_shared<CustomFunctionImpl>(
+                input_dim, builder, name));
+    }
+
+    [[nodiscard]] bool valid() const noexcept { return static_cast<bool>(impl_); }
+    explicit operator bool() const noexcept { return valid(); }
+
+    [[nodiscard]] size_t input_dim() const {
+        ensure_valid();
+        return impl_->input_dim();
+    }
+
+    [[nodiscard]] const std::string& name() const {
+        ensure_valid();
+        return impl_->name();
+    }
+
+    // Independent evaluation API
+    [[nodiscard]] double value(const std::vector<double>& x) const {
+        ensure_valid();
+        return impl_->value(x);
+    }
+
+    [[nodiscard]] std::vector<double> gradient(const std::vector<double>& x) const {
+        ensure_valid();
+        return impl_->gradient(x);
+    }
+
+    [[nodiscard]] std::pair<double, std::vector<double>>
+    value_and_gradient(const std::vector<double>& x) const {
+        ensure_valid();
+        return impl_->value_and_gradient(x);
+    }
+
+    // Call from main expression tree: operator()
+    Expression operator()(const std::vector<Expression>& args) const;
+    Expression operator()(std::initializer_list<Expression> args) const;
+
+    // Convenience overloads for 1-7 arguments
+    Expression operator()(const Expression& a) const {
+        return (*this)({a});
+    }
+
+    Expression operator()(const Expression& a, const Expression& b) const {
+        return (*this)({a, b});
+    }
+
+    Expression operator()(const Expression& a, const Expression& b,
+                          const Expression& c) const {
+        return (*this)({a, b, c});
+    }
+
+    Expression operator()(const Expression& a, const Expression& b,
+                          const Expression& c, const Expression& d) const {
+        return (*this)({a, b, c, d});
+    }
+
+    Expression operator()(const Expression& a, const Expression& b,
+                          const Expression& c, const Expression& d,
+                          const Expression& e) const {
+        return (*this)({a, b, c, d, e});
+    }
+
+    Expression operator()(const Expression& a, const Expression& b,
+                          const Expression& c, const Expression& d,
+                          const Expression& e, const Expression& f) const {
+        return (*this)({a, b, c, d, e, f});
+    }
+
+    Expression operator()(const Expression& a, const Expression& b,
+                          const Expression& c, const Expression& d,
+                          const Expression& e, const Expression& f,
+                          const Expression& g) const {
+        return (*this)({a, b, c, d, e, f, g});
+    }
+
+    [[nodiscard]] CustomFunctionHandle handle() const noexcept { return impl_; }
+
+private:
+    CustomFunctionHandle impl_;
+
+    void ensure_valid() const {
+        if (!impl_) {
+            throw Nh::RuntimeException(
+                "CustomFunction: invalid (null) handle");
+        }
+    }
+};
+
+// Factory function to create CUSTOM_FUNCTION Expression node
+Expression make_custom_call(const CustomFunctionHandle& func,
+                            const std::vector<Expression>& args);
 
 #endif  // EXPRESSION__H
