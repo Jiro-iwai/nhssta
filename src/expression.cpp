@@ -688,18 +688,76 @@ struct ExpectedProdPosCacheKeyHash {
 static std::unordered_map<ExpectedProdPosCacheKey, Expression, ExpectedProdPosCacheKeyHash>
     expected_prod_pos_expr_cache;
 
+// Cache statistics
+static size_t expected_prod_pos_cache_hits = 0;
+static size_t expected_prod_pos_cache_misses = 0;
+
+// Cache for phi2_expr (pointer-based)
+using Phi2PDFCacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
+
+struct Phi2PDFCacheKeyHash {
+    std::size_t operator()(const Phi2PDFCacheKey& key) const {
+        std::size_t h1 = std::hash<ExpressionImpl*>{}(std::get<0>(key));
+        std::size_t h2 = std::hash<ExpressionImpl*>{}(std::get<1>(key));
+        std::size_t h3 = std::hash<ExpressionImpl*>{}(std::get<2>(key));
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
+static std::unordered_map<Phi2PDFCacheKey, Expression, Phi2PDFCacheKeyHash> phi2_pdf_expr_cache;
+
 Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho) {
     // φ₂(x, y; ρ) = 1/(2π√(1-ρ²)) × exp(-(x² - 2ρxy + y²)/(2(1-ρ²)))
+    
+    // Check cache first
+    auto key = std::make_tuple(x.get(), y.get(), rho.get());
+    auto it = phi2_pdf_expr_cache.find(key);
+    if (it != phi2_pdf_expr_cache.end()) {
+        return it->second;
+    }
+    
     Expression one_minus_rho2 = Const(1.0) - rho * rho;
     Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
     Expression coeff = Const(1.0) / (Const(2.0 * M_PI) * sqrt_one_minus_rho2);
     Expression Q = (x * x - Const(2.0) * rho * x * y + y * y) / one_minus_rho2;
-    return coeff * exp(-Q / Const(2.0));
+    Expression result = coeff * exp(-Q / Const(2.0));
+    
+    // Cache the result
+    phi2_pdf_expr_cache[key] = result;
+    
+    return result;
 }
+
+// Cache for Phi2_expr (pointer-based)
+using Phi2CacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
+
+struct Phi2CacheKeyHash {
+    std::size_t operator()(const Phi2CacheKey& key) const {
+        std::size_t h1 = std::hash<ExpressionImpl*>{}(std::get<0>(key));
+        std::size_t h2 = std::hash<ExpressionImpl*>{}(std::get<1>(key));
+        std::size_t h3 = std::hash<ExpressionImpl*>{}(std::get<2>(key));
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
+static std::unordered_map<Phi2CacheKey, Expression, Phi2CacheKeyHash> phi2_expr_cache;
 
 Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho) {
     // Φ₂(h, k; ρ) using numerical integration for value, analytical gradients
-    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, h, k, rho));
+    
+    // Check cache first
+    auto key = std::make_tuple(h.get(), k.get(), rho.get());
+    auto it = phi2_expr_cache.find(key);
+    if (it != phi2_expr_cache.end()) {
+        return it->second;
+    }
+    
+    Expression result = Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, h, k, rho));
+    
+    // Cache the result
+    phi2_expr_cache[key] = result;
+    
+    return result;
 }
 
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
@@ -719,8 +777,11 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     auto key = std::make_tuple(mu0.get(), sigma0.get(), mu1.get(), sigma1.get(), rho.get());
     auto it = expected_prod_pos_expr_cache.find(key);
     if (it != expected_prod_pos_expr_cache.end()) {
+        expected_prod_pos_cache_hits++;
         return it->second;
     }
+    
+    expected_prod_pos_cache_misses++;
 
     Expression a0 = mu0 / sigma0;
     Expression a1 = mu1 / sigma1;
@@ -754,6 +815,15 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
     expected_prod_pos_expr_cache[key] = result;
     
     return result;
+}
+
+// Expose cache statistics for debugging
+size_t get_expected_prod_pos_cache_hits() {
+    return expected_prod_pos_cache_hits;
+}
+
+size_t get_expected_prod_pos_cache_misses() {
+    return expected_prod_pos_cache_misses;
 }
 
 // E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)

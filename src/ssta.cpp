@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
@@ -689,6 +690,11 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     // First, clear all gradients
     zero_all_grad();
     
+    // Debug: Expression node count before building objective
+    size_t node_count_before_objective = ExpressionImpl::node_count();
+    std::cerr << "[DEBUG] Expression node count before building objective: " 
+              << node_count_before_objective << std::endl;
+    
     // Build Expression for each endpoint's score
     Expression sum_exp = Const(0.0);
     for (const auto& path : endpoint_paths) {
@@ -705,6 +711,16 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     
     Expression objective = log(sum_exp);
     results.objective_value = objective->value();
+    
+    // Debug: Expression node count after building objective
+    size_t node_count_after_objective = ExpressionImpl::node_count();
+    std::cerr << "[DEBUG] Expression node count after building objective: " 
+              << node_count_after_objective << std::endl;
+    
+    // Debug: Cache statistics
+    std::cerr << "[DEBUG] expected_prod_pos_expr cache - hits: " 
+              << get_expected_prod_pos_cache_hits() 
+              << ", misses: " << get_expected_prod_pos_cache_misses() << std::endl;
     
     // Step 5: Compute gradients via backward pass
     objective->backward();
