@@ -706,7 +706,8 @@ struct Phi2PDFCacheKeyHash {
 
 static std::unordered_map<Phi2PDFCacheKey, Expression, Phi2PDFCacheKeyHash> phi2_pdf_expr_cache;
 
-Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho) {
+Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho,
+                     const Expression& one_minus_rho2, const Expression& sqrt_one_minus_rho2) {
     // φ₂(x, y; ρ) = 1/(2π√(1-ρ²)) × exp(-(x² - 2ρxy + y²)/(2(1-ρ²)))
     
     static size_t call_count = 0;
@@ -721,19 +722,30 @@ Expression phi2_expr(const Expression& x, const Expression& y, const Expression&
         return it->second;
     }
     
-    size_t nodes_before_one_minus_rho2 = ExpressionImpl::node_count();
-    Expression one_minus_rho2 = Const(1.0) - rho * rho;
-    Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
-    size_t nodes_after_one_minus_rho2 = ExpressionImpl::node_count();
+    // Use provided one_minus_rho2 and sqrt_one_minus_rho2 if available, otherwise compute them
+    Expression one_minus_rho2_local;
+    Expression sqrt_one_minus_rho2_local;
     
-    if (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2 > 0) {
-        std::cerr << "[DEBUG] phi2_expr call #" << call_count 
-                  << ": one_minus_rho2, sqrt created " 
-                  << (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2) << " nodes" << std::endl;
+    if (one_minus_rho2 && sqrt_one_minus_rho2) {
+        // Use provided values (optimization: avoid redundant computation)
+        one_minus_rho2_local = one_minus_rho2;
+        sqrt_one_minus_rho2_local = sqrt_one_minus_rho2;
+    } else {
+        // Compute internally (backward compatibility)
+        size_t nodes_before_one_minus_rho2 = ExpressionImpl::node_count();
+        one_minus_rho2_local = Const(1.0) - rho * rho;
+        sqrt_one_minus_rho2_local = sqrt(one_minus_rho2_local);
+        size_t nodes_after_one_minus_rho2 = ExpressionImpl::node_count();
+        
+        if (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2 > 0) {
+            std::cerr << "[DEBUG] phi2_expr call #" << call_count 
+                      << ": one_minus_rho2, sqrt created " 
+                      << (nodes_after_one_minus_rho2 - nodes_before_one_minus_rho2) << " nodes" << std::endl;
+        }
     }
     
     size_t nodes_before_coeff = ExpressionImpl::node_count();
-    Expression coeff = Const(1.0) / (Const(2.0 * M_PI) * sqrt_one_minus_rho2);
+    Expression coeff = Const(1.0) / (Const(2.0 * M_PI) * sqrt_one_minus_rho2_local);
     size_t nodes_after_coeff = ExpressionImpl::node_count();
     
     if (nodes_after_coeff - nodes_before_coeff > 0) {
@@ -742,7 +754,7 @@ Expression phi2_expr(const Expression& x, const Expression& y, const Expression&
     }
     
     size_t nodes_before_Q = ExpressionImpl::node_count();
-    Expression Q = (x * x - Const(2.0) * rho * x * y + y * y) / one_minus_rho2;
+    Expression Q = (x * x - Const(2.0) * rho * x * y + y * y) / one_minus_rho2_local;
     size_t nodes_after_Q = ExpressionImpl::node_count();
     
     if (nodes_after_Q - nodes_before_Q > 0) {
@@ -785,6 +797,53 @@ struct Phi2CacheKeyHash {
 };
 
 static std::unordered_map<Phi2CacheKey, Expression, Phi2CacheKeyHash> phi2_expr_cache;
+
+// Cache for phi_expr (pointer-based)
+static std::unordered_map<ExpressionImpl*, Expression> phi_expr_cache;
+
+Expression phi_expr(const Expression& x) {
+    // φ(x) = exp(-x²/2) / √(2π)
+    
+    // Check cache first
+    auto it = phi_expr_cache.find(x.get());
+    if (it != phi_expr_cache.end()) {
+        return it->second;
+    }
+    
+    static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
+    Expression result = INV_SQRT_2PI * exp(-(x * x) / 2.0);
+    
+    // Cache the result
+    phi_expr_cache[x.get()] = result;
+    
+    return result;
+}
+
+// Cache for Phi_expr (pointer-based)
+static std::unordered_map<ExpressionImpl*, Expression> Phi_expr_cache;
+static size_t Phi_expr_cache_hits = 0;
+static size_t Phi_expr_cache_misses = 0;
+
+Expression Phi_expr(const Expression& x) {
+    // Φ(x) = 0.5 × (1 + erf(x/√2))
+    
+    // Check cache first
+    auto it = Phi_expr_cache.find(x.get());
+    if (it != Phi_expr_cache.end()) {
+        Phi_expr_cache_hits++;
+        return it->second;
+    }
+    
+    Phi_expr_cache_misses++;
+    
+    static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
+    Expression result = 0.5 * (1.0 + erf(x * INV_SQRT_2));
+    
+    // Cache the result
+    Phi_expr_cache[x.get()] = result;
+    
+    return result;
+}
 
 Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho) {
     // Φ₂(h, k; ρ) using numerical integration for value, analytical gradients
@@ -886,9 +945,9 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
                   << (nodes_after_Phi_cond - nodes_before_Phi_cond) << " nodes" << std::endl;
     }
 
-    // φ₂(a0, a1; ρ)
+    // φ₂(a0, a1; ρ) - use precomputed one_minus_rho2 and sqrt_one_minus_rho2
     size_t nodes_before_phi2 = ExpressionImpl::node_count();
-    Expression phi2_a0_a1 = phi2_expr(a0, a1, rho);
+    Expression phi2_a0_a1 = phi2_expr(a0, a1, rho, one_minus_rho2, sqrt_one_minus_rho2);
     size_t nodes_after_phi2 = ExpressionImpl::node_count();
     
     if (nodes_after_phi2 - nodes_before_phi2 > 0) {
@@ -961,6 +1020,22 @@ size_t get_expected_prod_pos_cache_hits() {
 
 size_t get_expected_prod_pos_cache_misses() {
     return expected_prod_pos_cache_misses;
+}
+
+size_t get_phi_expr_cache_hits() {
+    return phi_expr_cache_hits;
+}
+
+size_t get_phi_expr_cache_misses() {
+    return phi_expr_cache_misses;
+}
+
+size_t get_Phi_expr_cache_hits() {
+    return Phi_expr_cache_hits;
+}
+
+size_t get_Phi_expr_cache_misses() {
+    return Phi_expr_cache_misses;
 }
 
 // E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)

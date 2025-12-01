@@ -322,22 +322,20 @@ Expression sqrt(const Expression& a);
  * 
  * @param x Expression to evaluate
  * @return Expression representing φ(x)
+ * 
+ * @note This function is cached for performance optimization (Issue #188)
  */
-inline Expression phi_expr(const Expression& x) {
-    static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
-    return INV_SQRT_2PI * exp(-(x * x) / 2.0);
-}
+Expression phi_expr(const Expression& x);
 
 /**
  * @brief Standard normal CDF: Φ(x) = 0.5 × (1 + erf(x/√2))
  * 
  * @param x Expression to evaluate
  * @return Expression representing Φ(x)
+ * 
+ * @note This function is cached for performance optimization (Issue #188)
  */
-inline Expression Phi_expr(const Expression& x) {
-    static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
-    return 0.5 * (1.0 + erf(x * INV_SQRT_2));
-}
+Expression Phi_expr(const Expression& x);
 
 /**
  * @brief MeanMax function: E[max(a, x)] where x ~ N(0,1)
@@ -491,8 +489,15 @@ inline Expression cov_x_max0_expr(const Expression& cov_xz,
  * @param x First variable
  * @param y Second variable
  * @param rho Correlation coefficient (-1 < ρ < 1)
+ * @param one_minus_rho2 Precomputed (1-ρ²) expression (for optimization, Issue #188)
+ * @param sqrt_one_minus_rho2 Precomputed √(1-ρ²) expression (for optimization, Issue #188)
+ * 
+ * @note If one_minus_rho2 and sqrt_one_minus_rho2 are not provided (empty Expression),
+ *       they will be computed internally. Providing them avoids redundant computation.
  */
-Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho);
+Expression phi2_expr(const Expression& x, const Expression& y, const Expression& rho,
+                     const Expression& one_minus_rho2 = Expression(),
+                     const Expression& sqrt_one_minus_rho2 = Expression());
 
 /**
  * @brief Bivariate standard normal CDF Φ₂(h, k; ρ)
@@ -577,5 +582,9 @@ void zero_all_grad();
 // Cache statistics (for debugging)
 size_t get_expected_prod_pos_cache_hits();
 size_t get_expected_prod_pos_cache_misses();
+size_t get_phi_expr_cache_hits();
+size_t get_phi_expr_cache_misses();
+size_t get_Phi_expr_cache_hits();
+size_t get_Phi_expr_cache_misses();
 
 #endif  // EXPRESSION__H

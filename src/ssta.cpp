@@ -741,6 +741,12 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     std::cerr << "[DEBUG] expected_prod_pos_expr cache - hits: " 
               << get_expected_prod_pos_cache_hits() 
               << ", misses: " << get_expected_prod_pos_cache_misses() << std::endl;
+    std::cerr << "[DEBUG] phi_expr cache - hits: " 
+              << get_phi_expr_cache_hits() 
+              << ", misses: " << get_phi_expr_cache_misses() << std::endl;
+    std::cerr << "[DEBUG] Phi_expr cache - hits: " 
+              << get_Phi_expr_cache_hits() 
+              << ", misses: " << get_Phi_expr_cache_misses() << std::endl;
     
     // Step 5: Compute gradients via backward pass
     objective->backward();
