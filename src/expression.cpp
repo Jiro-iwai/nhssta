@@ -950,62 +950,102 @@ size_t get_Phi_expr_cache_misses() {
     return 0;
 }
 
-// E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
-// When ρ = 1: D0 = μ0 + σ0·Z, D1 = μ1 + σ1·Z (same Z)
-// Both positive when Z > c where c = -min(a0, a1), a0 = μ0/σ0, a1 = μ1/σ1
-// E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+// expected_prod_pos_rho1_expr implemented as a custom function
+// Note: min(a0, a1) is computed using the differentiable formula:
+// min(a0, a1) = (a0 + a1 - sqrt((a0 - a1)^2 + epsilon)) / 2
+// where epsilon is a small constant for numerical stability
+static CustomFunction expected_prod_pos_rho1_func = CustomFunction::create(
+    4,
+    [](const std::vector<Variable>& v) -> Expression {
+        const Expression& mu0 = v[0];
+        const Expression& sigma0 = v[1];
+        const Expression& mu1 = v[2];
+        const Expression& sigma1 = v[3];
+        
+        // E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
+        // When ρ = 1: D0 = μ0 + σ0·Z, D1 = μ1 + σ1·Z (same Z)
+        // Both positive when Z > c where c = -min(a0, a1), a0 = μ0/σ0, a1 = μ1/σ1
+        // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+        
+        Expression a0 = mu0 / sigma0;
+        Expression a1 = mu1 / sigma1;
+        
+        // c = -min(a0, a1)
+        // Use smooth approximation: min(a0, a1) = (a0 + a1 - sqrt((a0 - a1)^2 + epsilon)) / 2
+        // For numerical stability, we use a small epsilon
+        static constexpr double epsilon = 1e-10;
+        Expression diff = a0 - a1;
+        Expression abs_diff = sqrt(diff * diff + Const(epsilon));
+        Expression min_a0_a1 = (a0 + a1 - abs_diff) / Const(2.0);
+        Expression c = Const(-1.0) * min_a0_a1;
+        
+        // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+        Expression Phi_neg_c = Phi_expr(Const(-1.0) * c);
+        Expression phi_c = phi_expr(c);
+        
+        return sigma0 * sigma1 *
+               ((a0 * a1 + Const(1.0)) * Phi_neg_c + (a0 + a1 + c) * phi_c);
+    },
+    "expected_prod_pos_rho1"
+);
+
 Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& sigma0,
                                        const Expression& mu1, const Expression& sigma1) {
-    Expression a0 = mu0 / sigma0;
-    Expression a1 = mu1 / sigma1;
-
-    // c = -min(a0, a1)
-    // For differentiability, we compute both cases and use the appropriate one
-    // When a0 < a1: c = -a0, when a0 >= a1: c = -a1
-    double a0_val = a0->value();
-    double a1_val = a1->value();
-    Expression c = (a0_val < a1_val) ? (minus_one * a0) : (minus_one * a1);
-
-    // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
-    Expression Phi_neg_c = Phi_expr(minus_one * c);
-    Expression phi_c = phi_expr(c);
-
-    Expression result = sigma0 * sigma1 *
-                        ((a0 * a1 + one) * Phi_neg_c + (a0 + a1 + c) * phi_c);
-
-    return result;
+    // E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
+    return expected_prod_pos_rho1_func(mu0, sigma0, mu1, sigma1);
 }
 
-// E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
-// When ρ = -1: D0 = μ0 + σ0·Z, D1 = μ1 - σ1·Z (opposite signs)
-// Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
-// E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
-// Returns 0 if a0 + a1 <= 0 (interval is empty)
+// expected_prod_pos_rho_neg1_expr implemented as a custom function
+// Note: The original implementation checks if a0 + a1 <= 0 at runtime and returns 0.
+// In a custom function, we cannot do runtime checks, so we use a smooth approximation:
+// We multiply the result by max(0, a0 + a1) / (a0 + a1 + epsilon) to approximate the step function.
+// max(0, x) = (x + sqrt(x^2 + epsilon)) / 2 for smooth approximation.
+static CustomFunction expected_prod_pos_rho_neg1_func = CustomFunction::create(
+    4,
+    [](const std::vector<Variable>& v) -> Expression {
+        const Expression& mu0 = v[0];
+        const Expression& sigma0 = v[1];
+        const Expression& mu1 = v[2];
+        const Expression& sigma1 = v[3];
+        
+        // E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
+        // When ρ = -1: D0 = μ0 + σ0·Z, D1 = μ1 - σ1·Z (opposite signs)
+        // Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
+        // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
+        // Returns 0 if a0 + a1 <= 0 (interval is empty)
+        
+        Expression a0 = mu0 / sigma0;
+        Expression a1 = mu1 / sigma1;
+        
+        // Use smooth approximation for the condition a0 + a1 > 0
+        // max(0, a0 + a1) = (a0 + a1 + sqrt((a0 + a1)^2 + epsilon)) / 2
+        static constexpr double epsilon = 1e-10;
+        Expression sum = a0 + a1;
+        Expression abs_sum = sqrt(sum * sum + Const(epsilon));
+        Expression max_sum = (sum + abs_sum) / Const(2.0);
+        // Normalize: max(0, sum) / (sum + epsilon) approximates step function
+        Expression step_factor = max_sum / (sum + Const(epsilon));
+        
+        // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
+        Expression Phi_a0 = Phi_expr(a0);
+        Expression Phi_a1 = Phi_expr(a1);
+        Expression phi_a0 = phi_expr(a0);
+        Expression phi_a1 = phi_expr(a1);
+        
+        Expression result = sigma0 * sigma1 *
+                            ((a0 * a1 - Const(1.0)) * (Phi_a0 + Phi_a1 - Const(1.0)) +
+                             a1 * phi_a0 + a0 * phi_a1);
+        
+        // Multiply by step factor to approximate the condition a0 + a1 > 0
+        return result * step_factor;
+    },
+    "expected_prod_pos_rho_neg1"
+);
+
 Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,
                                            const Expression& mu1, const Expression& sigma1) {
-    Expression a0 = mu0 / sigma0;
-    Expression a1 = mu1 / sigma1;
-
-    // Check if interval is non-empty: a0 + a1 > 0
-    double a0_val = a0->value();
-    double a1_val = a1->value();
-
-    if (a0_val + a1_val <= 0.0) {
-        // Interval is empty, E[D0⁺ D1⁺] = 0
-        return Const(0.0);
-    }
-
-    // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
-    Expression Phi_a0 = Phi_expr(a0);
-    Expression Phi_a1 = Phi_expr(a1);
-    Expression phi_a0 = phi_expr(a0);
-    Expression phi_a1 = phi_expr(a1);
-
-    Expression result = sigma0 * sigma1 *
-                        ((a0 * a1 - one) * (Phi_a0 + Phi_a1 - one) +
-                         a1 * phi_a0 + a0 * phi_a1);
-
-    return result;
+    // E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
+    return expected_prod_pos_rho_neg1_func(mu0, sigma0, mu1, sigma1);
 }
 
 

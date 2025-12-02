@@ -455,6 +455,14 @@ Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma
  * When ρ = 1: D0 = μ0 + σ0·Z, D1 = μ1 + σ1·Z (same Z)
  * Both positive when Z > c where c = -min(a0, a1)
  * E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
+ * 
+ * @param mu0 Mean of D0
+ * @param sigma0 Standard deviation of D0 (> 0)
+ * @param mu1 Mean of D1
+ * @param sigma1 Standard deviation of D1 (> 0)
+ * @return Expression representing E[D0⁺ D1⁺] for ρ = 1
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
 Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& sigma0,
                                        const Expression& mu1, const Expression& sigma1);
@@ -466,6 +474,14 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
  * Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
  * E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
  * Returns 0 if a0 + a1 <= 0 (interval is empty)
+ * 
+ * @param mu0 Mean of D0
+ * @param sigma0 Standard deviation of D0 (> 0)
+ * @param mu1 Mean of D1
+ * @param sigma1 Standard deviation of D1 (> 0)
+ * @return Expression representing E[D0⁺ D1⁺] for ρ = -1
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
 Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,
                                            const Expression& mu1, const Expression& sigma1);
