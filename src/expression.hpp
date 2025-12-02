@@ -352,21 +352,56 @@ void zero_all_grad();
 ////////////////
 // Custom Function Support
 
+namespace RandomVariable {
+
 // Builder type: function that takes local Variables and returns an Expression
 using CustomFunctionBuilder =
     std::function<Expression(const std::vector<Variable>&)>;
 
+// Native function types (for Native type custom functions)
+using NativeValueFunc =
+    std::function<double(const std::vector<double>&)>;
+
+using NativeGradFunc =
+    std::function<std::vector<double>(const std::vector<double>&)>;
+
+using NativeValueGradFunc =
+    std::function<std::pair<double, std::vector<double>>(
+        const std::vector<double>&)>;
+
+}  // namespace RandomVariable
+
 // Internal implementation class for custom functions
 class CustomFunctionImpl {
 public:
-    using Builder = CustomFunctionBuilder;
+    enum class ImplKind {
+        Graph,
+        Native
+    };
 
+    using Builder = RandomVariable::CustomFunctionBuilder;
+    using NativeValueFunc = RandomVariable::NativeValueFunc;
+    using NativeGradFunc = RandomVariable::NativeGradFunc;
+    using NativeValueGradFunc = RandomVariable::NativeValueGradFunc;
+
+    // Graph type constructor (existing)
     CustomFunctionImpl(size_t input_dim,
                        const Builder& builder,
                        const std::string& name = "");
 
+    // Native type constructors (new)
+    CustomFunctionImpl(size_t input_dim,
+                       NativeValueFunc value,
+                       NativeGradFunc gradient,
+                       const std::string& name = "");
+
+    CustomFunctionImpl(size_t input_dim,
+                       NativeValueGradFunc value_and_gradient,
+                       const std::string& name = "");
+
     [[nodiscard]] size_t input_dim() const noexcept { return input_dim_; }
     [[nodiscard]] const std::string& name() const noexcept { return name_; }
+    [[nodiscard]] ImplKind kind() const noexcept { return kind_; }
 
     // Independent evaluation API
     double value(const std::vector<double>& x);
@@ -379,26 +414,33 @@ public:
     eval_with_gradient(const std::vector<double>& args_values);
 
 private:
+    // Common fields
     size_t input_dim_;
     std::string name_;
-    std::vector<Variable> local_vars_;  // Internal input variables
-    Expression output_;                  // Internal expression tree output
+    ImplKind kind_;
 
-    // List of all nodes in internal expression tree (built once)
-    std::vector<ExpressionImpl*> nodes_;
-
-    // Cache for last evaluated arguments and value to avoid re-evaluation
+    // Cache for last evaluated arguments and value (Graph / Native common)
     std::vector<double> last_args_;
     double last_value_{0.0};
     bool has_cached_value_{false};
+
+    // Graph type fields
+    std::vector<Variable> local_vars_;  // Internal input variables
+    Expression output_;                  // Internal expression tree output
+    std::vector<ExpressionImpl*> nodes_; // List of all nodes in internal expression tree (built once)
+
+    // Native type fields
+    NativeValueFunc native_value_;      // null if not used
+    NativeGradFunc native_grad_;       // null if not used
+    NativeValueGradFunc native_value_grad_; // null if not used
 
     // Helper methods
     void build_nodes_list();
     void collect_nodes_dfs(ExpressionImpl* node,
                            std::unordered_set<ExpressionImpl*>& visited);
     void set_inputs_and_clear(const std::vector<double>& x);
-    [[nodiscard]] static bool args_equal(const std::vector<double>& a,
-                                         const std::vector<double>& b);
+    [[nodiscard]] bool args_equal(const std::vector<double>& a,
+                                   const std::vector<double>& b) const;
 };
 
 // User-facing wrapper class
@@ -407,19 +449,48 @@ using CustomFunctionHandle = std::shared_ptr<CustomFunctionImpl>;
 class CustomFunction {
 public:
     using Builder = CustomFunctionImpl::Builder;
+    using GraphBuilder = RandomVariable::CustomFunctionBuilder;
+    using NativeValueFunc = RandomVariable::NativeValueFunc;
+    using NativeGradFunc = RandomVariable::NativeGradFunc;
+    using NativeValueGradFunc = RandomVariable::NativeValueGradFunc;
 
     CustomFunction() = default;
 
     explicit CustomFunction(CustomFunctionHandle impl)
         : impl_(std::move(impl)) {}
 
-    // Factory method
-    static CustomFunction create(size_t input_dim,
-                                 const Builder& builder,
-                                 const std::string& name = "") {
+    // Graph type factory method (existing, renamed for clarity)
+    static CustomFunction create_graph(size_t input_dim,
+                                       GraphBuilder builder,
+                                       const std::string& name = "") {
         return CustomFunction(
             std::make_shared<CustomFunctionImpl>(
                 input_dim, builder, name));
+    }
+
+    // Compatibility: existing create() method
+    static CustomFunction create(size_t input_dim,
+                                 const Builder& builder,
+                                 const std::string& name = "") {
+        return create_graph(input_dim, std::move(builder), name);
+    }
+
+    // Native type factory methods (new)
+    static CustomFunction create_native(size_t input_dim,
+                                        NativeValueFunc value,
+                                        NativeGradFunc gradient,
+                                        const std::string& name = "") {
+        return CustomFunction(
+            std::make_shared<CustomFunctionImpl>(
+                input_dim, std::move(value), std::move(gradient), name));
+    }
+
+    static CustomFunction create_native(size_t input_dim,
+                                        NativeValueGradFunc value_and_gradient,
+                                        const std::string& name = "") {
+        return CustomFunction(
+            std::make_shared<CustomFunctionImpl>(
+                input_dim, std::move(value_and_gradient), name));
     }
 
     [[nodiscard]] bool valid() const noexcept { return static_cast<bool>(impl_); }

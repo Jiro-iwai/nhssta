@@ -450,10 +450,17 @@ void ExpressionImpl::print() {
     } else if (op_ == PHI2) {
         std::cout << std::setw(10) << "PHI2";
     } else if (op_ == CUSTOM_FUNCTION) {
+        const auto& func = custom_func_;
+        const char* kind_str =
+            (func->kind() == CustomFunctionImpl::ImplKind::Graph)
+                ? "G"
+                : "N";  // Graph / Native
+
         std::ostringstream oss;
-        oss << "CUSTOM(" << custom_func_->name()
+        oss << "CUSTOM[" << kind_str << "]("
+            << func->name()
             << ", n=" << custom_args_.size() << ")";
-        std::cout << std::setw(10) << oss.str();
+        std::cout << std::setw(18) << oss.str();
     }
 
     if (left() != null) {
@@ -715,7 +722,8 @@ ExpressionImpl::ExpressionImpl(const CustomFunctionHandle& func,
 CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
                                        const Builder& builder,
                                        const std::string& name)
-    : input_dim_(input_dim) {
+    : input_dim_(input_dim)
+    , kind_(ImplKind::Graph) {
     // Determine name
     if (name.empty()) {
         static std::atomic<size_t> counter{0};
@@ -736,6 +744,50 @@ CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
 
     // 3. Build list of all nodes in internal expression tree
     build_nodes_list();
+}
+
+// Native type constructor (value + gradient separate)
+CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
+                                       NativeValueFunc value,
+                                       NativeGradFunc gradient,
+                                       const std::string& name)
+    : input_dim_(input_dim)
+    , kind_(ImplKind::Native)
+    , native_value_(std::move(value))
+    , native_grad_(std::move(gradient)) {
+    if (!native_value_ || !native_grad_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl(Native): value and gradient must be non-null");
+    }
+
+    if (name.empty()) {
+        static std::atomic<size_t> counter{0};
+        size_t id = counter++;
+        name_ = "native_f_" + std::to_string(id);
+    } else {
+        name_ = name;
+    }
+}
+
+// Native type constructor (value_and_gradient combined)
+CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
+                                       NativeValueGradFunc value_and_gradient,
+                                       const std::string& name)
+    : input_dim_(input_dim)
+    , kind_(ImplKind::Native)
+    , native_value_grad_(std::move(value_and_gradient)) {
+    if (!native_value_grad_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl(Native): value_and_gradient must be non-null");
+    }
+
+    if (name.empty()) {
+        static std::atomic<size_t> counter{0};
+        size_t id = counter++;
+        name_ = "native_f_" + std::to_string(id);
+    } else {
+        name_ = name;
+    }
 }
 
 void CustomFunctionImpl::build_nodes_list() {
@@ -782,6 +834,11 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
             "CustomFunctionImpl::set_inputs_and_clear: size mismatch");
     }
 
+    // Only for Graph type
+    if (kind_ != ImplKind::Graph) {
+        return;  // Native type doesn't need this
+    }
+
     // 1. Clear value cache and gradients in internal expression tree
     for (auto* node : nodes_) {
         // 1.1. 勾配は全ノードでクリア
@@ -818,7 +875,7 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
 }
 
 bool CustomFunctionImpl::args_equal(const std::vector<double>& a,
-                                    const std::vector<double>& b) {
+                                    const std::vector<double>& b) const {
     if (a.size() != b.size()) {
         return false;
     }
@@ -831,62 +888,142 @@ bool CustomFunctionImpl::args_equal(const std::vector<double>& a,
 }
 
 double CustomFunctionImpl::value(const std::vector<double>& x) {
-    set_inputs_and_clear(x);
-    double v = output_->value();
-    // Cache the value and arguments for potential reuse in eval_with_gradient
-    last_args_ = x;
-    last_value_ = v;
-    has_cached_value_ = true;
-    return v;
+    if (x.size() != input_dim_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl::value: input dimension mismatch");
+    }
+
+    if (kind_ == ImplKind::Graph) {
+        set_inputs_and_clear(x);
+        double v = output_->value();
+        // Cache the value and arguments for potential reuse in eval_with_gradient
+        last_args_ = x;
+        last_value_ = v;
+        has_cached_value_ = true;
+        return v;
+    } else {  // Native
+        double v;
+        if (native_value_) {
+            v = native_value_(x);
+        } else if (native_value_grad_) {
+            v = native_value_grad_(x).first;
+        } else {
+            throw Nh::RuntimeException(
+                "CustomFunctionImpl(Native)::value: no value function");
+        }
+        last_args_ = x;
+        last_value_ = v;
+        has_cached_value_ = true;
+        return v;
+    }
 }
 
 std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
-    set_inputs_and_clear(x);
-    output_->value();
-    output_->backward(1.0);
-
-    std::vector<double> grad(input_dim_);
-    for (size_t i = 0; i < input_dim_; ++i) {
-        grad[i] = local_vars_[i]->gradient();
+    if (x.size() != input_dim_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl::gradient: input dimension mismatch");
     }
-    return grad;
+
+    if (kind_ == ImplKind::Graph) {
+        set_inputs_and_clear(x);
+        output_->value();
+        output_->backward(1.0);
+
+        std::vector<double> grad(input_dim_);
+        for (size_t i = 0; i < input_dim_; ++i) {
+            grad[i] = local_vars_[i]->gradient();
+        }
+        return grad;
+    } else {  // Native
+        if (native_grad_) {
+            return native_grad_(x);
+        } else if (native_value_grad_) {
+            return native_value_grad_(x).second;
+        } else {
+            throw Nh::RuntimeException(
+                "CustomFunctionImpl(Native)::gradient: no gradient function");
+        }
+    }
 }
 
 std::pair<double, std::vector<double>>
 CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
-    set_inputs_and_clear(x);
-    double v = output_->value();
-    output_->backward(1.0);
-
-    std::vector<double> grad(input_dim_);
-    for (size_t i = 0; i < input_dim_; ++i) {
-        grad[i] = local_vars_[i]->gradient();
+    if (x.size() != input_dim_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl::value_and_gradient: input dimension mismatch");
     }
-    return {v, std::move(grad)};
+
+    if (kind_ == ImplKind::Graph) {
+        set_inputs_and_clear(x);
+        double v = output_->value();
+        output_->backward(1.0);
+
+        std::vector<double> grad(input_dim_);
+        for (size_t i = 0; i < input_dim_; ++i) {
+            grad[i] = local_vars_[i]->gradient();
+        }
+
+        last_args_ = x;
+        last_value_ = v;
+        has_cached_value_ = true;
+
+        return {v, std::move(grad)};
+    } else {  // Native
+        double v;
+        std::vector<double> g;
+        if (native_value_grad_) {
+            auto pair = native_value_grad_(x);
+            v = pair.first;
+            g = std::move(pair.second);
+        } else if (native_value_ && native_grad_) {
+            v = native_value_(x);
+            g = native_grad_(x);
+        } else {
+            throw Nh::RuntimeException(
+                "CustomFunctionImpl(Native)::value_and_gradient: "
+                "insufficient callbacks");
+        }
+
+        last_args_ = x;
+        last_value_ = v;
+        has_cached_value_ = true;
+
+        return {v, std::move(g)};
+    }
 }
 
 std::pair<double, std::vector<double>>
 CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
-    // Optimization: if value was already computed with the same arguments,
-    // reuse it and only compute gradient
-    double v = 0.0;
-    if (has_cached_value_ && args_equal(args_values, last_args_)) {
-        // Reuse cached value, only compute gradient
-        v = last_value_;
-        // Still need to set inputs for gradient computation
-        set_inputs_and_clear(args_values);
-        // Value is already computed, skip value() call
-        output_->backward(1.0);
-    } else {
-        // Compute both value and gradient
-        return value_and_gradient(args_values);
+    if (args_values.size() != input_dim_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl::eval_with_gradient: size mismatch");
     }
 
-    std::vector<double> grad(input_dim_);
-    for (size_t i = 0; i < input_dim_; ++i) {
-        grad[i] = local_vars_[i]->gradient();
+    if (kind_ == ImplKind::Graph) {
+        // Optimization: if value was already computed with the same arguments,
+        // reuse it and only compute gradient
+        double v = 0.0;
+        if (has_cached_value_ && args_equal(args_values, last_args_)) {
+            // Reuse cached value, only compute gradient
+            v = last_value_;
+            // Still need to set inputs for gradient computation
+            set_inputs_and_clear(args_values);
+            // Value is already computed, skip value() call
+            output_->backward(1.0);
+        } else {
+            // Compute both value and gradient
+            return value_and_gradient(args_values);
+        }
+
+        std::vector<double> grad(input_dim_);
+        for (size_t i = 0; i < input_dim_; ++i) {
+            grad[i] = local_vars_[i]->gradient();
+        }
+        return {v, std::move(grad)};
+    } else {  // Native
+        // Native doesn't have internal state, so just call value_and_gradient
+        return value_and_gradient(args_values);
     }
-    return {v, std::move(grad)};
 }
 
 Expression CustomFunction::operator()(const std::vector<Expression>& args) const {
