@@ -73,37 +73,13 @@ ExpressionImpl::ExpressionImpl(const Op& op, const Expression& left, const Expre
     , is_gradient_set_(false)
     , op_(op)
     , left_(left)
-    , right_(right)
-    , third_(null) {
+    , right_(right) {
     eTbl().insert(this);
     if (left_ != null) {
         left_->add_root(this);
     }
     if (right_ != null) {
         right_->add_root(this);
-    }
-}
-
-ExpressionImpl::ExpressionImpl(const Op& op, const Expression& first, const Expression& second,
-                               const Expression& third)
-    : id_(current_id_++)
-    , is_set_value_(false)
-    , value_(0.0)
-    , gradient_(0.0)
-    , is_gradient_set_(false)
-    , op_(op)
-    , left_(first)
-    , right_(second)
-    , third_(third) {
-    eTbl().insert(this);
-    if (left_ != null) {
-        left_->add_root(this);
-    }
-    if (right_ != null) {
-        right_->add_root(this);
-    }
-    if (third_ != null) {
-        third_->add_root(this);
     }
 }
 
@@ -117,9 +93,6 @@ ExpressionImpl::~ExpressionImpl() {
     }
     if (right() != null) {
         right()->remove_root(this);
-    }
-    if (third() != null) {
-        third()->remove_root(this);
     }
     // CUSTOM_FUNCTION ノードの場合、custom_args_ の親子関係も解除
     if (op_ == CUSTOM_FUNCTION) {
@@ -160,20 +133,8 @@ double ExpressionImpl::value() {
             throw Nh::RuntimeException("Expression: variable value not set");
         }
 
-        // Check 3-argument operations first
-        if (left() != null && right() != null && third() != null) {
-            double h = left()->value();
-            double k = right()->value();
-            double rho = third()->value();
-
-            if (op_ == PHI2) {
-                // Φ₂(h, k; ρ) using numerical integration (Simpson's rule)
-                value_ = RandomVariable::bivariate_normal_cdf(h, k, rho);
-            } else {
-                throw Nh::RuntimeException("Expression: invalid 3-argument operation");
-            }
-
-        } else if (left() != null && right() != null) {
+        // Binary operations
+        if (left() != null && right() != null) {
             // Binary operations
             double l = left()->value();
             double r = right()->value();
@@ -294,27 +255,6 @@ void ExpressionImpl::propagate_gradient() {
         return;
     }
     
-    // Check 3-argument operations first
-    if (left() != null && right() != null && third() != null) {
-        double h = left()->value();
-        double k = right()->value();
-        double rho = third()->value();
-
-        if (op_ == PHI2) {
-            double one_minus_rho2 = 1.0 - (rho * rho);
-            double sigma = std::sqrt(std::max(1e-12, one_minus_rho2));
-
-            double grad_h = RandomVariable::normal_pdf(h) * RandomVariable::normal_cdf((k - rho * h) / sigma);
-            double grad_k = RandomVariable::normal_pdf(k) * RandomVariable::normal_cdf((h - rho * k) / sigma);
-            double grad_rho = RandomVariable::bivariate_normal_pdf(h, k, rho);
-
-            left()->gradient_ += upstream * grad_h;
-            right()->gradient_ += upstream * grad_k;
-            third()->gradient_ += upstream * grad_rho;
-        }
-        return;
-    }
-
     // Binary operations
     if (left() != null && right() != null) {
         double l = left()->value();
@@ -381,9 +321,6 @@ static void topo_sort_dfs(ExpressionImpl* node,
         if (node->right().get() != nullptr) {
             topo_sort_dfs(node->right().get(), visited, order);
         }
-        if (node->third().get() != nullptr) {
-            topo_sort_dfs(node->third().get(), visited, order);
-        }
     }
     
     // Add this node after children (reverse topological order)
@@ -447,8 +384,6 @@ void ExpressionImpl::print() {
         std::cout << std::setw(10) << "sqrt";
     } else if (op_ == POWER) {
         std::cout << std::setw(10) << "^";
-    } else if (op_ == PHI2) {
-        std::cout << std::setw(10) << "PHI2";
     } else if (op_ == CUSTOM_FUNCTION) {
         const auto& func = custom_func_;
         const char* kind_str =
@@ -707,7 +642,6 @@ ExpressionImpl::ExpressionImpl(const CustomFunctionHandle& func,
     , op_(CUSTOM_FUNCTION)
     , left_(null)
     , right_(null)
-    , third_(null)
     , custom_func_(func)
     , custom_args_(args) {
     eTbl().insert(this);
@@ -822,9 +756,6 @@ void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
         if (node->right()) {
             collect_nodes_dfs(node->right().get(), visited);
         }
-        if (node->third()) {
-            collect_nodes_dfs(node->third().get(), visited);
-        }
     }
 }
 
@@ -903,7 +834,7 @@ double CustomFunctionImpl::value(const std::vector<double>& x) {
         return v;
     }
     // Native
-    double v;
+    double v = 0.0;
     if (native_value_) {
         v = native_value_(x);
     } else if (native_value_grad_) {
@@ -979,7 +910,7 @@ CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
         return {v, std::move(grad)};
     }
     // Native
-    double v;
+    double v = 0.0;
     std::vector<double> g;
     if (native_value_grad_) {
         auto pair = native_value_grad_(x);
