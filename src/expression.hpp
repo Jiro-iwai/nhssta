@@ -441,6 +441,9 @@ Expression max0_var_expr(const Expression& mu, const Expression& sigma);
  * @param mu1 Mean of D1
  * @param sigma1 Standard deviation of D1 (> 0)
  * @param rho Correlation between D0 and D1
+ * @return Expression representing E[D0⁺ × D1⁺]
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
                                   const Expression& mu1, const Expression& sigma1,
