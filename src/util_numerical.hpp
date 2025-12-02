@@ -39,6 +39,14 @@ double covariance_max0_max0(double mu0, double sigma0,
                             double mu1, double sigma1,
                             double rho);
 
+// Bivariate normal distribution functions
+// φ₂(x, y; ρ) = Bivariate normal PDF
+double bivariate_normal_pdf(double x, double y, double rho);
+
+// Φ₂(h, k; ρ) = Bivariate normal CDF using Simpson's rule
+// 128 points provides 8-digit accuracy with good performance (~1.6μs)
+double bivariate_normal_cdf(double h, double k, double rho, int n_points = 128);
+
 }  // namespace RandomVariable
 
 #endif  // NH_UTIL_NUMERICAL__H

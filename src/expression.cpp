@@ -19,66 +19,6 @@
 #include <unordered_set>
 #include <vector>
 
-// Local helper functions for bivariate normal distribution
-namespace {
-
-// Use normal_pdf and normal_cdf from util_numerical.hpp
-using RandomVariable::normal_pdf;
-using RandomVariable::normal_cdf;
-
-// Bivariate normal PDF: φ₂(x, y; ρ)
-double compute_phi2(double x, double y, double rho) {
-    if (std::abs(rho) > 0.9999) {
-        // Degenerate case - return a small value
-        return 0.0;
-    }
-    double one_minus_rho2 = 1.0 - (rho * rho);
-    double coeff = 1.0 / (2.0 * M_PI * std::sqrt(one_minus_rho2));
-    double Q = (x * x - 2.0 * rho * x * y + y * y) / one_minus_rho2;
-    return coeff * std::exp(-Q / 2.0);
-}
-
-// Bivariate normal CDF: Φ₂(h, k; ρ) using Simpson's rule
-// 128 points provides 8-digit accuracy with good performance (~1.6μs)
-double compute_Phi2(double h, double k, double rho, int n_points = 128) {
-    // Handle edge cases
-    if (std::abs(rho) > 0.9999) {
-        if (rho > 0) {
-            return normal_cdf(std::min(h, k));
-        }
-        return std::max(0.0, normal_cdf(h) + normal_cdf(k) - 1.0);
-    }
-    if (std::abs(rho) < 1e-10) {
-        return normal_cdf(h) * normal_cdf(k);
-    }
-
-    // Integrate φ(x) × Φ((k - ρx)/σ') from -∞ to h
-    double sigma_prime = std::sqrt(1.0 - (rho * rho));
-    double lower_bound = -8.0;  // Effectively -∞ for standard normal
-    double upper_bound = h;
-
-    if (upper_bound < lower_bound) {
-        return 0.0;
-    }
-
-    double sum = 0.0;
-    double dx = (upper_bound - lower_bound) / n_points;
-
-    for (int i = 0; i <= n_points; ++i) {
-        double x = lower_bound + (i * dx);
-        double f_val = normal_pdf(x) * normal_cdf((k - rho * x) / sigma_prime);
-        // Simpson's rule weights: 1-4-2-4-2-...-4-1
-        double weight = 1.0;
-        if (i != 0 && i != n_points) {
-            weight = (i % 2 == 0) ? 2.0 : 4.0;
-        }
-        sum += weight * f_val;
-    }
-    return sum * dx / 3.0;
-}
-
-}  // anonymous namespace
-
 int ExpressionImpl::current_id_ = 0;
 
 // Flag to track if eTbl has been destroyed
@@ -228,7 +168,7 @@ double ExpressionImpl::value() {
 
             if (op_ == PHI2) {
                 // Φ₂(h, k; ρ) using numerical integration (Simpson's rule)
-                value_ = compute_Phi2(h, k, rho);
+                value_ = RandomVariable::bivariate_normal_cdf(h, k, rho);
             } else {
                 throw Nh::RuntimeException("Expression: invalid 3-argument operation");
             }
@@ -256,6 +196,7 @@ double ExpressionImpl::value() {
             }
 
         } else if (left() != null) {
+            // Unary operations
             double l = left()->value();
 
             if (op_ == EXP) {
@@ -363,9 +304,9 @@ void ExpressionImpl::propagate_gradient() {
             double one_minus_rho2 = 1.0 - (rho * rho);
             double sigma = std::sqrt(std::max(1e-12, one_minus_rho2));
 
-            double grad_h = normal_pdf(h) * normal_cdf((k - rho * h) / sigma);
-            double grad_k = normal_pdf(k) * normal_cdf((h - rho * k) / sigma);
-            double grad_rho = compute_phi2(h, k, rho);
+            double grad_h = RandomVariable::normal_pdf(h) * RandomVariable::normal_cdf((k - rho * h) / sigma);
+            double grad_k = RandomVariable::normal_pdf(k) * RandomVariable::normal_cdf((h - rho * k) / sigma);
+            double grad_rho = RandomVariable::bivariate_normal_pdf(h, k, rho);
 
             left()->gradient_ += upstream * grad_h;
             right()->gradient_ += upstream * grad_k;
@@ -735,25 +676,16 @@ Expression sqrt(const Expression& a) {
 
 //////////////////////////
 
-// assignment to (double)
 double& operator<<(double& a, const Expression& b) {
     a = b->value();
     return a;
 }
 
 //////////////////////////
-// Automatic differentiation utilities
 
 void zero_all_grad() {
     ExpressionImpl::zero_all_grad();
 }
-
-//////////////////////////
-// Bivariate normal distribution expressions (Phase 5 of #167)
-// Statistical functions moved to statistical_functions.hpp/cpp
-
-
-//////////////////////////
 
 //////////////////////////
 // Custom Function Implementation
