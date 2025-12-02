@@ -497,7 +497,7 @@ static double bivariate_normal_cdf_simpson(double h, double k, double rho, int n
     for (int i = 0; i <= n_points; ++i) {
         double x = lower_bound + (i * dx);
         double f_val = normal_pdf(x) * normal_cdf((k - rho * x) / sigma_prime);
-        double weight;
+        double weight = 0.0;  // Initialize to avoid compiler warning
         if (i == 0 || i == n_points) {
             weight = 1.0;
         } else if (i % 2 == 0) {
