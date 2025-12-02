@@ -775,32 +775,20 @@ static size_t expected_prod_pos_cache_hits = 0;
 static size_t expected_prod_pos_cache_misses = 0;
 
 
-// Cache for phi_expr (pointer-based)
-static std::unordered_map<ExpressionImpl*, Expression> phi_expr_cache;
-static size_t phi_expr_cache_hits = 0;
-static size_t phi_expr_cache_misses = 0;
+// phi_expr implemented as a custom function
+static CustomFunction phi_func = CustomFunction::create(
+    1,
+    [](const std::vector<Variable>& v) {
+        static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
+        Expression x = v[0];
+        return INV_SQRT_2PI * exp(-(x * x) / Const(2.0));
+    },
+    "phi"
+);
 
 Expression phi_expr(const Expression& x) {
     // φ(x) = exp(-x²/2) / √(2π)
-    
-    // Check cache first
-    auto it = phi_expr_cache.find(x.get());
-    if (it != phi_expr_cache.end()) {
-        phi_expr_cache_hits++;
-        return it->second;
-    }
-    
-    phi_expr_cache_misses++;
-    
-    static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
-    // Create a new Const(2.0) each time to avoid issues with global 'two' being cleared
-    // in custom function internal expression trees
-    Expression result = INV_SQRT_2PI * exp(-(x * x) / Const(2.0));
-    
-    // Cache the result
-    phi_expr_cache[x.get()] = result;
-    
-    return result;
+    return phi_func(x);
 }
 
 // Cache for Phi_expr (pointer-based)
@@ -896,12 +884,13 @@ size_t get_expected_prod_pos_cache_misses() {
     return expected_prod_pos_cache_misses;
 }
 
+// Cache statistics functions removed - phi_expr now uses custom function without cache
 size_t get_phi_expr_cache_hits() {
-    return phi_expr_cache_hits;
+    return 0;
 }
 
 size_t get_phi_expr_cache_misses() {
-    return phi_expr_cache_misses;
+    return 0;
 }
 
 size_t get_Phi_expr_cache_hits() {

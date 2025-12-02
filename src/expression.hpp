@@ -347,7 +347,7 @@ Expression sqrt(const Expression& a);
  * @param x Expression to evaluate
  * @return Expression representing φ(x)
  * 
- * @note This function is cached for performance optimization (Issue #188)
+ * @note Implemented as a custom function for code clarity and consistency
  */
 Expression phi_expr(const Expression& x);
 
