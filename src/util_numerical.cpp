@@ -278,33 +278,6 @@ static const double wphi[GH_N] = {
     4.31065263071830e-06
 };
 
-// Gauss-Hermite 20-point quadrature for standard normal integration
-// ∫_{-∞}^{∞} φ(z) f(z) dz ≒ Σ wphi_20[i] * f(zphi_20[i])
-//
-// Conversion from standard Gauss-Hermite (with exp(-x²) weight):
-//   z = √2 * x_GH, w_phi = w_GH / √π
-// Generated using numpy.polynomial.hermite.hermgauss(20)
-// ============================================================================
-
-static constexpr int GH_20_N = 20;
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-static const double zphi_20[GH_20_N] = {
-    -7.619048541679759e+00,    -6.510590157013655e+00,    -5.578738805893201e+00,    -4.734581334046055e+00,
-    -3.943967350657316e+00,    -3.189014816553389e+00,    -2.458663611172368e+00,    -1.745247320814127e+00,
-    -1.042945348802751e+00,    -3.469641570813560e-01,    3.469641570813560e-01,    1.042945348802751e+00,
-    1.745247320814127e+00,    2.458663611172368e+00,    3.189014816553389e+00,    3.943967350657316e+00,
-    4.734581334046055e+00,    5.578738805893201e+00,    6.510590157013655e+00,    7.619048541679759e+00
-};
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
-static const double wphi_20[GH_20_N] = {
-    1.257800672437923e-13,    2.482062362315176e-10,    6.127490259982928e-08,    4.402121090230851e-06,
-    1.288262799619293e-04,    1.830103131080493e-03,    1.399783744710102e-02,    6.150637206397690e-02,
-    1.617393339840000e-01,    2.607930634495549e-01,    2.607930634495549e-01,    1.617393339840000e-01,
-    6.150637206397690e-02,    1.399783744710102e-02,    1.830103131080493e-03,    1.288262799619293e-04,
-    4.402121090230851e-06,    6.127490259982928e-08,    2.482062362315176e-10,    1.257800672437923e-13
-};
 
 // Helper: Clamp value to [min, max]
 static double clamp(double val, double min_val, double max_val) {
@@ -356,11 +329,10 @@ double expected_prod_pos_rho_neg1(double mu0, double sigma0,
            ((a0 * a1 - 1.0) * (Phi_a0 + Phi_a1 - 1.0) + a1 * phi_a0 + a0 * phi_a1);
 }
 
-// Helper: E[D0⁺ D1⁺] using Gauss-Hermite quadrature with specified number of points
-// n_points must be 10 or 20
+// Helper: E[D0⁺ D1⁺] using Gauss-Hermite quadrature (10 points)
 static double expected_prod_pos_gh(double mu0, double sigma0,
                                    double mu1, double sigma1,
-                                   double rho, int n_points) {
+                                   double rho) {
     // Decomposition:
     //   D0 = μ0 + σ0 * Z
     //   D1 = μ1 + σ1 * (ρ*Z + √(1-ρ²)*Z1)
@@ -378,55 +350,27 @@ static double expected_prod_pos_gh(double mu0, double sigma0,
     double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
 
     double sum = 0.0;
-    
-    if (n_points == 10) {
-        for (int i = 0; i < GH_N; ++i) {
-            double z = zphi[i];
-            double w = wphi[i];
+    for (int i = 0; i < GH_N; ++i) {
+        double z = zphi[i];
+        double w = wphi[i];
 
-            // D0 value at this quadrature point
-            double d0 = mu0 + (sigma0 * z);
+        // D0 value at this quadrature point
+        double d0 = mu0 + (sigma0 * z);
 
-            // D0⁺ = max(0, d0)
-            if (d0 <= 0.0) {
-                continue;
-            }
-            double D0plus = d0;
-
-            // Conditional mean of D1 given Z=z
-            double m1z = mu1 + (rho * sigma1 * z);
-
-            // E[D1⁺ | Z=z] using expected_positive_part formula
-            double t = m1z / s1_cond;
-            double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
-
-            sum += w * D0plus * E_D1pos_givenZ;
+        // D0⁺ = max(0, d0)
+        if (d0 <= 0.0) {
+            continue;
         }
-    } else if (n_points == 20) {
-        for (int i = 0; i < GH_20_N; ++i) {
-            double z = zphi_20[i];
-            double w = wphi_20[i];
+        double D0plus = d0;
 
-            // D0 value at this quadrature point
-            double d0 = mu0 + (sigma0 * z);
+        // Conditional mean of D1 given Z=z
+        double m1z = mu1 + (rho * sigma1 * z);
 
-            // D0⁺ = max(0, d0)
-            if (d0 <= 0.0) {
-                continue;
-            }
-            double D0plus = d0;
+        // E[D1⁺ | Z=z] using expected_positive_part formula
+        double t = m1z / s1_cond;
+        double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
 
-            // Conditional mean of D1 given Z=z
-            double m1z = mu1 + (rho * sigma1 * z);
-
-            // E[D1⁺ | Z=z] using expected_positive_part formula
-            double t = m1z / s1_cond;
-            double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
-
-            sum += w * D0plus * E_D1pos_givenZ;
-        }
-    } else {
-        throw Nh::RuntimeException("expected_prod_pos_gh: n_points must be 10 or 20");
+        sum += w * D0plus * E_D1pos_givenZ;
     }
 
     return sum;
@@ -493,23 +437,17 @@ double expected_prod_pos(double mu0, double sigma0,
         return expected_prod_pos_rho_neg1(mu0, sigma0, mu1, sigma1);
     }
 
-    // High correlation: use analytical formula (uses GH 20 points for bivariate_normal_cdf)
+    // High correlation: use analytical formula (uses Simpson's rule 32 points)
     // |ρ| ≥ 0.95
     constexpr double HIGH_CORR_THRESHOLD = 0.95;
     if (abs_rho >= HIGH_CORR_THRESHOLD) {
         return expected_prod_pos_analytical(mu0, sigma0, mu1, sigma1, rho);
     }
 
-    // Medium correlation: use GH 20 points
-    // 0.9 ≤ |ρ| < 0.95
-    constexpr double MEDIUM_CORR_THRESHOLD = 0.9;
-    if (abs_rho >= MEDIUM_CORR_THRESHOLD) {
-        return expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
-    }
-
-    // Low correlation: use GH 10 points
-    // |ρ| < 0.9
-    return expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
+    // Low/Medium correlation: use GH 10 points
+    // |ρ| < 0.95
+    // GH 10 points provides sufficient accuracy (0.04-0.07% error) for all correlations < 0.95
+    return expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho);
 }
 
 double covariance_max0_max0(double mu0, double sigma0,

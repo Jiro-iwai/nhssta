@@ -288,40 +288,40 @@ TEST_F(GHPointsAccuracyTest, UnifiedMethodBoundaries) {
         EXPECT_LT(error, 1e-10) << "|ρ| = 0.89 should use GH 10 points";
     }
 
-    // Test boundary: |ρ| = 0.9 (should use GH 20 points)
+    // Test boundary: |ρ| = 0.9 (should use GH 10 points, not GH 20)
     {
         double rho = 0.9;
         double result = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
-        double expected_gh20 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
-        double error = std::abs(result - expected_gh20) / std::abs(expected_gh20);
-        EXPECT_LT(error, 1e-10) << "|ρ| = 0.9 should use GH 20 points";
+        double expected_gh10 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
+        double error = std::abs(result - expected_gh10) / std::abs(expected_gh10);
+        EXPECT_LT(error, 1e-10) << "|ρ| = 0.9 should use GH 10 points";
     }
 
     {
         double rho = -0.9;
         double result = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
-        double expected_gh20 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
-        double error = std::abs(result - expected_gh20) / std::abs(expected_gh20);
-        EXPECT_LT(error, 1e-10) << "|ρ| = 0.9 should use GH 20 points";
+        double expected_gh10 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
+        double error = std::abs(result - expected_gh10) / std::abs(expected_gh10);
+        EXPECT_LT(error, 1e-10) << "|ρ| = 0.9 should use GH 10 points";
     }
 
     // Test boundary: |ρ| = 0.95 (should use analytical formula)
     {
         double rho = 0.95;
         double result = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
-        // Analytical formula uses bivariate_normal_cdf which now uses Simpson's rule
-        // We can verify it's close to GH 20 (analytical should be more accurate)
-        double expected_gh20 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
-        double error = std::abs(result - expected_gh20) / std::abs(expected_gh20);
-        // Analytical formula should be more accurate than GH 20 for high correlation
+        // Analytical formula uses bivariate_normal_cdf which now uses Simpson's rule 32 points
+        // We can verify it's close to GH 10 (analytical should be more accurate)
+        double expected_gh10 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
+        double error = std::abs(result - expected_gh10) / std::abs(expected_gh10);
+        // Analytical formula should be more accurate than GH 10 for high correlation
         EXPECT_LT(error, 0.01) << "|ρ| = 0.95 should use analytical formula";
     }
 
     {
         double rho = -0.95;
         double result = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
-        double expected_gh20 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
-        double error = std::abs(result - expected_gh20) / std::abs(expected_gh20);
+        double expected_gh10 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
+        double error = std::abs(result - expected_gh10) / std::abs(expected_gh10);
         EXPECT_LT(error, 0.01) << "|ρ| = 0.95 should use analytical formula";
     }
 }
@@ -341,7 +341,7 @@ TEST_F(GHPointsAccuracyTest, UnifiedImplementationConsistency) {
         {1.0, 1.0, 1.0, 1.0, 0.0, "ρ=0.0 (independent)"},
         {1.0, 1.0, 1.0, 1.0, 0.5, "ρ=0.5 (low correlation)"},
         {1.0, 1.0, 1.0, 1.0, 0.89, "ρ=0.89 (GH 10 points boundary)"},
-        {1.0, 1.0, 1.0, 1.0, 0.9, "ρ=0.9 (GH 20 points boundary)"},
+        {1.0, 1.0, 1.0, 1.0, 0.9, "ρ=0.9 (GH 10 points, boundary to analytical)"},
         {1.0, 1.0, 1.0, 1.0, 0.95, "ρ=0.95 (analytical formula boundary)"},
         {1.0, 1.0, 1.0, 1.0, 0.99, "ρ=0.99 (high correlation)"},
         {2.0, 1.0, 2.0, 1.0, 0.9, "ρ=0.9, μ=2.0"},
@@ -399,7 +399,7 @@ TEST_F(GHPointsAccuracyTest, UnifiedImplementationConsistency) {
             // Use relative tolerance based on correlation
             // High correlation (|ρ| ≥ 0.95): both use analytical formula, should match very well (< 0.1%)
             // Medium correlation (0.9 ≤ |ρ| < 0.95): direct GH vs analytical
-            //   - expected_prod_pos() uses direct GH 20 points
+            //   - expected_prod_pos() uses direct GH 10 points
             //   - expected_prod_pos_expr() uses analytical formula with bivariate_normal_cdf() (Simpson's rule)
             //   - Simpson's rule provides high accuracy, so errors should be small
             // Low correlation (|ρ| < 0.9): direct GH vs analytical
@@ -443,39 +443,37 @@ TEST_F(GHPointsAccuracyTest, BoundaryConditionAccuracy) {
     double mu1 = 1.0;
     double sigma1 = 0.5;
 
-    // Test boundary: |ρ| = 0.9 (GH 10 points → GH 20 points)
-    std::cout << "\n--- Boundary: |ρ| = 0.9 (GH 10 → GH 20) ---" << std::endl;
+    // Test boundary: |ρ| = 0.9 (GH 10 points, boundary to analytical formula)
+    std::cout << "\n--- Boundary: |ρ| = 0.9 (GH 10 points) ---" << std::endl;
     {
         double rho = 0.9;
         double result = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
         double gh10 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
-        double gh20 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
 
         std::cout << "ρ = 0.9:" << std::endl;
-        std::cout << "  Unified (GH 20): " << result << std::endl;
-        std::cout << "  GH 10 points:    " << gh10 << std::endl;
-        std::cout << "  GH 20 points:    " << gh20 << std::endl;
-        std::cout << "  Error (vs GH 20): " << std::abs((result - gh20) / gh20) * 100.0 << "%" << std::endl;
+        std::cout << "  Unified (GH 10): " << result << std::endl;
+        std::cout << "  GH 10 points:     " << gh10 << std::endl;
+        std::cout << "  Error:            " << std::abs((result - gh10) / gh10) * 100.0 << "%" << std::endl;
 
-        // Should use GH 20 points
-        double error = std::abs(result - gh20) / std::abs(gh20);
-        EXPECT_LT(error, 1e-10) << "Should use GH 20 points at |ρ| = 0.9";
+        // Should use GH 10 points
+        double error = std::abs(result - gh10) / std::abs(gh10);
+        EXPECT_LT(error, 1e-10) << "Should use GH 10 points at |ρ| = 0.9";
     }
 
     {
         double rho = -0.9;
         double result = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
-        double gh20 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
-        double error = std::abs(result - gh20) / std::abs(gh20);
-        EXPECT_LT(error, 1e-10) << "Should use GH 20 points at |ρ| = 0.9";
+        double gh10 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
+        double error = std::abs(result - gh10) / std::abs(gh10);
+        EXPECT_LT(error, 1e-10) << "Should use GH 10 points at |ρ| = 0.9";
     }
 
-    // Test boundary: |ρ| = 0.95 (GH 20 points → Analytical formula)
-    std::cout << "\n--- Boundary: |ρ| = 0.95 (GH 20 → Analytical) ---" << std::endl;
+    // Test boundary: |ρ| = 0.95 (GH 10 points → Analytical formula)
+    std::cout << "\n--- Boundary: |ρ| = 0.95 (GH 10 → Analytical) ---" << std::endl;
     {
         double rho = 0.95;
         double result = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
-        double gh20 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
+        double gh10 = expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
         double expr = RandomVariable::expected_prod_pos_expr(
             Const(mu0), Const(sigma0),
             Const(mu1), Const(sigma1),
@@ -484,7 +482,7 @@ TEST_F(GHPointsAccuracyTest, BoundaryConditionAccuracy) {
 
         std::cout << "ρ = 0.95:" << std::endl;
         std::cout << "  Unified (Analytical): " << result << std::endl;
-        std::cout << "  GH 20 points:         " << gh20 << std::endl;
+        std::cout << "  GH 10 points:        " << gh10 << std::endl;
         std::cout << "  Expression:          " << expr << std::endl;
         std::cout << "  Error (vs Expression): " << std::abs((result - expr) / expr) * 100.0 << "%" << std::endl;
 
@@ -827,7 +825,7 @@ TEST_F(GHPointsAccuracyTest, AnalyticalFormulaTermAnalysis) {
     double mu1 = 1.0, sigma1 = 1.0;
     double rho = 0.9;
     
-    // Direct GH integration (should use GH 20 points for rho=0.9)
+    // Direct GH integration (should use GH 10 points for rho=0.9)
     double numerical = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho);
     std::cout << "Direct GH integration: " << numerical << std::endl;
     std::cout << std::endl;
@@ -876,7 +874,7 @@ TEST_F(GHPointsAccuracyTest, AnalyticalFormulaTermAnalysis) {
     
     // Check if bivariate_normal_cdf is the source of error
     std::cout << "bivariate_normal_cdf(" << a0 << ", " << a1 << ", " << rho << ") = " << Phi2_a0_a1 << std::endl;
-    std::cout << "  (should use GH 20 points for rho=0.9)" << std::endl;
+    std::cout << "  (should use GH 10 points for rho=0.9)" << std::endl;
     
     // The error suggests that the analytical formula may have issues
     // even though bivariate_normal_cdf uses the same GH integration method
