@@ -407,11 +407,10 @@ Expression MeanPhiMax_expr(const Expression& a);
  * @param mu Mean of the underlying normal distribution
  * @param sigma Standard deviation (NOT variance)
  * @return Expression representing E[max(0, D)]
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
-inline Expression max0_mean_expr(const Expression& mu, const Expression& sigma) {
-    Expression a = -(mu / sigma);  // normalized threshold
-    return mu + sigma * MeanMax_expr(a);
-}
+Expression max0_mean_expr(const Expression& mu, const Expression& sigma);
 
 /**
  * @brief Variance of max(0, D) where D ~ N(μ, σ²)

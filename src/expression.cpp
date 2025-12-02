@@ -852,6 +852,23 @@ Expression MeanPhiMax_expr(const Expression& a) {
     return MeanPhiMax_func(a);
 }
 
+// max0_mean_expr implemented as a custom function
+static CustomFunction max0_mean_func = CustomFunction::create(
+    2,
+    [](const std::vector<Variable>& v) {
+        const Expression& mu = v[0];
+        const Expression& sigma = v[1];
+        Expression a = -(mu / sigma);  // normalized threshold
+        return mu + sigma * MeanMax_expr(a);
+    },
+    "max0_mean"
+);
+
+Expression max0_mean_expr(const Expression& mu, const Expression& sigma) {
+    // E[max(0, D)] = μ + σ × MeanMax(-μ/σ)
+    return max0_mean_func(mu, sigma);
+}
+
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
                                   const Expression& mu1, const Expression& sigma1,
                                   const Expression& rho) {
