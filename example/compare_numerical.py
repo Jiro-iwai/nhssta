@@ -49,9 +49,27 @@ def compare_lines(line1, line2, lat_tol, corr_tol, max_errors):
     if not line1.strip() or not line2.strip():
         return line1.strip() == line2.strip()
     
+    # Handle comment lines (for sensitivity analysis output)
+    # Comment lines starting with # should match exactly (except for numerical values)
+    is_comment_line = line1.strip().startswith('#') or line2.strip().startswith('#')
+    if is_comment_line:
+        # For comment lines, compare non-comment parts with numerical tolerance
+        # Extract content after # and compare
+        content1 = line1.strip()
+        content2 = line2.strip()
+        # If both are pure comment lines (only #), they should match
+        if content1 == '#' or content2 == '#':
+            return content1 == content2
+        # Compare comment prefix and content separately
+        prefix1 = content1.split()[0] if content1.split() else ''
+        prefix2 = content2.split()[0] if content2.split() else ''
+        if prefix1 != prefix2:
+            return False
+        # Continue with numerical comparison for the rest
+    
     # Determine section by tab character:
     # - Lines with tabs → correlation matrix
-    # - Lines without tabs → LAT values
+    # - Lines without tabs → LAT values (or sensitivity values)
     is_correlation_line = '\t' in line1 or '\t' in line2
     
     # Split by whitespace (both space and tab)

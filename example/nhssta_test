@@ -161,11 +161,23 @@ run_test() {
 
     rm -f "${TEMP_RESULT_FILE}"
 
-    # Run nhssta, filter comments, version, timestamp, and OK line, and save output
-    if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "^nhssta " | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
-        print_failure "  ✗ FAILED (nhssta execution failed)"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        return 1
+    # Check if this is a sensitivity test (options contain -s)
+    # For sensitivity tests, keep comment lines (they contain important info like Objective value)
+    # For other tests, filter out comment lines
+    if echo "${OPTIONS}" | grep -q "\-s"; then
+        # Sensitivity test: keep comment lines, filter version and OK line
+        if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^nhssta " | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
+            print_failure "  ✗ FAILED (nhssta execution failed)"
+            FAILED_TESTS=$((FAILED_TESTS + 1))
+            return 1
+        fi
+    else
+        # Regular test: filter comments, version, timestamp, and OK line
+        if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "^nhssta " | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
+            print_failure "  ✗ FAILED (nhssta execution failed)"
+            FAILED_TESTS=$((FAILED_TESTS + 1))
+            return 1
+        fi
     fi
 
     # Compare with expected result using numerical tolerance
@@ -219,6 +231,14 @@ run_test "gaussdelay.dlib + s344.bench" "gaussdelay.dlib" "s344.bench" "-l -p" "
 run_test "gaussdelay.dlib + s820.bench" "gaussdelay.dlib" "s820.bench" "-l -p" "result6"
 run_test "ex4_gauss.dlib + ex3.bench" "ex4_gauss.dlib" "ex3.bench" "-l -c -p" "result7"
 run_test "dos.dlib + dos.bench" "dos.dlib" "dos.bench" "-l -c -p" "result8"
+
+print_section "Sensitivity Analysis Tests"
+
+# Sensitivity analysis tests
+# Note: Sensitivity values may have small numerical differences due to floating-point precision
+# Using LAT tolerance (1.6%) for sensitivity values as well
+run_test "ex4_gauss.dlib + s27.bench (sensitivity)" "ex4_gauss.dlib" "s27.bench" "-s -n 3" "result_sensitivity_s27_expected"
+run_test "ex4_gauss.dlib + ex4.bench (sensitivity)" "ex4_gauss.dlib" "ex4.bench" "-s -n 5" "result_sensitivity_ex4_expected"
 
 print_section "Test Summary"
 echo "Total tests: ${TOTAL_TESTS}"
