@@ -145,9 +145,8 @@ Expression max0_var_expr(const Expression& mu, const Expression& sigma);
  * @param rho Correlation coefficient
  * @return Expression representing Φ₂(h, k; ρ)
  * 
- * @note Uses PHI2 operation internally for numerical integration.
- *       This function provides a consistent interface similar to other
- *       statistical functions.
+ * @note Implemented as a Native type custom function for better consistency
+ *       with other statistical functions.
  */
 Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho);
 

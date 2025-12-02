@@ -3,6 +3,7 @@
 
 #include "statistical_functions.hpp"
 #include "expression.hpp"
+#include "util_numerical.hpp"
 
 #include <cmath>
 #include <memory>
@@ -136,18 +137,44 @@ Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
 
 // Phi2_expr: Φ₂(h, k; ρ) = Bivariate normal CDF
 // 
-// Note: bivariate_normal_cdf uses numerical integration (Simpson's rule),
-// which cannot be directly expressed as an Expression tree. Therefore,
-// we create a PHI2 node directly, which handles both value computation
-// (via bivariate_normal_cdf) and gradient computation internally.
+// Implemented as a Native type custom function for better consistency with
+// other statistical functions. Uses bivariate_normal_cdf for value computation
+// and analytical gradient formulas for gradient computation.
 //
-// This function provides a consistent interface for creating PHI2 nodes,
-// similar to other statistical functions, even though the underlying
-// implementation still uses the PHI2 operation.
+// Gradient formulas:
+//   ∂Φ₂/∂h = φ(h) × Φ((k - ρh)/√(1-ρ²))
+//   ∂Φ₂/∂k = φ(k) × Φ((h - ρk)/√(1-ρ²))
+//   ∂Φ₂/∂ρ = φ₂(h, k; ρ) (bivariate normal PDF)
 Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho) {
-    // Φ₂(h, k; ρ) = Bivariate normal CDF
-    // Create PHI2 node directly - it handles numerical integration internally
-    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, h, k, rho));
+    // Create Native type custom function
+    static CustomFunction phi2_func = CustomFunction::create_native(
+        3,
+        // Value function: Φ₂(h, k; ρ)
+        [](const std::vector<double>& x) -> double {
+            return RandomVariable::bivariate_normal_cdf(x[0], x[1], x[2]);
+        },
+        // Gradient function
+        [](const std::vector<double>& x) -> std::vector<double> {
+            double h = x[0];
+            double k = x[1];
+            double rho = x[2];
+            
+            // Compute gradient components
+            double one_minus_rho2 = 1.0 - (rho * rho);
+            double sigma = std::sqrt(std::max(1e-12, one_minus_rho2));
+            
+            double grad_h = RandomVariable::normal_pdf(h) * 
+                           RandomVariable::normal_cdf((k - rho * h) / sigma);
+            double grad_k = RandomVariable::normal_pdf(k) * 
+                           RandomVariable::normal_cdf((h - rho * k) / sigma);
+            double grad_rho = RandomVariable::bivariate_normal_pdf(h, k, rho);
+            
+            return {grad_h, grad_k, grad_rho};
+        },
+        "Phi2"
+    );
+    
+    return phi2_func({h, k, rho});
 }
 
 // expected_prod_pos_expr implemented as a custom function

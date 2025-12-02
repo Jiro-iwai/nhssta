@@ -44,9 +44,9 @@ static std::unordered_map<Phi2CacheKey, Expression, Phi2CacheKeyHash> phi2_expr_
 
 // Bivariate standard normal CDF Φ₂(h, k; ρ)
 // NOTE: This function is for testing purposes only.
-// In production code, expected_prod_pos_expr() in expression.cpp creates PHI2 node directly.
+// In production code, Phi2_expr() uses Native type custom function.
 Expression Phi2_expr_test(const Expression& h, const Expression& k, const Expression& rho) {
-    // Φ₂(h, k; ρ) using numerical integration for value, analytical gradients
+    // Φ₂(h, k; ρ) - use production Phi2_expr which now uses Native custom function
     
     // Check cache first
     auto key = std::make_tuple(h.get(), k.get(), rho.get());
@@ -55,7 +55,8 @@ Expression Phi2_expr_test(const Expression& h, const Expression& k, const Expres
         return it->second;
     }
     
-    Expression result = Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, h, k, rho));
+    // Use production Phi2_expr (now implemented as Native custom function)
+    Expression result = RandomVariable::Phi2_expr(h, k, rho);
     
     // Cache the result
     phi2_expr_cache[key] = result;

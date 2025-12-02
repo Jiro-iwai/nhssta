@@ -174,7 +174,7 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     // print all expression infomation
     friend void print_all();
 
-    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG, ERF, SQRT, PHI2, CUSTOM_FUNCTION };
+    enum Op { CONST = 0, PARAM, PLUS, MINUS, MUL, DIV, POWER, EXP, LOG, ERF, SQRT, CUSTOM_FUNCTION };
 
     static void print_all();
     void print();
@@ -183,10 +183,6 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     ExpressionImpl(double value);
 
     ExpressionImpl(const Op& op, const Expression& left, const Expression& right);
-
-    // Constructor for 3-argument operations (e.g., PHI2)
-    ExpressionImpl(const Op& op, const Expression& first, const Expression& second,
-                   const Expression& third);
 
     // Constructor for CUSTOM_FUNCTION operation
     ExpressionImpl(const CustomFunctionHandle& func,
@@ -218,9 +214,6 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     }
     [[nodiscard]] const Expression& right() const {
         return right_;
-    }
-    [[nodiscard]] const Expression& third() const {
-        return third_;
     }
     [[nodiscard]] const std::vector<Expression>& custom_args() const {
         return custom_args_;
@@ -257,7 +250,6 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
                    // type, const is intentional
     Expression left_;
     Expression right_;
-    Expression third_;  // For 3-argument operations (e.g., PHI2: h, k, rho)
     Expressions roots_;
 
     // Custom function fields (only valid when op_ == CUSTOM_FUNCTION)
