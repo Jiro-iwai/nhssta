@@ -134,6 +134,22 @@ Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
 // Bivariate normal distribution functions
 // =============================================================================
 
+// Phi2_expr: Φ₂(h, k; ρ) = Bivariate normal CDF
+// 
+// Note: bivariate_normal_cdf uses numerical integration (Simpson's rule),
+// which cannot be directly expressed as an Expression tree. Therefore,
+// we create a PHI2 node directly, which handles both value computation
+// (via bivariate_normal_cdf) and gradient computation internally.
+//
+// This function provides a consistent interface for creating PHI2 nodes,
+// similar to other statistical functions, even though the underlying
+// implementation still uses the PHI2 operation.
+Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho) {
+    // Φ₂(h, k; ρ) = Bivariate normal CDF
+    // Create PHI2 node directly - it handles numerical integration internally
+    return Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, h, k, rho));
+}
+
 // expected_prod_pos_expr implemented as a custom function
 static CustomFunction expected_prod_pos_func = CustomFunction::create(
     5,
@@ -157,8 +173,8 @@ static CustomFunction expected_prod_pos_func = CustomFunction::create(
         Expression one_minus_rho2 = Const(1.0) - rho * rho;
         Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
 
-        // Φ₂(a0, a1; ρ) - create PHI2 node directly to avoid dependency on Phi2_expr
-        Expression Phi2_a0_a1 = Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, a0, a1, rho));
+        // Φ₂(a0, a1; ρ) - use Phi2_expr for consistency
+        Expression Phi2_a0_a1 = Phi2_expr(a0, a1, rho);
 
         // φ(a0) and φ(a1)
         Expression phi_a0 = phi_expr(a0);
