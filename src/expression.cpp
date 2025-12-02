@@ -807,6 +807,51 @@ Expression Phi_expr(const Expression& x) {
     return Phi_func(x);
 }
 
+// MeanMax_expr implemented as a custom function
+static CustomFunction MeanMax_func = CustomFunction::create(
+    1,
+    [](const std::vector<Variable>& v) {
+        const Expression& a = v[0];
+        return phi_expr(a) + a * Phi_expr(a);
+    },
+    "MeanMax"
+);
+
+// MeanMax2_expr implemented as a custom function
+static CustomFunction MeanMax2_func = CustomFunction::create(
+    1,
+    [](const std::vector<Variable>& v) {
+        const Expression& a = v[0];
+        return Const(1.0) + (a * a - Const(1.0)) * Phi_expr(a) + a * phi_expr(a);
+    },
+    "MeanMax2"
+);
+
+// MeanPhiMax_expr implemented as a custom function
+static CustomFunction MeanPhiMax_func = CustomFunction::create(
+    1,
+    [](const std::vector<Variable>& v) {
+        const Expression& a = v[0];
+        return Const(1.0) - Phi_expr(a);
+    },
+    "MeanPhiMax"
+);
+
+Expression MeanMax_expr(const Expression& a) {
+    // MeanMax(a) = φ(a) + a × Φ(a)
+    return MeanMax_func(a);
+}
+
+Expression MeanMax2_expr(const Expression& a) {
+    // MeanMax2(a) = 1 + (a² - 1) × Φ(a) + a × φ(a)
+    return MeanMax2_func(a);
+}
+
+Expression MeanPhiMax_expr(const Expression& a) {
+    // MeanPhiMax(a) = Φ(-a) = 1 - Φ(a)
+    return MeanPhiMax_func(a);
+}
+
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
                                   const Expression& mu1, const Expression& sigma1,
                                   const Expression& rho) {

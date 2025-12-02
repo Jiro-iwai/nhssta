@@ -367,10 +367,10 @@ Expression Phi_expr(const Expression& x);
  * 
  * @param a Expression for the threshold
  * @return Expression representing MeanMax(a)
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
-inline Expression MeanMax_expr(const Expression& a) {
-    return phi_expr(a) + a * Phi_expr(a);
-}
+Expression MeanMax_expr(const Expression& a);
 
 /**
  * @brief MeanMax2 function: E[max(a, x)²] where x ~ N(0,1)
@@ -378,10 +378,10 @@ inline Expression MeanMax_expr(const Expression& a) {
  * 
  * @param a Expression for the threshold
  * @return Expression representing MeanMax2(a)
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
-inline Expression MeanMax2_expr(const Expression& a) {
-    return 1.0 + (a * a - 1.0) * Phi_expr(a) + a * phi_expr(a);
-}
+Expression MeanMax2_expr(const Expression& a);
 
 /**
  * @brief MeanPhiMax function: E[max(a, x) × x] where x ~ N(0,1)
@@ -389,10 +389,10 @@ inline Expression MeanMax2_expr(const Expression& a) {
  * 
  * @param a Expression for the threshold
  * @return Expression representing MeanPhiMax(a)
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
-inline Expression MeanPhiMax_expr(const Expression& a) {
-    return 1.0 - Phi_expr(a);
-}
+Expression MeanPhiMax_expr(const Expression& a);
 
 // =============================================================================
 // MAX0 functions for SSTA
