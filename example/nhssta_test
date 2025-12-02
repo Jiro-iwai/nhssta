@@ -10,11 +10,13 @@ FAILED_TESTS=0
 # Tolerance for floating-point comparisons (relative error)
 # LAT values (mean, stddev): 1.6% (0.016) - actual max error is ~1.33% in large circuits
 # Correlation values: 3.8% (0.038) - actual max error is ~3.12%
+# Sensitivity values (dF/dmu, dF/dsigma): 2.0% (0.02) - gradient values typically have small errors
 # MAX operation is commutative, so different calculation order causes small differences
 # LAT values typically have smaller errors (~0.07-0.41% in small circuits, up to ~1.33% in large circuits)
 # Correlation values can accumulate more error due to multiple MAX operations (up to ~3.12%)
 LAT_TOLERANCE=0.016
 CORR_TOLERANCE=0.038
+SENS_TOLERANCE=0.02
 
 # Function to print section header
 print_section() {
@@ -181,13 +183,14 @@ run_test() {
     fi
 
     # Compare with expected result using numerical tolerance
-    # LAT tolerance: 1.6%, Correlation tolerance: 3.8%
-    COMPARE_OUTPUT=$(python3 compare_numerical.py "${TEMP_RESULT_FILE}" "${RESULT_FILE}" "${LAT_TOLERANCE}" "${CORR_TOLERANCE}" 2>/dev/null)
+    # LAT tolerance: 1.6%, Correlation tolerance: 3.8%, Sensitivity tolerance: 2.0%
+    COMPARE_OUTPUT=$(python3 compare_numerical.py "${TEMP_RESULT_FILE}" "${RESULT_FILE}" "${LAT_TOLERANCE}" "${CORR_TOLERANCE}" "${SENS_TOLERANCE}" 2>/dev/null)
     COMPARE_EXIT_CODE=$?
     
     # Extract maximum errors from output using awk (compatible with macOS)
     MAX_LAT_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_LAT_ERROR:' '{print $2}' | awk '{print $1}' | awk -F'MAX_CORR_ERROR:' '{print $1}')
-    MAX_CORR_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_CORR_ERROR:' '{print $2}')
+    MAX_CORR_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_CORR_ERROR:' '{print $2}' | awk '{print $1}' | awk -F'MAX_SENS_ERROR:' '{print $1}')
+    MAX_SENS_ERROR=$(echo "${COMPARE_OUTPUT}" | awk -F'MAX_SENS_ERROR:' '{print $2}')
     
     # Default to 0.0 if extraction failed
     if [ -z "${MAX_LAT_ERROR}" ] || [ "${MAX_LAT_ERROR}" = "" ]; then
@@ -196,21 +199,40 @@ run_test() {
     if [ -z "${MAX_CORR_ERROR}" ] || [ "${MAX_CORR_ERROR}" = "" ]; then
         MAX_CORR_ERROR="0.000000"
     fi
+    if [ -z "${MAX_SENS_ERROR}" ] || [ "${MAX_SENS_ERROR}" = "" ]; then
+        MAX_SENS_ERROR="0.000000"
+    fi
     
     # Convert to percentage
     MAX_LAT_PCT=$(echo "${MAX_LAT_ERROR}" | awk '{printf "%.2f", $1 * 100}')
     MAX_CORR_PCT=$(echo "${MAX_CORR_ERROR}" | awk '{printf "%.2f", $1 * 100}')
+    MAX_SENS_PCT=$(echo "${MAX_SENS_ERROR}" | awk '{printf "%.2f", $1 * 100}')
     
     # Calculate tolerance percentages
     LAT_TOL_PCT=$(echo "${LAT_TOLERANCE}" | awk '{printf "%.2f", $1 * 100}')
     CORR_TOL_PCT=$(echo "${CORR_TOLERANCE}" | awk '{printf "%.2f", $1 * 100}')
+    SENS_TOL_PCT=$(echo "${SENS_TOLERANCE}" | awk '{printf "%.2f", $1 * 100}')
+    
+    # Determine if this is a sensitivity test
+    IS_SENSITIVITY_TEST=false
+    if echo "${OPTIONS}" | grep -q "\-s"; then
+        IS_SENSITIVITY_TEST=true
+    fi
     
     if [ ${COMPARE_EXIT_CODE} -eq 0 ]; then
-        print_success "  ✓ PASSED (最大誤差: LAT ${MAX_LAT_PCT}%, 相関 ${MAX_CORR_PCT}%)"
+        if [ "${IS_SENSITIVITY_TEST}" = "true" ]; then
+            print_success "  ✓ PASSED (最大誤差: 感度 ${MAX_SENS_PCT}%)"
+        else
+            print_success "  ✓ PASSED (最大誤差: LAT ${MAX_LAT_PCT}%, 相関 ${MAX_CORR_PCT}%)"
+        fi
         PASSED_TESTS=$((PASSED_TESTS + 1))
         rm -f "${TEMP_RESULT_FILE}" # Clean up on success
     else
-        print_failure "  ✗ FAILED (最大誤差: LAT ${MAX_LAT_PCT}%, 相関 ${MAX_CORR_PCT}%, 許容: LAT ${LAT_TOL_PCT}%, 相関 ${CORR_TOL_PCT}%)"
+        if [ "${IS_SENSITIVITY_TEST}" = "true" ]; then
+            print_failure "  ✗ FAILED (最大誤差: 感度 ${MAX_SENS_PCT}%, 許容: 感度 ${SENS_TOL_PCT}%)"
+        else
+            print_failure "  ✗ FAILED (最大誤差: LAT ${MAX_LAT_PCT}%, 相関 ${MAX_CORR_PCT}%, 許容: LAT ${LAT_TOL_PCT}%, 相関 ${CORR_TOL_PCT}%)"
+        fi
         echo "    --- Diff for ${TEST_NAME} ---"
         # Show diff for debugging, but use numerical comparison for pass/fail
         diff -u "${TEMP_RESULT_FILE}" "${RESULT_FILE}" | head -30
