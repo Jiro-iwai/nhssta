@@ -108,13 +108,13 @@ $ make test
 すべてのテストがパスすると、以下のように表示されます：
 
 ```
-[==========] Running 485 tests from 50 test suites.
-[  PASSED  ] 485 tests.
+[==========] Running 719 tests from 64 test suites.
+[  PASSED  ] 719 tests.
 ==========================================
 Running integration tests...
 ==========================================
-Total tests: 8
-Passed: 8
+Total tests: 10
+Passed: 10
 Failed: 0
 ✓ All tests passed!
 ```
@@ -230,14 +230,14 @@ nhssta 0.3.2
 #
 # Top 5 Endpoints (by LAT + σ):
 #
-#node              LAT     sigma     score
+#node                    LAT    sigma     score
 #-----------------------------------------
 ...
 #-----------------------------------------
 #
 # Gate Sensitivities (∂F/∂μ, ∂F/∂σ):
 #
-#instance    output    input   type        dF/dmu    dF/dsigma
+#instance   output    input   type          dF/dmu   dF/dsigma
 #-------------------------------------------------------------
 ...
 #-------------------------------------------------------------
