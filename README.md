@@ -1,6 +1,6 @@
-# 統計的PERT法 nhssta 0.3.0
+# 統計的PERT法 nhssta 0.3.1
 
-本ドキュメントには統計的PERT法 nhssta 0.3.0 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
+本ドキュメントには統計的PERT法 nhssta 0.3.1 (以下、nhssta ) の概要、使用方法、及び使用上の注意点が記載されています。
 
 ## 1. 概要
 
@@ -161,7 +161,7 @@ $ nhssta -d [.dlibファイル] -b [.benchファイル] [-l] [-c] [-p [N]] [-s] 
   - `N` を省略した場合はデフォルトで 5 本を対象とする
   - `-s` オプションと組み合わせて使用
 
-**注意**: `-l`、`-c`、`-p`、`-s` のいずれかは必ず指定する必要があります。複数を同時に指定することも可能です。
+**注意**: `-l`、`-c`、`-p`、`-s` のいずれも指定しない場合、何も出力されませんが、エラーにはなりません。複数を同時に指定することも可能です。
 
 ### 2.3 Exit Codes
 
@@ -195,7 +195,7 @@ nhsstaは以下のexit codeを返します：
 # exampleディレクトリから実行する場合
 $ cd example
 $ ../build/bin/nhssta -l -c -p -d ex4_gauss.dlib -b ex4.bench
-nhssta 0.3.0
+nhssta 0.3.1
 
 #
 # LAT
@@ -221,7 +221,7 @@ OK
 
 ```bash
 $ ../build/bin/nhssta -s -n 5 -d ex4_gauss.dlib -b ex4.bench
-nhssta 0.3.0
+nhssta 0.3.1
 
 #
 # Sensitivity Analysis
