@@ -439,8 +439,8 @@ private:
     void collect_nodes_dfs(ExpressionImpl* node,
                            std::unordered_set<ExpressionImpl*>& visited);
     void set_inputs_and_clear(const std::vector<double>& x);
-    [[nodiscard]] bool args_equal(const std::vector<double>& a,
-                                   const std::vector<double>& b) const;
+    [[nodiscard]] static bool args_equal(const std::vector<double>& a,
+                                         const std::vector<double>& b);
 };
 
 // User-facing wrapper class
@@ -461,7 +461,7 @@ public:
 
     // Graph type factory method (existing, renamed for clarity)
     static CustomFunction create_graph(size_t input_dim,
-                                       GraphBuilder builder,
+                                       const GraphBuilder& builder,
                                        const std::string& name = "") {
         return CustomFunction(
             std::make_shared<CustomFunctionImpl>(
@@ -472,7 +472,7 @@ public:
     static CustomFunction create(size_t input_dim,
                                  const Builder& builder,
                                  const std::string& name = "") {
-        return create_graph(input_dim, std::move(builder), name);
+        return create_graph(input_dim, builder, name);
     }
 
     // Native type factory methods (new)

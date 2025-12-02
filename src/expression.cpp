@@ -736,7 +736,7 @@ CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
     // 1. Create local input variables
     local_vars_.reserve(input_dim_);
     for (size_t i = 0; i < input_dim_; ++i) {
-        local_vars_.emplace_back(Variable());
+        local_vars_.emplace_back();
     }
 
     // 2. Call builder to construct expression tree
@@ -875,7 +875,7 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
 }
 
 bool CustomFunctionImpl::args_equal(const std::vector<double>& a,
-                                    const std::vector<double>& b) const {
+                                     const std::vector<double>& b) {
     if (a.size() != b.size()) {
         return false;
     }
@@ -901,21 +901,21 @@ double CustomFunctionImpl::value(const std::vector<double>& x) {
         last_value_ = v;
         has_cached_value_ = true;
         return v;
-    } else {  // Native
-        double v;
-        if (native_value_) {
-            v = native_value_(x);
-        } else if (native_value_grad_) {
-            v = native_value_grad_(x).first;
-        } else {
-            throw Nh::RuntimeException(
-                "CustomFunctionImpl(Native)::value: no value function");
-        }
-        last_args_ = x;
-        last_value_ = v;
-        has_cached_value_ = true;
-        return v;
     }
+    // Native
+    double v;
+    if (native_value_) {
+        v = native_value_(x);
+    } else if (native_value_grad_) {
+        v = native_value_grad_(x).first;
+    } else {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl(Native)::value: no value function");
+    }
+    last_args_ = x;
+    last_value_ = v;
+    has_cached_value_ = true;
+    return v;
 }
 
 std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
@@ -934,25 +934,25 @@ std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
             grad[i] = local_vars_[i]->gradient();
         }
         return grad;
-    } else {  // Native
-        std::vector<double> grad;
-        if (native_grad_) {
-            grad = native_grad_(x);
-        } else if (native_value_grad_) {
-            grad = native_value_grad_(x).second;
-        } else {
-            throw Nh::RuntimeException(
-                "CustomFunctionImpl(Native)::gradient: no gradient function");
-        }
-
-        // Verify gradient dimension matches input dimension
-        if (grad.size() != input_dim_) {
-            throw Nh::RuntimeException(
-                "CustomFunctionImpl(Native)::gradient: wrong gradient dimension");
-        }
-
-        return grad;
     }
+    // Native
+    std::vector<double> grad;
+    if (native_grad_) {
+        grad = native_grad_(x);
+    } else if (native_value_grad_) {
+        grad = native_value_grad_(x).second;
+    } else {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl(Native)::gradient: no gradient function");
+    }
+
+    // Verify gradient dimension matches input dimension
+    if (grad.size() != input_dim_) {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl(Native)::gradient: wrong gradient dimension");
+    }
+
+    return grad;
 }
 
 std::pair<double, std::vector<double>>
@@ -977,28 +977,28 @@ CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
         has_cached_value_ = true;
 
         return {v, std::move(grad)};
-    } else {  // Native
-        double v;
-        std::vector<double> g;
-        if (native_value_grad_) {
-            auto pair = native_value_grad_(x);
-            v = pair.first;
-            g = std::move(pair.second);
-        } else if (native_value_ && native_grad_) {
-            v = native_value_(x);
-            g = native_grad_(x);
-        } else {
-            throw Nh::RuntimeException(
-                "CustomFunctionImpl(Native)::value_and_gradient: "
-                "insufficient callbacks");
-        }
-
-        last_args_ = x;
-        last_value_ = v;
-        has_cached_value_ = true;
-
-        return {v, std::move(g)};
     }
+    // Native
+    double v;
+    std::vector<double> g;
+    if (native_value_grad_) {
+        auto pair = native_value_grad_(x);
+        v = pair.first;
+        g = std::move(pair.second);
+    } else if (native_value_ && native_grad_) {
+        v = native_value_(x);
+        g = native_grad_(x);
+    } else {
+        throw Nh::RuntimeException(
+            "CustomFunctionImpl(Native)::value_and_gradient: "
+            "insufficient callbacks");
+    }
+
+    last_args_ = x;
+    last_value_ = v;
+    has_cached_value_ = true;
+
+    return {v, std::move(g)};
 }
 
 std::pair<double, std::vector<double>>
@@ -1029,10 +1029,9 @@ CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
             grad[i] = local_vars_[i]->gradient();
         }
         return {v, std::move(grad)};
-    } else {  // Native
-        // Native doesn't have internal state, so just call value_and_gradient
-        return value_and_gradient(args_values);
     }
+    // Native doesn't have internal state, so just call value_and_gradient
+    return value_and_gradient(args_values);
 }
 
 Expression CustomFunction::operator()(const std::vector<Expression>& args) const {
