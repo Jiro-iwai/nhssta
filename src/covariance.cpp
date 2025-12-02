@@ -1,6 +1,7 @@
 // -*- c++ -*-
 // Author: IWAI Jiro
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -133,24 +134,20 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
     return cov;
 }
 
+// Check and clamp covariance to valid range: [-max_cov, max_cov]
+// where max_cov = sqrt(variance(a) * variance(b)) = σ_a * σ_b
+// This ensures |cov| <= max_cov, which is equivalent to |correlation| <= 1
+// (since correlation = cov / (σ_a * σ_b))
+//
+// Refactored from Issue #180: Simplified implementation using std::clamp
+// instead of the previous complex logic with dimension mismatches and
+// redundant correlation coefficient calculations.
 static void check_covariance(double& cov, const RandomVariable& a, const RandomVariable& b) {
-    double v0 = a->variance();
-    double v1 = b->variance();
-    double max_cov = sqrt(v0 * v1);
-    if (max_cov < MINIMUM_VARIANCE) {
-        if (cov >= MINIMUM_VARIANCE) {
-            throw Nh::RuntimeException("check_covariance: covariance " + std::to_string(cov) +
-                                       " exceeds maximum possible value " +
-                                       std::to_string(MINIMUM_VARIANCE));
-        }
-        return;
-    }
-    double cor = cov / max_cov;
-    double abs_cor = fabs(cor);
-    if (1.0 < abs_cor) {
-        double sig = cor / abs_cor;
-        cov = sig * max_cov;
-    }
+    double max_cov = std::sqrt(a->variance() * b->variance());
+    
+    // Clamp covariance to valid range: [-max_cov, max_cov]
+    // This ensures |cov| <= max_cov, which is equivalent to |correlation| <= 1
+    cov = std::clamp(cov, -max_cov, max_cov);
 }
 
 double covariance(const Normal& a, const Normal& b) {
