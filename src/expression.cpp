@@ -869,6 +869,25 @@ Expression max0_mean_expr(const Expression& mu, const Expression& sigma) {
     return max0_mean_func(mu, sigma);
 }
 
+// max0_var_expr implemented as a custom function
+static CustomFunction max0_var_func = CustomFunction::create(
+    2,
+    [](const std::vector<Variable>& v) {
+        const Expression& mu = v[0];
+        const Expression& sigma = v[1];
+        Expression a = -(mu / sigma);  // normalized threshold
+        Expression mm = MeanMax_expr(a);
+        Expression mm2 = MeanMax2_expr(a);
+        return sigma * sigma * (mm2 - mm * mm);
+    },
+    "max0_var"
+);
+
+Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
+    // Var[max(0, D)] = σ² × (MeanMax2(a) - MeanMax(a)²)  where a = -μ/σ
+    return max0_var_func(mu, sigma);
+}
+
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
                                   const Expression& mu1, const Expression& sigma1,
                                   const Expression& rho) {

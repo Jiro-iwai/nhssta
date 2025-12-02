@@ -420,13 +420,10 @@ Expression max0_mean_expr(const Expression& mu, const Expression& sigma);
  * @param mu Mean of the underlying normal distribution
  * @param sigma Standard deviation (NOT variance)
  * @return Expression representing Var[max(0, D)]
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
  */
-inline Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
-    Expression a = -(mu / sigma);  // normalized threshold
-    Expression mm = MeanMax_expr(a);
-    Expression mm2 = MeanMax2_expr(a);
-    return sigma * sigma * (mm2 - mm * mm);
-}
+Expression max0_var_expr(const Expression& mu, const Expression& sigma);
 
 /**
  * @brief E[D0⁺ × D1⁺] where D0, D1 are bivariate normal
