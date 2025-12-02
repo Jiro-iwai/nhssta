@@ -791,30 +791,20 @@ Expression phi_expr(const Expression& x) {
     return phi_func(x);
 }
 
-// Cache for Phi_expr (pointer-based)
-static std::unordered_map<ExpressionImpl*, Expression> Phi_expr_cache;
-static size_t Phi_expr_cache_hits = 0;
-static size_t Phi_expr_cache_misses = 0;
+// Phi_expr implemented as a custom function
+static CustomFunction Phi_func = CustomFunction::create(
+    1,
+    [](const std::vector<Variable>& v) {
+        static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
+        const Expression& x = v[0];
+        return Const(0.5) * (Const(1.0) + erf(x * INV_SQRT_2));
+    },
+    "Phi"
+);
 
 Expression Phi_expr(const Expression& x) {
     // Φ(x) = 0.5 × (1 + erf(x/√2))
-    
-    // Check cache first
-    auto it = Phi_expr_cache.find(x.get());
-    if (it != Phi_expr_cache.end()) {
-        Phi_expr_cache_hits++;
-        return it->second;
-    }
-    
-    Phi_expr_cache_misses++;
-    
-    static constexpr double INV_SQRT_2 = 0.7071067811865476;  // 1/√2
-    Expression result = half * (one + erf(x * INV_SQRT_2));
-    
-    // Cache the result
-    Phi_expr_cache[x.get()] = result;
-    
-    return result;
+    return Phi_func(x);
 }
 
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
@@ -893,12 +883,13 @@ size_t get_phi_expr_cache_misses() {
     return 0;
 }
 
+// Cache statistics functions removed - Phi_expr now uses custom function without cache
 size_t get_Phi_expr_cache_hits() {
-    return Phi_expr_cache_hits;
+    return 0;
 }
 
 size_t get_Phi_expr_cache_misses() {
-    return Phi_expr_cache_misses;
+    return 0;
 }
 
 // E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)

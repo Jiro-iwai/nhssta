@@ -357,7 +357,7 @@ Expression phi_expr(const Expression& x);
  * @param x Expression to evaluate
  * @return Expression representing Φ(x)
  * 
- * @note This function is cached for performance optimization (Issue #188)
+ * @note Implemented as a custom function for code clarity and consistency
  */
 Expression Phi_expr(const Expression& x);
 
