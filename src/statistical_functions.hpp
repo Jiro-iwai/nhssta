@@ -129,6 +129,47 @@ Expression max0_var_expr(const Expression& mu, const Expression& sigma);
  * 
  * @note Implemented as a custom function for code clarity and consistency
  */
+/**
+ * @brief Bivariate normal CDF: Φ₂(h, k; ρ)
+ * 
+ * Computes the cumulative distribution function of a bivariate normal
+ * distribution using numerical integration (Simpson's rule).
+ * 
+ * Gradient formulas:
+ *   ∂Φ₂/∂h = φ(h) × Φ((k - ρh)/√(1-ρ²))
+ *   ∂Φ₂/∂k = φ(k) × Φ((h - ρk)/√(1-ρ²))
+ *   ∂Φ₂/∂ρ = φ₂(h, k; ρ) (bivariate normal PDF)
+ * 
+ * @param h First argument
+ * @param k Second argument
+ * @param rho Correlation coefficient
+ * @return Expression representing Φ₂(h, k; ρ)
+ * 
+ * @note Uses PHI2 operation internally for numerical integration.
+ *       This function provides a consistent interface similar to other
+ *       statistical functions.
+ */
+Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho);
+
+/**
+ * @brief E[D0⁺ D1⁺] for bivariate normal distribution
+ *
+ * E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ)
+ *            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
+ *            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
+ *            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + (1-ρ²) φ₂(a0, a1; ρ)]
+ * 
+ * where a0 = μ0/σ0, a1 = μ1/σ1
+ * 
+ * @param mu0 Mean of D0
+ * @param sigma0 Standard deviation of D0 (> 0)
+ * @param mu1 Mean of D1
+ * @param sigma1 Standard deviation of D1 (> 0)
+ * @param rho Correlation between D0 and D1
+ * @return Expression representing E[D0⁺ × D1⁺]
+ * 
+ * @note Implemented as a custom function for code clarity and consistency
+ */
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
                                   const Expression& mu1, const Expression& sigma1,
                                   const Expression& rho);
