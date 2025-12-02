@@ -183,7 +183,7 @@ TEST_F(GHPointsAccuracyTest, HighCorrelationAccuracyComparison) {
     std::cout << std::string(140, '-') << std::endl;
 
     for (const auto& tc : test_cases) {
-        // Reference: Analytical formula (Simpson's rule 128 points)
+        // Reference: Analytical formula (Simpson's rule 32 points)
         double analytical = RandomVariable::expected_prod_pos_expr(
             Const(tc.mu0), Const(tc.sigma0),
             Const(tc.mu1), Const(tc.sigma1),
@@ -215,8 +215,9 @@ TEST_F(GHPointsAccuracyTest, HighCorrelationAccuracyComparison) {
                   << std::endl;
     }
 
-    std::cout << "\nNote: Analytical formula uses Simpson's rule 128 points as reference." << std::endl;
+    std::cout << "\nNote: Analytical formula uses Simpson's rule 32 points as reference." << std::endl;
     std::cout << "Errors are relative to this reference." << std::endl;
+    std::cout << "GH 20 and 40 points are computed for comparison purposes only (not used in production)." << std::endl;
 }
 
 TEST_F(GHPointsAccuracyTest, Issue182SpecificCase) {
@@ -486,7 +487,7 @@ TEST_F(GHPointsAccuracyTest, BoundaryConditionAccuracy) {
         std::cout << "  Expression:          " << expr << std::endl;
         std::cout << "  Error (vs Expression): " << std::abs((result - expr) / expr) * 100.0 << "%" << std::endl;
 
-        // Should use analytical formula (which uses GH 20 points for bivariate_normal_cdf)
+        // Should use analytical formula (which uses Simpson's rule 32 points for bivariate_normal_cdf)
         // Both should match closely
         double error = std::abs(result - expr) / std::abs(expr);
         EXPECT_LT(error, 0.01) << "Analytical formula should match Expression at |ρ| = 0.95";
@@ -519,8 +520,8 @@ TEST_F(GHPointsAccuracyTest, BoundaryContinuity) {
     std::cout << "\n--- Continuity at |ρ| = 0.9 ---" << std::endl;
     {
         double rho_below = 0.899;  // Just below boundary (should use GH 10)
-        double rho_at = 0.9;       // At boundary (should use GH 20)
-        double rho_above = 0.901;  // Just above boundary (should use GH 20)
+        double rho_at = 0.9;       // At boundary (should use GH 10)
+        double rho_above = 0.901;  // Just above boundary (should use GH 10)
 
         double result_below = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho_below);
         double result_at = RandomVariable::expected_prod_pos(mu0, sigma0, mu1, sigma1, rho_at);
@@ -537,15 +538,16 @@ TEST_F(GHPointsAccuracyTest, BoundaryContinuity) {
         std::cout << "Jump at boundary: " << jump_at * 100.0 << "%" << std::endl;
         std::cout << "Jump above boundary: " << jump_above * 100.0 << "%" << std::endl;
 
-        // Allow small discontinuity due to method change (should be < 5%)
-        EXPECT_LT(jump_at, 0.05) << "Discontinuity at |ρ| = 0.9 boundary too large";
-        EXPECT_LT(jump_above, 0.01) << "Discontinuity above |ρ| = 0.9 boundary too large";
+        // At |ρ| = 0.9, all values use GH 10 points, so there should be no discontinuity
+        // Allow small numerical error (should be < 0.1%)
+        EXPECT_LT(jump_at, 0.001) << "Discontinuity at |ρ| = 0.9 boundary too large (should be continuous)";
+        EXPECT_LT(jump_above, 0.001) << "Discontinuity above |ρ| = 0.9 boundary too large (should be continuous)";
     }
 
     // Test continuity at |ρ| = 0.95 boundary
     std::cout << "\n--- Continuity at |ρ| = 0.95 ---" << std::endl;
     {
-        double rho_below = 0.949;  // Just below boundary (should use GH 20)
+        double rho_below = 0.949;  // Just below boundary (should use GH 10)
         double rho_at = 0.95;      // At boundary (should use analytical)
         double rho_above = 0.951;  // Just above boundary (should use analytical)
 
