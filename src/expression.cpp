@@ -734,9 +734,9 @@ CustomFunctionImpl::CustomFunctionImpl(size_t input_dim,
     }
 
     // 1. Create local input variables
-    local_vars_.resize(input_dim_);
+    local_vars_.reserve(input_dim_);
     for (size_t i = 0; i < input_dim_; ++i) {
-        local_vars_[i] = Variable();
+        local_vars_.emplace_back(Variable());
     }
 
     // 2. Call builder to construct expression tree
@@ -829,14 +829,14 @@ void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
 }
 
 void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
+    // Graph type only - early return for Native type
+    if (kind_ != ImplKind::Graph) {
+        return;  // Native type doesn't need this
+    }
+
     if (x.size() != input_dim_) {
         throw Nh::RuntimeException(
             "CustomFunctionImpl::set_inputs_and_clear: size mismatch");
-    }
-
-    // Only for Graph type
-    if (kind_ != ImplKind::Graph) {
-        return;  // Native type doesn't need this
     }
 
     // 1. Clear value cache and gradients in internal expression tree
@@ -935,14 +935,23 @@ std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
         }
         return grad;
     } else {  // Native
+        std::vector<double> grad;
         if (native_grad_) {
-            return native_grad_(x);
+            grad = native_grad_(x);
         } else if (native_value_grad_) {
-            return native_value_grad_(x).second;
+            grad = native_value_grad_(x).second;
         } else {
             throw Nh::RuntimeException(
                 "CustomFunctionImpl(Native)::gradient: no gradient function");
         }
+
+        // Verify gradient dimension matches input dimension
+        if (grad.size() != input_dim_) {
+            throw Nh::RuntimeException(
+                "CustomFunctionImpl(Native)::gradient: wrong gradient dimension");
+        }
+
+        return grad;
     }
 }
 
