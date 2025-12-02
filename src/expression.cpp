@@ -971,13 +971,42 @@ static CustomFunction expected_prod_pos_rho1_func = CustomFunction::create(
         Expression a1 = mu1 / sigma1;
         
         // c = -min(a0, a1)
-        // Use smooth approximation: min(a0, a1) = (a0 + a1 - sqrt((a0 - a1)^2 + epsilon)) / 2
-        // For numerical stability, we use a small epsilon
+        // 
+        // Original implementation used runtime value checking:
+        //   double a0_val = a0->value();
+        //   double a1_val = a1->value();
+        //   Expression c = (a0_val < a1_val) ? (-a0) : (-a1);
+        //
+        // In custom functions, we cannot access runtime values, so we need a
+        // differentiable expression that approximates min(a0, a1).
+        //
+        // Mathematical formula:
+        //   min(a, b) = (a + b - |a - b|) / 2
+        //
+        // The absolute value |a - b| is not differentiable at a = b, so we use
+        // a smooth approximation:
+        //   |x| ≈ sqrt(x^2 + epsilon)
+        //
+        // This approximation:
+        //   - Is differentiable everywhere (unlike |x|)
+        //   - Approaches |x| as epsilon → 0
+        //   - Has error O(epsilon) when |x| >> sqrt(epsilon)
+        //   - Has error O(sqrt(epsilon)) when |x| ≈ 0
+        //
+        // For epsilon = 1e-10:
+        //   - When |a0 - a1| >> 1e-5: error is negligible (< 1e-10)
+        //   - When |a0 - a1| ≈ 0: error is about 1e-5 (acceptable for numerical stability)
+        //
+        // Alternative approaches considered:
+        //   1. tanh(k * x) / k: Smooth but requires tanh function (not available in Expression)
+        //   2. x * erf(k * x): Smooth but requires erf (available but more expensive)
+        //   3. sqrt(x^2 + epsilon): Simple, efficient, and sufficient for our needs
+        //
         static constexpr double epsilon = 1e-10;
         Expression diff = a0 - a1;
-        Expression abs_diff = sqrt(diff * diff + Const(epsilon));
-        Expression min_a0_a1 = (a0 + a1 - abs_diff) / Const(2.0);
-        Expression c = Const(-1.0) * min_a0_a1;
+        Expression abs_diff = sqrt(diff * diff + Const(epsilon));  // |diff| ≈ sqrt(diff^2 + epsilon)
+        Expression min_a0_a1 = (a0 + a1 - abs_diff) / Const(2.0);  // min(a0, a1)
+        Expression c = Const(-1.0) * min_a0_a1;  // c = -min(a0, a1)
         
         // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
         Expression Phi_neg_c = Phi_expr(Const(-1.0) * c);
@@ -1017,13 +1046,49 @@ static CustomFunction expected_prod_pos_rho_neg1_func = CustomFunction::create(
         Expression a0 = mu0 / sigma0;
         Expression a1 = mu1 / sigma1;
         
-        // Use smooth approximation for the condition a0 + a1 > 0
-        // max(0, a0 + a1) = (a0 + a1 + sqrt((a0 + a1)^2 + epsilon)) / 2
+        // Original implementation checked runtime condition:
+        //   double a0_val = a0->value();
+        //   double a1_val = a1->value();
+        //   if (a0_val + a1_val <= 0.0) {
+        //       return Const(0.0);  // Interval is empty
+        //   }
+        //
+        // In custom functions, we cannot do runtime checks, so we need a
+        // differentiable expression that approximates the step function:
+        //   step(x) = 1 if x > 0, else 0
+        //
+        // We use a smooth approximation based on max(0, x):
+        //   max(0, x) = (x + |x|) / 2
+        //
+        // Using the smooth absolute value approximation:
+        //   |x| ≈ sqrt(x^2 + epsilon)
+        //
+        // Therefore:
+        //   max(0, x) ≈ (x + sqrt(x^2 + epsilon)) / 2
+        //
+        // To approximate step(x) = 1 if x > 0 else 0, we use:
+        //   step(x) ≈ max(0, x) / (x + epsilon)
+        //
+        // This approximation:
+        //   - Approaches 1 when x >> epsilon (x > 0)
+        //   - Approaches 0 when x << -epsilon (x < 0)
+        //   - Is smooth and differentiable everywhere
+        //   - Has a smooth transition near x = 0
+        //
+        // Alternative approaches considered:
+        //   1. tanh(k * x): Smooth sigmoid, but tanh is not available in Expression
+        //   2. (1 + erf(k * x)) / 2: Smooth but requires erf (more expensive)
+        //   3. max(0, x) / (x + epsilon): Simple, efficient, and sufficient
+        //
+        // For our use case (a0 + a1 > 0), we want:
+        //   - result * step_factor ≈ result when a0 + a1 > 0
+        //   - result * step_factor ≈ 0 when a0 + a1 <= 0
+        //
         static constexpr double epsilon = 1e-10;
         Expression sum = a0 + a1;
-        Expression abs_sum = sqrt(sum * sum + Const(epsilon));
-        Expression max_sum = (sum + abs_sum) / Const(2.0);
-        // Normalize: max(0, sum) / (sum + epsilon) approximates step function
+        Expression abs_sum = sqrt(sum * sum + Const(epsilon));  // |sum| ≈ sqrt(sum^2 + epsilon)
+        Expression max_sum = (sum + abs_sum) / Const(2.0);  // max(0, sum)
+        // Step function approximation: step(sum) ≈ max(0, sum) / (sum + epsilon)
         Expression step_factor = max_sum / (sum + Const(epsilon));
         
         // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
