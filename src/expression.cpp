@@ -751,29 +751,6 @@ void zero_all_grad() {
 //////////////////////////
 // Bivariate normal distribution expressions (Phase 5 of #167)
 
-// Cache for expected_prod_pos_expr (pointer-based)
-// Key: tuple of ExpressionImpl pointers (mu0, sigma0, mu1, sigma1, rho)
-using ExpectedProdPosCacheKey = std::tuple<ExpressionImpl*, ExpressionImpl*, ExpressionImpl*, ExpressionImpl*, ExpressionImpl*>;
-
-// Hash function for tuple of pointers
-struct ExpectedProdPosCacheKeyHash {
-    std::size_t operator()(const ExpectedProdPosCacheKey& key) const {
-        std::size_t h1 = std::hash<ExpressionImpl*>{}(std::get<0>(key));
-        std::size_t h2 = std::hash<ExpressionImpl*>{}(std::get<1>(key));
-        std::size_t h3 = std::hash<ExpressionImpl*>{}(std::get<2>(key));
-        std::size_t h4 = std::hash<ExpressionImpl*>{}(std::get<3>(key));
-        std::size_t h5 = std::hash<ExpressionImpl*>{}(std::get<4>(key));
-        return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3) ^ (h5 << 4);
-    }
-};
-
-static std::unordered_map<ExpectedProdPosCacheKey, Expression, ExpectedProdPosCacheKeyHash>
-    expected_prod_pos_expr_cache;
-
-// Cache statistics
-static size_t expected_prod_pos_cache_hits = 0;
-static size_t expected_prod_pos_cache_misses = 0;
-
 
 // phi_expr implemented as a custom function
 static CustomFunction phi_func = CustomFunction::create(
@@ -888,71 +865,71 @@ Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
     return max0_var_func(mu, sigma);
 }
 
+// expected_prod_pos_expr implemented as a custom function
+static CustomFunction expected_prod_pos_func = CustomFunction::create(
+    5,
+    [](const std::vector<Variable>& v) {
+        const Expression& mu0 = v[0];
+        const Expression& sigma0 = v[1];
+        const Expression& mu1 = v[2];
+        const Expression& sigma1 = v[3];
+        const Expression& rho = v[4];
+        
+        // E[D0⁺ D1⁺] where D0, D1 are bivariate normal
+        // Formula:
+        // E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ)
+        //            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
+        //            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
+        //            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + (1-ρ²) φ₂(a0, a1; ρ)]
+        // where a0 = μ0/σ0, a1 = μ1/σ1
+        
+        Expression a0 = mu0 / sigma0;
+        Expression a1 = mu1 / sigma1;
+        Expression one_minus_rho2 = Const(1.0) - rho * rho;
+        Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
+
+        // Φ₂(a0, a1; ρ) - create PHI2 node directly to avoid dependency on Phi2_expr
+        Expression Phi2_a0_a1 = Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, a0, a1, rho));
+
+        // φ(a0) and φ(a1)
+        Expression phi_a0 = phi_expr(a0);
+        Expression phi_a1 = phi_expr(a1);
+
+        // Φ((a0 - ρa1)/√(1-ρ²)) and Φ((a1 - ρa0)/√(1-ρ²))
+        Expression Phi_cond_0 = Phi_expr((a0 - rho * a1) / sqrt_one_minus_rho2);
+        Expression Phi_cond_1 = Phi_expr((a1 - rho * a0) / sqrt_one_minus_rho2);
+
+        // φ₂(a0, a1; ρ) = 1/(2π√(1-ρ²)) × exp(-(a0² - 2ρa0a1 + a1²)/(2(1-ρ²)))
+        // Direct implementation to avoid dependency on phi2_expr
+        Expression coeff_phi2 = Const(1.0) / (Const(2.0 * M_PI) * sqrt_one_minus_rho2);
+        Expression Q_phi2 = (a0 * a0 - Const(2.0) * rho * a0 * a1 + a1 * a1) / one_minus_rho2;
+        Expression phi2_a0_a1 = coeff_phi2 * exp(-Q_phi2 / Const(2.0));
+
+        // Build the formula
+        Expression term1 = mu0 * mu1 * Phi2_a0_a1;
+        Expression term2 = mu0 * sigma1 * phi_a1 * Phi_cond_0;
+        Expression term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
+        Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
+        return term1 + term2 + term3 + term4;
+    },
+    "expected_prod_pos"
+);
+
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
                                   const Expression& mu1, const Expression& sigma1,
                                   const Expression& rho) {
     // E[D0⁺ D1⁺] where D0, D1 are bivariate normal
-    //
-    // Formula:
-    // E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ)
-    //            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
-    //            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
-    //            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + (1-ρ²) φ₂(a0, a1; ρ)]
-    //
-    // where a0 = μ0/σ0, a1 = μ1/σ1
-
-    // Check cache first (pointer-based)
-    auto key = std::make_tuple(mu0.get(), sigma0.get(), mu1.get(), sigma1.get(), rho.get());
-    auto it = expected_prod_pos_expr_cache.find(key);
-    if (it != expected_prod_pos_expr_cache.end()) {
-        expected_prod_pos_cache_hits++;
-        return it->second;
-    }
-    
-    expected_prod_pos_cache_misses++;
-
-    Expression a0 = mu0 / sigma0;
-    Expression a1 = mu1 / sigma1;
-    Expression one_minus_rho2 = one - rho * rho;
-    Expression sqrt_one_minus_rho2 = sqrt(one_minus_rho2);
-
-    // Φ₂(a0, a1; ρ) - create PHI2 node directly to avoid dependency on Phi2_expr
-    Expression Phi2_a0_a1 = Expression(std::make_shared<ExpressionImpl>(ExpressionImpl::PHI2, a0, a1, rho));
-
-    // φ(a0) and φ(a1)
-    Expression phi_a0 = phi_expr(a0);
-    Expression phi_a1 = phi_expr(a1);
-
-    // Φ((a0 - ρa1)/√(1-ρ²)) and Φ((a1 - ρa0)/√(1-ρ²))
-    Expression Phi_cond_0 = Phi_expr((a0 - rho * a1) / sqrt_one_minus_rho2);
-    Expression Phi_cond_1 = Phi_expr((a1 - rho * a0) / sqrt_one_minus_rho2);
-
-    // φ₂(a0, a1; ρ) = 1/(2π√(1-ρ²)) × exp(-(a0² - 2ρa0a1 + a1²)/(2(1-ρ²)))
-    // Direct implementation to avoid dependency on phi2_expr
-    Expression coeff_phi2 = one / (Const(2.0 * M_PI) * sqrt_one_minus_rho2);
-    Expression Q_phi2 = (a0 * a0 - two * rho * a0 * a1 + a1 * a1) / one_minus_rho2;
-    Expression phi2_a0_a1 = coeff_phi2 * exp(-Q_phi2 / two);
-
-    // Build the formula
-    Expression term1 = mu0 * mu1 * Phi2_a0_a1;
-    Expression term2 = mu0 * sigma1 * phi_a1 * Phi_cond_0;
-    Expression term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
-    Expression term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
-    Expression result = term1 + term2 + term3 + term4;
-    
-    // Cache the result
-    expected_prod_pos_expr_cache[key] = result;
-    
-    return result;
+    return expected_prod_pos_func(mu0, sigma0, mu1, sigma1, rho);
 }
 
 // Expose cache statistics for debugging
+// Cache statistics functions - cache removed, always return 0 for compatibility
 size_t get_expected_prod_pos_cache_hits() {
-    return expected_prod_pos_cache_hits;
+    return 0;
 }
 
 size_t get_expected_prod_pos_cache_misses() {
-    return expected_prod_pos_cache_misses;
+    return 0;
 }
 
 // Cache statistics functions removed - phi_expr now uses custom function without cache

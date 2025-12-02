@@ -75,9 +75,10 @@ TEST_F(ExpressionCacheInvestigation, ExpressionFunction_SameObjects) {
     std::cout << "e1.get() = " << e1.get() << ", e2.get() = " << e2.get() << std::endl;
     std::cout << "Are they the same? " << (e1.get() == e2.get() ? "YES" : "NO") << std::endl;
     
-    // With caching, same Expression objects should return cached result
-    EXPECT_EQ(second_call, 0) << "Expression-level functions should cache with same objects";
-    EXPECT_EQ(e1.get(), e2.get()) << "Should return same Expression object";
+    // Note: expected_prod_pos_expr now uses custom function without cache
+    // Same Expression objects will create new nodes (custom function creates new expression tree)
+    // Values should be the same though
+    EXPECT_DOUBLE_EQ(e1->value(), e2->value()) << "Values should be the same";
 }
 
 // Test 3: Expression-level function - different Expression objects with same values
@@ -170,9 +171,10 @@ TEST_F(ExpressionCacheInvestigation, ExpressionFunction_FromRandomVariable) {
     std::cout << "e1.get() = " << e1.get() << ", e2.get() = " << e2.get() << std::endl;
     std::cout << "Are they the same? " << (e1.get() == e2.get() ? "YES" : "NO") << std::endl;
     
-    // With caching, same Expression objects should return cached result
-    EXPECT_EQ(second_call, 0) << "Expression-level functions should cache with same objects";
-    EXPECT_EQ(e1.get(), e2.get()) << "Should return same Expression object";
+    // Note: expected_prod_pos_expr now uses custom function without cache
+    // Same Expression objects will create new nodes (custom function creates new expression tree)
+    // Values should be the same though
+    EXPECT_DOUBLE_EQ(e1->value(), e2->value()) << "Values should be the same";
 }
 
 // Test 6: Breakdown of expected_prod_pos_expr node creation
