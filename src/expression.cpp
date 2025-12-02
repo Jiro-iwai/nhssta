@@ -780,7 +780,7 @@ static CustomFunction phi_func = CustomFunction::create(
     1,
     [](const std::vector<Variable>& v) {
         static constexpr double INV_SQRT_2PI = 0.3989422804014327;  // 1/√(2π)
-        Expression x = v[0];
+        const Expression& x = v[0];
         return INV_SQRT_2PI * exp(-(x * x) / Const(2.0));
     },
     "phi"
