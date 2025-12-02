@@ -20,7 +20,7 @@ CXXFLAGS = -g -Wall -std=c++17
 INCLUDE = -I../include 
 CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
 	random_variable.cpp add.cpp util_numerical.cpp gate.cpp \
-	parser.cpp ssta.cpp expression.cpp main.cpp
+	parser.cpp ssta.cpp expression.cpp statistical_functions.cpp main.cpp
 OBJS = $(addprefix ../build/src/,$(CXXSRCS:.cpp=.o))
 DEPS = $(addprefix ../build/src/,$(CXXSRCS:.cpp=.d))
 TARGET = ../build/bin/nhssta
@@ -75,7 +75,7 @@ TEST_TARGET = ../build/bin/nhssta_test
 # Core library objects (without main.cpp)
 LIB_OBJS = ../build/src/covariance.o ../build/src/max.o ../build/src/sub.o ../build/src/normal.o \
 	../build/src/random_variable.o ../build/src/add.o ../build/src/util_numerical.o ../build/src/gate.o \
-	../build/src/parser.o ../build/src/ssta.o ../build/src/expression.o
+	../build/src/parser.o ../build/src/ssta.o ../build/src/expression.o ../build/src/statistical_functions.o
 
 $(TARGET) : $(OBJS) 
 	$(Q)mkdir -p ../build/bin

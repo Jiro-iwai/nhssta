@@ -16,8 +16,23 @@
 #include <iostream>
 
 #include "expression.hpp"
+#include "statistical_functions.hpp"
 #include "max.hpp"
 #include "normal.hpp"
+
+// Import only statistical functions, not the entire namespace
+// to avoid conflict with RandomVariable::RandomVariable type alias
+// Note: Variable, Expression, ExpressionImpl are in global namespace
+using RandomVariable::phi_expr;
+using RandomVariable::Phi_expr;
+using RandomVariable::MeanMax_expr;
+using RandomVariable::MeanMax2_expr;
+using RandomVariable::MeanPhiMax_expr;
+using RandomVariable::max0_mean_expr;
+using RandomVariable::max0_var_expr;
+using RandomVariable::expected_prod_pos_expr;
+using RandomVariable::expected_prod_pos_rho1_expr;
+using RandomVariable::expected_prod_pos_rho_neg1_expr;
 
 // Numerical gradient using central difference
 namespace {

@@ -6,6 +6,8 @@
 #include <cmath>
 
 #include "../src/expression.hpp"
+#include "statistical_functions.hpp"
+using namespace RandomVariable;
 
 class CustomFunctionTest : public ::testing::Test {
 protected:

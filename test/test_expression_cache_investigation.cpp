@@ -9,6 +9,9 @@
 #include <unordered_map>
 
 #include "expression.hpp"
+#include "statistical_functions.hpp"
+
+using RandomVariable::expected_prod_pos_expr;
 #include "random_variable.hpp"
 #include "normal.hpp"
 #include "add.hpp"

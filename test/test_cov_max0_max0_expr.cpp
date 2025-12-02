@@ -16,6 +16,8 @@
 #include <iostream>
 
 #include "expression.hpp"
+#include "statistical_functions.hpp"
+using namespace RandomVariable;
 #include "test_expression_helpers.hpp"
 #include "util_numerical.hpp"
 

@@ -18,6 +18,9 @@
 #include <iostream>
 
 #include "expression.hpp"
+#include "statistical_functions.hpp"
+
+using namespace RandomVariable;
 
 // Reference implementations for comparison
 namespace {

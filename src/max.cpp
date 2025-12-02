@@ -9,6 +9,7 @@
 #include <nhssta/exception.hpp>
 
 #include "covariance.hpp"
+#include "statistical_functions.hpp"
 #include "sub.hpp"
 #include "util_numerical.hpp"
 

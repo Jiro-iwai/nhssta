@@ -5,6 +5,8 @@
 
 #include "test_expression_helpers.hpp"
 #include "expression.hpp"
+#include "statistical_functions.hpp"
+using namespace RandomVariable;
 #include <unordered_map>
 #include <tuple>
 #include <cmath>

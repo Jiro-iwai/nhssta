@@ -10,6 +10,9 @@
 #define TEST_EXPRESSION_HELPERS_H
 
 #include "expression.hpp"
+#include "statistical_functions.hpp"
+
+using RandomVariable::Phi_expr;
 
 /**
  * @brief Mean of sum: E[A + B] = μ_A + μ_B

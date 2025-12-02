@@ -8,6 +8,8 @@
 #include <iomanip>
 
 #include "expression.hpp"
+#include "statistical_functions.hpp"
+using namespace RandomVariable;
 #include "test_expression_helpers.hpp"
 #include "random_variable.hpp"
 #include "normal.hpp"

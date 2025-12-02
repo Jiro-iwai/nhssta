@@ -11,6 +11,7 @@
 #include "covariance.hpp"
 #include "expression.hpp"
 #include "max.hpp"
+#include "statistical_functions.hpp"
 #include "statistics.hpp"
 #include "sub.hpp"
 #include "util_numerical.hpp"
