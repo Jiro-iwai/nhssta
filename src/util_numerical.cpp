@@ -278,6 +278,34 @@ static const double wphi[GH_N] = {
     4.31065263071830e-06
 };
 
+// Gauss-Hermite 20-point quadrature for standard normal integration
+// ∫_{-∞}^{∞} φ(z) f(z) dz ≒ Σ wphi_20[i] * f(zphi_20[i])
+//
+// Conversion from standard Gauss-Hermite (with exp(-x²) weight):
+//   z = √2 * x_GH, w_phi = w_GH / √π
+// Generated using numpy.polynomial.hermite.hermgauss(20)
+// ============================================================================
+
+static constexpr int GH_20_N = 20;
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+static const double zphi_20[GH_20_N] = {
+    -7.619048541679759e+00,    -6.510590157013655e+00,    -5.578738805893201e+00,    -4.734581334046055e+00,
+    -3.943967350657316e+00,    -3.189014816553389e+00,    -2.458663611172368e+00,    -1.745247320814127e+00,
+    -1.042945348802751e+00,    -3.469641570813560e-01,    3.469641570813560e-01,    1.042945348802751e+00,
+    1.745247320814127e+00,    2.458663611172368e+00,    3.189014816553389e+00,    3.943967350657316e+00,
+    4.734581334046055e+00,    5.578738805893201e+00,    6.510590157013655e+00,    7.619048541679759e+00
+};
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
+static const double wphi_20[GH_20_N] = {
+    1.257800672437923e-13,    2.482062362315176e-10,    6.127490259982928e-08,    4.402121090230851e-06,
+    1.288262799619293e-04,    1.830103131080493e-03,    1.399783744710102e-02,    6.150637206397690e-02,
+    1.617393339840000e-01,    2.607930634495549e-01,    2.607930634495549e-01,    1.617393339840000e-01,
+    6.150637206397690e-02,    1.399783744710102e-02,    1.830103131080493e-03,    1.288262799619293e-04,
+    4.402121090230851e-06,    6.127490259982928e-08,    2.482062362315176e-10,    1.257800672437923e-13
+};
+
 // Helper: Clamp value to [min, max]
 static double clamp(double val, double min_val, double max_val) {
     if (val < min_val) {
@@ -328,30 +356,11 @@ double expected_prod_pos_rho_neg1(double mu0, double sigma0,
            ((a0 * a1 - 1.0) * (Phi_a0 + Phi_a1 - 1.0) + a1 * phi_a0 + a0 * phi_a1);
 }
 
-double expected_prod_pos(double mu0, double sigma0,
-                         double mu1, double sigma1,
-                         double rho) {
-    // E[D0⁺ D1⁺] where D0, D1 are bivariate normal with correlation ρ
-    // Precondition: sigma0 > 0, sigma1 > 0
-    if (sigma0 <= 0.0 || sigma1 <= 0.0) {
-        throw Nh::RuntimeException("expected_prod_pos: sigma0 and sigma1 must be positive");
-    }
-
-    // Clamp rho to [-1, 1] for numerical stability
-    rho = clamp(rho, -1.0, 1.0);
-
-    // Use analytical formulas for ρ ≈ ±1 to avoid numerical issues
-    constexpr double RHO_THRESHOLD = 0.9999;
-    if (rho > RHO_THRESHOLD) {
-        return expected_prod_pos_rho1(mu0, sigma0, mu1, sigma1);
-    }
-    if (rho < -RHO_THRESHOLD) {
-        return expected_prod_pos_rho_neg1(mu0, sigma0, mu1, sigma1);
-    }
-
-    //
-    // General case: Gauss-Hermite quadrature
-    //
+// Helper: E[D0⁺ D1⁺] using Gauss-Hermite quadrature with specified number of points
+// n_points must be 10 or 20
+static double expected_prod_pos_gh(double mu0, double sigma0,
+                                   double mu1, double sigma1,
+                                   double rho, int n_points) {
     // Decomposition:
     //   D0 = μ0 + σ0 * Z
     //   D1 = μ1 + σ1 * (ρ*Z + √(1-ρ²)*Z1)
@@ -369,31 +378,138 @@ double expected_prod_pos(double mu0, double sigma0,
     double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
 
     double sum = 0.0;
-    for (int i = 0; i < GH_N; ++i) {
-        double z = zphi[i];
-        double w = wphi[i];
+    
+    if (n_points == 10) {
+        for (int i = 0; i < GH_N; ++i) {
+            double z = zphi[i];
+            double w = wphi[i];
 
-        // D0 value at this quadrature point
-        double d0 = mu0 + (sigma0 * z);
+            // D0 value at this quadrature point
+            double d0 = mu0 + (sigma0 * z);
 
-        // D0⁺ = max(0, d0)
-        if (d0 <= 0.0) {
-            // D0⁺ = 0, so contribution is 0
-            continue;
+            // D0⁺ = max(0, d0)
+            if (d0 <= 0.0) {
+                continue;
+            }
+            double D0plus = d0;
+
+            // Conditional mean of D1 given Z=z
+            double m1z = mu1 + (rho * sigma1 * z);
+
+            // E[D1⁺ | Z=z] using expected_positive_part formula
+            double t = m1z / s1_cond;
+            double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
+
+            sum += w * D0plus * E_D1pos_givenZ;
         }
-        double D0plus = d0;
+    } else if (n_points == 20) {
+        for (int i = 0; i < GH_20_N; ++i) {
+            double z = zphi_20[i];
+            double w = wphi_20[i];
 
-        // Conditional mean of D1 given Z=z
-        double m1z = mu1 + (rho * sigma1 * z);
+            // D0 value at this quadrature point
+            double d0 = mu0 + (sigma0 * z);
 
-        // E[D1⁺ | Z=z] using expected_positive_part formula
-        double t = m1z / s1_cond;
-        double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
+            // D0⁺ = max(0, d0)
+            if (d0 <= 0.0) {
+                continue;
+            }
+            double D0plus = d0;
 
-        sum += w * D0plus * E_D1pos_givenZ;
+            // Conditional mean of D1 given Z=z
+            double m1z = mu1 + (rho * sigma1 * z);
+
+            // E[D1⁺ | Z=z] using expected_positive_part formula
+            double t = m1z / s1_cond;
+            double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
+
+            sum += w * D0plus * E_D1pos_givenZ;
+        }
+    } else {
+        throw Nh::RuntimeException("expected_prod_pos_gh: n_points must be 10 or 20");
     }
 
     return sum;
+}
+
+// Analytical formula for E[D0⁺ D1⁺]
+// E[D0⁺ D1⁺] = μ0 μ1 Φ₂(a0, a1; ρ)
+//            + μ0 σ1 φ(a1) Φ((a0 - ρa1)/√(1-ρ²))
+//            + μ1 σ0 φ(a0) Φ((a1 - ρa0)/√(1-ρ²))
+//            + σ0 σ1 [ρ Φ₂(a0, a1; ρ) + (1-ρ²) φ₂(a0, a1; ρ)]
+// where a0 = μ0/σ0, a1 = μ1/σ1
+static double expected_prod_pos_analytical(double mu0, double sigma0,
+                                          double mu1, double sigma1,
+                                          double rho) {
+    double a0 = mu0 / sigma0;
+    double a1 = mu1 / sigma1;
+    double one_minus_rho2 = 1.0 - (rho * rho);
+    double sqrt_one_minus_rho2 = std::sqrt(one_minus_rho2);
+
+    // Φ₂(a0, a1; ρ) - bivariate_normal_cdfを使用
+    double Phi2_a0_a1 = bivariate_normal_cdf(a0, a1, rho);
+
+    // φ(a0) and φ(a1)
+    double phi_a0 = normal_pdf(a0);
+    double phi_a1 = normal_pdf(a1);
+
+    // Φ((a0 - ρa1)/√(1-ρ²)) and Φ((a1 - ρa0)/√(1-ρ²))
+    double Phi_cond_0 = normal_cdf((a0 - rho * a1) / sqrt_one_minus_rho2);
+    double Phi_cond_1 = normal_cdf((a1 - rho * a0) / sqrt_one_minus_rho2);
+
+    // φ₂(a0, a1; ρ) = 1/(2π√(1-ρ²)) × exp(-(a0² - 2ρa0a1 + a1²)/(2(1-ρ²)))
+    double coeff_phi2 = 1.0 / (2.0 * M_PI * sqrt_one_minus_rho2);
+    double Q_phi2 = (a0 * a0 - 2.0 * rho * a0 * a1 + a1 * a1) / one_minus_rho2;
+    double phi2_a0_a1 = coeff_phi2 * std::exp(-Q_phi2 / 2.0);
+
+    // Build the formula
+    double term1 = mu0 * mu1 * Phi2_a0_a1;
+    double term2 = mu0 * sigma1 * phi_a1 * Phi_cond_0;
+    double term3 = mu1 * sigma0 * phi_a0 * Phi_cond_1;
+    double term4 = sigma0 * sigma1 * (rho * Phi2_a0_a1 + one_minus_rho2 * phi2_a0_a1);
+    
+    return term1 + term2 + term3 + term4;
+}
+
+double expected_prod_pos(double mu0, double sigma0,
+                         double mu1, double sigma1,
+                         double rho) {
+    // E[D0⁺ D1⁺] where D0, D1 are bivariate normal with correlation ρ
+    // Precondition: sigma0 > 0, sigma1 > 0
+    if (sigma0 <= 0.0 || sigma1 <= 0.0) {
+        throw Nh::RuntimeException("expected_prod_pos: sigma0 and sigma1 must be positive");
+    }
+
+    // Clamp rho to [-1, 1] for numerical stability
+    rho = clamp(rho, -1.0, 1.0);
+    double abs_rho = std::abs(rho);
+
+    // Use analytical formulas for ρ ≈ ±1 to avoid numerical issues
+    constexpr double RHO_THRESHOLD = 0.9999;
+    if (abs_rho > RHO_THRESHOLD) {
+        if (rho > 0) {
+            return expected_prod_pos_rho1(mu0, sigma0, mu1, sigma1);
+        }
+        return expected_prod_pos_rho_neg1(mu0, sigma0, mu1, sigma1);
+    }
+
+    // High correlation: use analytical formula (uses GH 20 points for bivariate_normal_cdf)
+    // |ρ| ≥ 0.95
+    constexpr double HIGH_CORR_THRESHOLD = 0.95;
+    if (abs_rho >= HIGH_CORR_THRESHOLD) {
+        return expected_prod_pos_analytical(mu0, sigma0, mu1, sigma1, rho);
+    }
+
+    // Medium correlation: use GH 20 points
+    // 0.9 ≤ |ρ| < 0.95
+    constexpr double MEDIUM_CORR_THRESHOLD = 0.9;
+    if (abs_rho >= MEDIUM_CORR_THRESHOLD) {
+        return expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 20);
+    }
+
+    // Low correlation: use GH 10 points
+    // |ρ| < 0.9
+    return expected_prod_pos_gh(mu0, sigma0, mu1, sigma1, rho, 10);
 }
 
 double covariance_max0_max0(double mu0, double sigma0,
@@ -422,9 +538,44 @@ double bivariate_normal_pdf(double x, double y, double rho) {
     return coeff * std::exp(-Q / 2.0);
 }
 
+// Helper: Bivariate normal CDF using Simpson's rule
+// Φ₂(h, k; ρ) = ∫_{-∞}^{h} φ(x) × Φ((k - ρx)/√(1-ρ²)) dx
+// Uses Simpson's rule with finite integration range [-10.0, h]
+// φ(-10) ≈ 7.7e-23, so [-∞, -10] contribution is negligible
+static double bivariate_normal_cdf_simpson(double h, double k, double rho, int n_points) {
+    double one_minus_rho2 = 1.0 - (rho * rho);
+    double sigma_prime = std::sqrt(one_minus_rho2);
+    
+    double lower_bound = -10.0;
+    double upper_bound = h;
+    
+    if (upper_bound < lower_bound) {
+        return 0.0;
+    }
+    
+    double sum = 0.0;
+    double dx = (upper_bound - lower_bound) / n_points;
+    
+    for (int i = 0; i <= n_points; ++i) {
+        double x = lower_bound + (i * dx);
+        double f_val = normal_pdf(x) * normal_cdf((k - rho * x) / sigma_prime);
+        double weight;
+        if (i == 0 || i == n_points) {
+            weight = 1.0;
+        } else if (i % 2 == 0) {
+            weight = 2.0;
+        } else {
+            weight = 4.0;
+        }
+        sum += weight * f_val;
+    }
+    
+    return sum * dx / 3.0;
+}
+
 double bivariate_normal_cdf(double h, double k, double rho, int n_points) {
-    // Bivariate normal CDF: Φ₂(h, k; ρ) using Simpson's rule
-    // 128 points provides 8-digit accuracy with good performance (~1.6μs)
+    // Bivariate normal CDF: Φ₂(h, k; ρ)
+    // Uses Simpson's rule for high accuracy
     // Handle edge cases
     if (std::abs(rho) > 0.9999) {
         if (rho > 0) {
@@ -436,29 +587,12 @@ double bivariate_normal_cdf(double h, double k, double rho, int n_points) {
         return normal_cdf(h) * normal_cdf(k);
     }
 
-    // Integrate φ(x) × Φ((k - ρx)/σ') from -∞ to h
-    double sigma_prime = std::sqrt(1.0 - (rho * rho));
-    double lower_bound = -8.0;  // Effectively -∞ for standard normal
-    double upper_bound = h;
-
-    if (upper_bound < lower_bound) {
-        return 0.0;
+    // Default to 32 points for good accuracy (~0.4μs) with < 0.1% error
+    if (n_points == 0) {
+        n_points = 32;
     }
-
-    double sum = 0.0;
-    double dx = (upper_bound - lower_bound) / n_points;
-
-    for (int i = 0; i <= n_points; ++i) {
-        double x = lower_bound + (i * dx);
-        double f_val = normal_pdf(x) * normal_cdf((k - rho * x) / sigma_prime);
-        // Simpson's rule weights: 1-4-2-4-2-...-4-1
-        double weight = 1.0;
-        if (i != 0 && i != n_points) {
-            weight = (i % 2 == 0) ? 2.0 : 4.0;
-        }
-        sum += weight * f_val;
-    }
-    return sum * dx / 3.0;
+    
+    return bivariate_normal_cdf_simpson(h, k, rho, n_points);
 }
 
 }  // namespace RandomVariable
