@@ -354,34 +354,5 @@ Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expressi
     return expected_prod_pos_rho_neg1_func(mu0, sigma0, mu1, sigma1);
 }
 
-// =============================================================================
-// Cache statistics functions (for compatibility)
-// =============================================================================
-
-// Cache statistics functions - cache removed, always return 0 for compatibility
-size_t get_phi_expr_cache_hits() {
-    return 0;
-}
-
-size_t get_phi_expr_cache_misses() {
-    return 0;
-}
-
-size_t get_Phi_expr_cache_hits() {
-    return 0;
-}
-
-size_t get_Phi_expr_cache_misses() {
-    return 0;
-}
-
-size_t get_expected_prod_pos_cache_hits() {
-    return 0;
-}
-
-size_t get_expected_prod_pos_cache_misses() {
-    return 0;
-}
-
 }  // namespace RandomVariable
 

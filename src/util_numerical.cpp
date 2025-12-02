@@ -289,11 +289,12 @@ static double clamp(double val, double min_val, double max_val) {
     return val;
 }
 
-// Helper: E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
+// E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
 // Both positive when Z > c where c = -min(a0, a1)
 // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 + 1)·Φ(-c) + (a0 + a1 + c)·φ(c)]
-static double expected_prod_pos_rho1(double mu0, double sigma0,
-                                     double mu1, double sigma1) {
+// Uses exact std::min (no approximation)
+double expected_prod_pos_rho1(double mu0, double sigma0,
+                               double mu1, double sigma1) {
     double a0 = mu0 / sigma0;
     double a1 = mu1 / sigma1;
     double c = -std::min(a0, a1);
@@ -304,11 +305,12 @@ static double expected_prod_pos_rho1(double mu0, double sigma0,
     return sigma0 * sigma1 * ((a0 * a1 + 1.0) * Phi_neg_c + (a0 + a1 + c) * phi_c);
 }
 
-// Helper: E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
+// E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
 // Both positive when -a0 < Z < a1 (if a0 + a1 > 0)
 // E[D0⁺ D1⁺] = σ0·σ1 · [(a0·a1 - 1)·(Φ(a0) + Φ(a1) - 1) + a1·φ(a0) + a0·φ(a1)]
-static double expected_prod_pos_rho_neg1(double mu0, double sigma0,
-                                         double mu1, double sigma1) {
+// Uses exact condition check (no approximation)
+double expected_prod_pos_rho_neg1(double mu0, double sigma0,
+                                  double mu1, double sigma1) {
     double a0 = mu0 / sigma0;
     double a1 = mu1 / sigma1;
 

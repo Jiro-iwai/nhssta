@@ -19,6 +19,7 @@
 #include "statistical_functions.hpp"
 #include "max.hpp"
 #include "normal.hpp"
+#include "util_numerical.hpp"
 
 // Import only statistical functions, not the entire namespace
 // to avoid conflict with RandomVariable::RandomVariable type alias
@@ -297,5 +298,167 @@ TEST_F(Max0ExprTest, Max0ExprConsistency) {
     Expression var_direct = max0_var_expr(mu_expr, sigma_expr);
     
     EXPECT_NEAR(var_computed->value(), var_direct->value(), 1e-10);
+}
+
+// =============================================================================
+// Approximation error tests for rho=1 and rho=-1 cases
+// =============================================================================
+
+TEST_F(Max0ExprTest, ExpectedProdPosRho1_ApproximationError) {
+    // Test approximation error for expected_prod_pos_rho1_expr
+    // Compare Expression version (uses smooth min approximation) with
+    // exact numerical version (uses exact std::min, no approximation)
+    
+    std::cout << "\n=== Testing expected_prod_pos_rho1_expr approximation error ===" << std::endl;
+    std::cout << std::setprecision(12);
+    
+    // Test cases: various (a0, a1) combinations where min(a0, a1) matters
+    struct TestCase {
+        double mu0, sigma0, mu1, sigma1;
+        std::string description;
+    };
+    
+    std::vector<TestCase> test_cases = {
+        {10.0, 1.0, 10.0, 1.0, "a0 ≈ a1 (equal)"},
+        {10.0, 1.0, 10.01, 1.0, "a0 ≈ a1 (very close)"},
+        {10.0, 1.0, 10.1, 1.0, "a0 ≈ a1 (close)"},
+        {5.0, 1.0, 10.0, 1.0, "a0 < a1 (different)"},
+        {10.0, 1.0, 5.0, 1.0, "a0 > a1 (different)"},
+        {0.0, 1.0, 0.0, 1.0, "a0 = a1 = 0"},
+        {-5.0, 1.0, -10.0, 1.0, "Both negative, a0 > a1"},
+        {-10.0, 1.0, -5.0, 1.0, "Both negative, a0 < a1"},
+    };
+    
+    double max_rel_error = 0.0;
+    double max_abs_error = 0.0;
+    
+    for (const auto& tc : test_cases) {
+        // Exact numerical version (uses std::min, no approximation)
+        double exact_result = RandomVariable::expected_prod_pos_rho1(tc.mu0, tc.sigma0, tc.mu1, tc.sigma1);
+        
+        // Expression version (approximate, uses smooth min)
+        Variable mu0_expr, sigma0_expr, mu1_expr, sigma1_expr;
+        mu0_expr = tc.mu0;
+        sigma0_expr = tc.sigma0;
+        mu1_expr = tc.mu1;
+        sigma1_expr = tc.sigma1;
+        
+        Expression expr_result = expected_prod_pos_rho1_expr(mu0_expr, sigma0_expr, mu1_expr, sigma1_expr);
+        double expr_val = expr_result->value();
+        
+        double abs_error = std::abs(expr_val - exact_result);
+        double rel_error = (std::abs(exact_result) > 1e-15) ? abs_error / std::abs(exact_result) : abs_error;
+        
+        max_rel_error = std::max(max_rel_error, rel_error);
+        max_abs_error = std::max(max_abs_error, abs_error);
+        
+        double a0 = tc.mu0 / tc.sigma0;
+        double a1 = tc.mu1 / tc.sigma1;
+        double diff = std::abs(a0 - a1);
+        
+        std::cout << "\n" << tc.description << ":" << std::endl;
+        std::cout << "  μ0=" << tc.mu0 << ", σ0=" << tc.sigma0 
+                  << ", μ1=" << tc.mu1 << ", σ1=" << tc.sigma1 << std::endl;
+        std::cout << "  a0=" << a0 << ", a1=" << a1 << ", |a0-a1|=" << diff << std::endl;
+        std::cout << "  Exact (std::min): " << exact_result << std::endl;
+        std::cout << "  Expression (approx): " << expr_val << std::endl;
+        std::cout << "  Abs error: " << abs_error << std::endl;
+        std::cout << "  Rel error: " << rel_error << std::endl;
+        
+        // For epsilon=1e-10, expect error ~1e-5 when |a0-a1| ≈ 0
+        // For |a0-a1| >> 1e-5, error should be negligible (< 1e-10)
+        if (diff < 1e-5) {
+            EXPECT_LT(rel_error, 1e-4) << "When a0 ≈ a1, rel error should be < 1e-4";
+        } else {
+            EXPECT_LT(rel_error, 1e-8) << "When |a0-a1| >> 1e-5, rel error should be < 1e-8";
+        }
+    }
+    
+    std::cout << "\n=== Summary ===" << std::endl;
+    std::cout << "Max relative error: " << max_rel_error << std::endl;
+    std::cout << "Max absolute error: " << max_abs_error << std::endl;
+}
+
+TEST_F(Max0ExprTest, ExpectedProdPosRhoNeg1_ApproximationError) {
+    // Test approximation error for expected_prod_pos_rho_neg1_expr
+    // Compare Expression version (uses smooth step function) with
+    // exact numerical version (uses exact condition check, no approximation)
+    
+    std::cout << "\n=== Testing expected_prod_pos_rho_neg1_expr approximation error ===" << std::endl;
+    std::cout << std::setprecision(12);
+    
+    struct TestCase {
+        double mu0, sigma0, mu1, sigma1;
+        std::string description;
+    };
+    
+    std::vector<TestCase> test_cases = {
+        {10.0, 1.0, 10.0, 1.0, "a0 + a1 = 20 > 0"},
+        {5.0, 1.0, 5.0, 1.0, "a0 + a1 = 10 > 0"},
+        {1.0, 1.0, 1.0, 1.0, "a0 + a1 = 2 > 0"},
+        {0.1, 1.0, 0.1, 1.0, "a0 + a1 = 0.2 > 0 (small positive)"},
+        {0.0, 1.0, 0.0, 1.0, "a0 + a1 = 0 (boundary)"},
+        {-0.1, 1.0, -0.1, 1.0, "a0 + a1 = -0.2 < 0 (should be 0)"},
+        {-1.0, 1.0, -1.0, 1.0, "a0 + a1 = -2 < 0 (should be 0)"},
+        {-5.0, 1.0, -5.0, 1.0, "a0 + a1 = -10 < 0 (should be 0)"},
+        {10.0, 1.0, -5.0, 1.0, "a0 + a1 = 5 > 0"},
+        {-5.0, 1.0, 10.0, 1.0, "a0 + a1 = 5 > 0"},
+        {1e-6, 1.0, 1e-6, 1.0, "a0 + a1 = 2e-6 > 0 (very small positive)"},
+        {-1e-6, 1.0, -1e-6, 1.0, "a0 + a1 = -2e-6 < 0 (very small negative)"},
+    };
+    
+    double max_rel_error = 0.0;
+    double max_abs_error = 0.0;
+    
+    for (const auto& tc : test_cases) {
+        // Exact numerical version (uses exact condition check, no approximation)
+        double exact_result = RandomVariable::expected_prod_pos_rho_neg1(tc.mu0, tc.sigma0, tc.mu1, tc.sigma1);
+        
+        // Expression version (approximate, uses smooth step function)
+        Variable mu0_expr, sigma0_expr, mu1_expr, sigma1_expr;
+        mu0_expr = tc.mu0;
+        sigma0_expr = tc.sigma0;
+        mu1_expr = tc.mu1;
+        sigma1_expr = tc.sigma1;
+        
+        Expression expr_result = expected_prod_pos_rho_neg1_expr(mu0_expr, sigma0_expr, mu1_expr, sigma1_expr);
+        double expr_val = expr_result->value();
+        
+        double abs_error = std::abs(expr_val - exact_result);
+        double rel_error = (std::abs(exact_result) > 1e-15) ? abs_error / std::abs(exact_result) : abs_error;
+        
+        max_rel_error = std::max(max_rel_error, rel_error);
+        max_abs_error = std::max(max_abs_error, abs_error);
+        
+        double a0 = tc.mu0 / tc.sigma0;
+        double a1 = tc.mu1 / tc.sigma1;
+        double sum = a0 + a1;
+        
+        std::cout << "\n" << tc.description << ":" << std::endl;
+        std::cout << "  μ0=" << tc.mu0 << ", σ0=" << tc.sigma0 
+                  << ", μ1=" << tc.mu1 << ", σ1=" << tc.sigma1 << std::endl;
+        std::cout << "  a0 + a1 = " << sum << std::endl;
+        std::cout << "  Exact (condition check): " << exact_result << std::endl;
+        std::cout << "  Expression (approx): " << expr_val << std::endl;
+        std::cout << "  Abs error: " << abs_error << std::endl;
+        std::cout << "  Rel error: " << rel_error << std::endl;
+        
+        // For a0 + a1 >> epsilon, step function should be accurate
+        // For a0 + a1 ≈ 0, expect smooth transition
+        if (sum > 1e-5) {
+            // Well in positive region, should be accurate
+            EXPECT_LT(rel_error, 1e-6) << "When a0+a1 >> epsilon, rel error should be < 1e-6";
+        } else if (sum < -1e-5) {
+            // Well in negative region, should be close to 0
+            EXPECT_LT(expr_val, 1e-5) << "When a0+a1 << -epsilon, result should be ≈ 0";
+        } else {
+            // Near boundary, allow larger error due to smooth transition
+            EXPECT_LT(abs_error, 1e-3) << "Near boundary (|a0+a1| < 1e-5), abs error should be < 1e-3";
+        }
+    }
+    
+    std::cout << "\n=== Summary ===" << std::endl;
+    std::cout << "Max relative error: " << max_rel_error << std::endl;
+    std::cout << "Max absolute error: " << max_abs_error << std::endl;
 }
 

@@ -349,14 +349,6 @@ double& operator<<(double& a, const Expression& b);
 // Automatic differentiation utilities
 void zero_all_grad();
 
-// Cache statistics (for debugging)
-size_t get_expected_prod_pos_cache_hits();
-size_t get_expected_prod_pos_cache_misses();
-size_t get_phi_expr_cache_hits();
-size_t get_phi_expr_cache_misses();
-size_t get_Phi_expr_cache_hits();
-size_t get_Phi_expr_cache_misses();
-
 ////////////////
 // Custom Function Support
 

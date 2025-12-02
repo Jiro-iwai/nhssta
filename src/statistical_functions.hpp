@@ -170,46 +170,6 @@ Expression expected_prod_pos_rho1_expr(const Expression& mu0, const Expression& 
 Expression expected_prod_pos_rho_neg1_expr(const Expression& mu0, const Expression& sigma0,
                                            const Expression& mu1, const Expression& sigma1);
 
-// =============================================================================
-// Cache statistics functions (for compatibility)
-// =============================================================================
-
-/**
- * @brief Get cache hit count for phi_expr (always returns 0, cache removed)
- * @return Always returns 0
- */
-size_t get_phi_expr_cache_hits();
-
-/**
- * @brief Get cache miss count for phi_expr (always returns 0, cache removed)
- * @return Always returns 0
- */
-size_t get_phi_expr_cache_misses();
-
-/**
- * @brief Get cache hit count for Phi_expr (always returns 0, cache removed)
- * @return Always returns 0
- */
-size_t get_Phi_expr_cache_hits();
-
-/**
- * @brief Get cache miss count for Phi_expr (always returns 0, cache removed)
- * @return Always returns 0
- */
-size_t get_Phi_expr_cache_misses();
-
-/**
- * @brief Get cache hit count for expected_prod_pos_expr (always returns 0, cache removed)
- * @return Always returns 0
- */
-size_t get_expected_prod_pos_cache_hits();
-
-/**
- * @brief Get cache miss count for expected_prod_pos_expr (always returns 0, cache removed)
- * @return Always returns 0
- */
-size_t get_expected_prod_pos_cache_misses();
-
 }  // namespace RandomVariable
 
 #endif  // NHSSTA_STATISTICAL_FUNCTIONS_HPP

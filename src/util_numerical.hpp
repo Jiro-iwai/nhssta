@@ -47,6 +47,18 @@ double bivariate_normal_pdf(double x, double y, double rho);
 // 128 points provides 8-digit accuracy with good performance (~1.6μs)
 double bivariate_normal_cdf(double h, double k, double rho, int n_points = 128);
 
+// E[D0⁺ D1⁺] for ρ = 1 (perfectly correlated)
+// Uses exact std::min (no approximation)
+// Precondition: sigma0 > 0, sigma1 > 0
+double expected_prod_pos_rho1(double mu0, double sigma0,
+                               double mu1, double sigma1);
+
+// E[D0⁺ D1⁺] for ρ = -1 (perfectly negatively correlated)
+// Uses exact condition check (no approximation)
+// Precondition: sigma0 > 0, sigma1 > 0
+double expected_prod_pos_rho_neg1(double mu0, double sigma0,
+                                  double mu1, double sigma1);
+
 }  // namespace RandomVariable
 
 #endif  // NH_UTIL_NUMERICAL__H
