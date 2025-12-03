@@ -20,14 +20,23 @@ namespace RandomVariable {
 struct PairHash {
     template <class T1, class T2>
     std::size_t operator()(const std::pair<T1, T2>& p) const {
-        // Hash based on the underlying shared_ptr addresses
+        // Step 1: Compute hash values for both elements
+        // Hash based on the underlying shared_ptr addresses (pointer identity)
         auto h1 = std::hash<const void*>{}(p.first.get());
         auto h2 = std::hash<const void*>{}(p.second.get());
-        // Symmetric hash: use min/max to ensure same hash for (a,b) and (b,a)
-        // after normalization
+        
+        // Step 2: Normalize hash values for symmetric hashing
+        // Use min/max to ensure same hash for (a,b) and (b,a) after normalization
+        // This works together with normalize() to provide consistent hashing
         auto lo = std::min(h1, h2);
         auto hi = std::max(h1, h2);
-        // Use golden ratio multiplier for better hash distribution
+        
+        // Step 3: Combine hashes using golden ratio multiplier
+        // Golden ratio multiplier: 0x9e3779b9 = 2^32 / φ (where φ ≈ 1.618...)
+        // Multiplying by an irrational number (via 2^32/φ) improves hash distribution
+        // and reduces collisions. This is a well-established technique used in
+        // many hash table implementations (e.g., Java HashMap, Python dict).
+        // XOR combines lo and hi to mix both hash values into the final result.
         return lo ^ (hi * 0x9e3779b9);
     }
     
