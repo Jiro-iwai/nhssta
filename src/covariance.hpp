@@ -30,6 +30,20 @@ struct PairHash {
         // Use golden ratio multiplier for better hash distribution
         return lo ^ (hi * 0x9e3779b9);
     }
+    
+    // Hash collision handling:
+    // When hash collisions occur (different keys produce the same hash value),
+    // std::unordered_map automatically handles them using chaining:
+    // 1. Keys with the same hash are stored in the same bucket (linked list)
+    // 2. During lookup, std::unordered_map:
+    //    a. Computes hash value to find the bucket
+    //    b. Iterates through the chain comparing keys using operator==
+    //    c. Returns the value when matching key is found
+    // 3. Key equality is determined by std::pair's operator==, which compares
+    //    both first and second elements using RandomVariable's operator==
+    //    (pointer comparison via HandleBase)
+    // 4. Performance: O(1) average case, O(n) worst case if all keys collide
+    //    (very rare with current hash function due to golden ratio multiplier)
 };
 
 class CovarianceMatrixImpl {
