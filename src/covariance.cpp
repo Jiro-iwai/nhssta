@@ -26,24 +26,39 @@ CovarianceMatrix& get_covariance_matrix() {
 
 bool CovarianceMatrixImpl::lookup(const RandomVariable& a, const RandomVariable& b,
                                 double& cov) const {
-    // Normalize key to ensure consistent lookup (single search instead of two)
+    // Step 1: Cache lookup
+    // Normalize key (ensure a <= b ordering) and search cache
+    // This allows handling both (a, b) and (b, a) with a single search
     RowCol rowcol = normalize(a, b);
     auto i = cmat.find(rowcol);
     if (i != cmat.end()) {
+        // Cache hit: return precomputed covariance value
         cov = i->second;
         return true;
     }
 
+    // Step 2: Fallback handling (cache miss)
+    // Check if both variables are NormalImpl (normal distribution) type
+    // For NormalImpl types, we can compute immediately using statistical properties
     const auto* a_normal = dynamic_cast<const NormalImpl*>(a.get());
     const auto* b_normal = dynamic_cast<const NormalImpl*>(b.get());
     if (a_normal != nullptr && b_normal != nullptr) {
+        // Both are normal distributions
         if (a == b) {
+            // Same variable: use property Cov(X, X) = Var(X)
             cov = a->variance();
         } else {
+            // Different variables: assume independent normal distributions (cov = 0)
+            // If correlation exists, it will be computed recursively in the caller's
+            // covariance() function
             cov = 0.0;
         }
         return true;
     }
+
+    // Step 3: Fallback failed
+    // For non-NormalImpl types (OpADD, OpMAX, OpMAX0, etc.),
+    // delegate to more complex computation logic in the caller's covariance() function
     return false;
 }
 
