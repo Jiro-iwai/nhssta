@@ -103,13 +103,9 @@ TEST_F(CovarianceCacheNormalizationTest, SymmetricHash) {
     Normal a(10.0, 4.0);
     Normal b(5.0, 1.0);
     
-    RandomVariable::PairHash hasher;
-    RandomVariable::CovarianceMatrixImpl::RowCol key1(a, b);
-    RandomVariable::CovarianceMatrixImpl::RowCol key2(b, a);
-    
     // After normalization, both keys should produce the same hash
-    // Note: This test assumes normalize() is applied before hashing
-    // The actual hash values may differ, but the normalized keys should hash the same
+    // Note: This test verifies symmetric hashing through actual cache behavior
+    // The normalize() function ensures (a, b) and (b, a) use the same cache entry
     
     // Test through actual cache behavior
     RandomVariable::CovarianceMatrixImpl matrix;
@@ -193,8 +189,8 @@ TEST_F(CovarianceCacheNormalizationTest, IntegrationWithCovarianceCalculation) {
     EXPECT_DOUBLE_EQ(cov1, cov2);
     
     // Cache should contain normalized entries
-    auto& matrix = RandomVariable::get_covariance_matrix();
     // Note: Actual cache size depends on internal calculations,
     // but (a, sum) and (sum, a) should use the same cache entry
+    // This is verified by the fact that cov1 == cov2 above
 }
 
