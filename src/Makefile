@@ -69,7 +69,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_sensitivity_clone.cpp ../test/test_expression_cache.cpp \
 	../test/test_expression_node_count.cpp ../test/test_expression_cache_investigation.cpp \
 	../test/test_expression_helpers.cpp ../test/test_custom_function.cpp \
-	../test/test_custom_function_native.cpp
+	../test/test_custom_function_native.cpp ../test/test_simple_circuit.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 
