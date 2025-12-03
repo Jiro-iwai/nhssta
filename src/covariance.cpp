@@ -6,12 +6,15 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <nhssta/exception.hpp>
 
 #include "add.hpp"
 #include "covariance.hpp"
 #include "expression.hpp"
 #include "max.hpp"
+#include "profiling.hpp"
 #include "statistical_functions.hpp"
 #include "statistics.hpp"
 #include "sub.hpp"
@@ -164,6 +167,73 @@ double covariance(const Normal& a, const Normal& b) {
 static std::unordered_map<std::pair<RandomVariable, RandomVariable>, Expression, PairHash>
     cov_expr_cache;
 
+#ifdef DEBUG
+// Profiling statistics for cov_expr
+struct CovExprStats {
+    size_t total_calls = 0;
+    size_t cache_hits = 0;
+    size_t cache_misses = 0;
+    size_t normal_normal_cases = 0;
+    size_t add_expansions = 0;
+    size_t sub_expansions = 0;
+    size_t max_expansions = 0;
+    size_t max0_expansions = 0;
+    size_t recursive_calls = 0;
+    size_t max_recursion_depth = 0;
+    std::unordered_map<std::string, size_t> case_counts;
+    
+    void reset() {
+        total_calls = 0;
+        cache_hits = 0;
+        cache_misses = 0;
+        normal_normal_cases = 0;
+        add_expansions = 0;
+        sub_expansions = 0;
+        max_expansions = 0;
+        max0_expansions = 0;
+        recursive_calls = 0;
+        max_recursion_depth = 0;
+        case_counts.clear();
+    }
+    
+    void print(std::ostream& os = std::cerr) const {
+        os << "\n=== cov_expr() Detailed Analysis ===" << std::endl;
+        os << "Total calls: " << total_calls << std::endl;
+        if (total_calls > 0) {
+            os << "Cache hits: " << cache_hits << " (" << (100.0 * cache_hits / total_calls) << "%)" << std::endl;
+            os << "Cache misses: " << cache_misses << " (" << (100.0 * cache_misses / total_calls) << "%)" << std::endl;
+        }
+        os << "\nCase breakdown:" << std::endl;
+        os << "  Normal-Normal: " << normal_normal_cases << std::endl;
+        os << "  ADD expansion: " << add_expansions << std::endl;
+        os << "  SUB expansion: " << sub_expansions << std::endl;
+        os << "  MAX expansion: " << max_expansions << std::endl;
+        os << "  MAX0 expansion: " << max0_expansions << std::endl;
+        os << "  Recursive calls: " << recursive_calls << std::endl;
+        os << "  Max recursion depth: " << max_recursion_depth << std::endl;
+        os << "\nCase type distribution:" << std::endl;
+        for (const auto& pair : case_counts) {
+            os << "  " << pair.first << ": " << pair.second << std::endl;
+        }
+        os << std::endl;
+    }
+};
+
+static CovExprStats cov_expr_stats;
+
+void reset_cov_expr_stats() {
+    cov_expr_stats.reset();
+}
+
+void print_cov_expr_stats() {
+    cov_expr_stats.print();
+}
+#else
+// Dummy implementations for non-DEBUG builds
+void reset_cov_expr_stats() {}
+void print_cov_expr_stats() {}
+#endif
+
 void clear_cov_expr_cache() {
     cov_expr_cache.clear();
 }
@@ -174,7 +244,7 @@ static Expression cov_x_max0_expr(const RandomVariable& x, const RandomVariable&
     const RandomVariable& z = y_max0->left();
 
     // Cov(X, max0(Z)) = Cov(X, Z) × Φ(μ_Z/σ_Z)
-    Expression cov_xz = cov_expr(x, z);
+    Expression cov_xz = cov_expr(x, z, 0);  // Reset depth for helper functions
     Expression mu_z = z->mean_expr();
     Expression sigma_z = z->std_expr();
 
@@ -193,7 +263,7 @@ static Expression cov_max0_max0_expr(const RandomVariable& a, const RandomVariab
     Expression sigma1 = d1->std_expr();
 
     // ρ = Cov(D0, D1) / (σ0 * σ1)
-    Expression cov_d0d1 = cov_expr(d0, d1);
+    Expression cov_d0d1 = cov_expr(d0, d1, 0);  // Reset depth for helper functions
     double rho_val = cov_d0d1->value() / (sigma0->value() * sigma1->value());
 
     // E[D0⁺] and E[D1⁺]
@@ -222,62 +292,122 @@ static Expression cov_max0_max0_expr(const RandomVariable& a, const RandomVariab
     return result;
 }
 
-Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
+Expression cov_expr(const RandomVariable& a, const RandomVariable& b, int depth) {
+    PROFILE_FUNCTION();
+#ifdef DEBUG
+    cov_expr_stats.total_calls++;
+    if (depth > static_cast<int>(cov_expr_stats.max_recursion_depth)) {
+        cov_expr_stats.max_recursion_depth = depth;
+    }
+    if (depth > 0) {
+        cov_expr_stats.recursive_calls++;
+    }
+#endif
     // Check cache first (with symmetry)
     auto it = cov_expr_cache.find({a, b});
     if (it != cov_expr_cache.end()) {
+#ifdef DEBUG
+        cov_expr_stats.cache_hits++;
+#endif
         return it->second;
     }
     it = cov_expr_cache.find({b, a});
     if (it != cov_expr_cache.end()) {
+#ifdef DEBUG
+        cov_expr_stats.cache_hits++;
+#endif
         return it->second;
     }
+#ifdef DEBUG
+    cov_expr_stats.cache_misses++;
+#endif
 
     Expression result;
 
     // C-5.2: Same variable → Variance
     if (a == b) {
+#ifdef DEBUG
+        cov_expr_stats.case_counts["SameVariable"]++;
+#endif
         result = a->var_expr();
     }
     // C-5.3: ADD linear expansion - Cov(A+B, X) = Cov(A,X) + Cov(B,X)
     else if (dynamic_cast<const OpADD*>(a.get()) != nullptr) {
-        Expression cov_left = cov_expr(a->left(), b);
-        Expression cov_right = cov_expr(a->right(), b);
+#ifdef DEBUG
+        cov_expr_stats.add_expansions++;
+        cov_expr_stats.case_counts["ADD_a"]++;
+#endif
+        Expression cov_left = cov_expr(a->left(), b, depth + 1);
+        Expression cov_right = cov_expr(a->right(), b, depth + 1);
         result = cov_left + cov_right;
     } else if (dynamic_cast<const OpADD*>(b.get()) != nullptr) {
-        Expression cov_left = cov_expr(a, b->left());
-        Expression cov_right = cov_expr(a, b->right());
+#ifdef DEBUG
+        cov_expr_stats.add_expansions++;
+        cov_expr_stats.case_counts["ADD_b"]++;
+#endif
+        Expression cov_left = cov_expr(a, b->left(), depth + 1);
+        Expression cov_right = cov_expr(a, b->right(), depth + 1);
         result = cov_left + cov_right;
     }
     // C-5.3: SUB linear expansion - Cov(A-B, X) = Cov(A,X) - Cov(B,X)
     else if (dynamic_cast<const OpSUB*>(a.get()) != nullptr) {
-        result = cov_expr(a->left(), b) - cov_expr(a->right(), b);
+#ifdef DEBUG
+        cov_expr_stats.sub_expansions++;
+        cov_expr_stats.case_counts["SUB_a"]++;
+#endif
+        result = cov_expr(a->left(), b, depth + 1) - cov_expr(a->right(), b, depth + 1);
     } else if (dynamic_cast<const OpSUB*>(b.get()) != nullptr) {
-        result = cov_expr(a, b->left()) - cov_expr(a, b->right());
+#ifdef DEBUG
+        cov_expr_stats.sub_expansions++;
+        cov_expr_stats.case_counts["SUB_b"]++;
+#endif
+        result = cov_expr(a, b->left(), depth + 1) - cov_expr(a, b->right(), depth + 1);
     }
     // C-5.6: MAX expansion - MAX(A,B) = A + MAX0(B-A)
     else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
+#ifdef DEBUG
+        cov_expr_stats.max_expansions++;
+        cov_expr_stats.case_counts["MAX_a"]++;
+#endif
         const RandomVariable& x = a->left();
         auto m = a.dynamic_pointer_cast<const OpMAX>();
         const RandomVariable& z = m->max0();
-        result = cov_expr(x, b) + cov_expr(z, b);
+        result = cov_expr(x, b, depth + 1) + cov_expr(z, b, depth + 1);
     } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
+#ifdef DEBUG
+        cov_expr_stats.max_expansions++;
+        cov_expr_stats.case_counts["MAX_b"]++;
+#endif
         const RandomVariable& x = b->left();
         auto m = b.dynamic_pointer_cast<const OpMAX>();
         const RandomVariable& z = m->max0();
-        result = cov_expr(a, x) + cov_expr(a, z);
+        result = cov_expr(a, x, depth + 1) + cov_expr(a, z, depth + 1);
     }
     // Handle nested MAX0(MAX0(...)) - pass through
     else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
              dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr) {
-        result = cov_expr(a->left(), b);
+#ifdef DEBUG
+        cov_expr_stats.case_counts["NestedMAX0_a"]++;
+#endif
+        result = cov_expr(a->left(), b, depth + 1);
     } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr &&
                dynamic_cast<const OpMAX0*>(b->left().get()) != nullptr) {
-        result = cov_expr(a, b->left());
+#ifdef DEBUG
+        cov_expr_stats.case_counts["NestedMAX0_b"]++;
+#endif
+        result = cov_expr(a, b->left(), depth + 1);
     }
     // C-5.5: MAX0 × MAX0
     else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
              dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
+#ifdef DEBUG
+        cov_expr_stats.max0_expansions++;
+        if (a->left() == b->left()) {
+            cov_expr_stats.case_counts["MAX0_MAX0_same"]++;
+        } else {
+            cov_expr_stats.case_counts["MAX0_MAX0_diff"]++;
+        }
+#endif
         if (a->left() == b->left()) {
             // max0(D) with itself: Cov = Var(max0(D))
             result = a->var_expr();
@@ -287,13 +417,23 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
     }
     // C-5.4: MAX0 × X (X is not MAX0)
     else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr) {
+#ifdef DEBUG
+        cov_expr_stats.case_counts["MAX0_X_a"]++;
+#endif
         result = cov_x_max0_expr(b, a);
     } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
+#ifdef DEBUG
+        cov_expr_stats.case_counts["MAX0_X_b"]++;
+#endif
         result = cov_x_max0_expr(a, b);
     }
     // C-5.2: Normal × Normal (independent)
     else if (dynamic_cast<const NormalImpl*>(a.get()) != nullptr &&
              dynamic_cast<const NormalImpl*>(b.get()) != nullptr) {
+#ifdef DEBUG
+        cov_expr_stats.normal_normal_cases++;
+        cov_expr_stats.case_counts["Normal_Normal"]++;
+#endif
         result = Const(0.0);
     }
     // Unsupported combination

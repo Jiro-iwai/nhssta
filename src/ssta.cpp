@@ -16,6 +16,7 @@
 #include "expression.hpp"
 #include "parser.hpp"
 #include "util_numerical.hpp"
+#include "profiling.hpp"
 
 namespace Nh {
 
@@ -651,6 +652,7 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
 }
 
 SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
+    PROFILE_FUNCTION();
     using namespace RandomVariable;
     
     SensitivityResults results;
@@ -688,28 +690,40 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     
     // Step 4: Build objective function F = log(Σ exp(LAT + σ))
     // First, clear all gradients
-    zero_all_grad();
+    {
+        PROFILE_SCOPE("zero_all_grad");
+        zero_all_grad();
+    }
     
     // Build Expression for each endpoint's score
     Expression sum_exp = Const(0.0);
-    for (const auto& path : endpoint_paths) {
-        auto sig_it = signals_.find(path.endpoint);
-        if (sig_it == signals_.end()) {
-            continue;
+    {
+        PROFILE_SCOPE("build_objective_expression");
+        for (const auto& path : endpoint_paths) {
+            auto sig_it = signals_.find(path.endpoint);
+            if (sig_it == signals_.end()) {
+                continue;
+            }
+            const RandomVariable& lat = sig_it->second;
+            
+            Expression mean_expr = lat->mean_expr();
+            Expression std_expr = lat->std_expr();
+            Expression score_expr = mean_expr + std_expr;
+            sum_exp = sum_exp + exp(score_expr);
         }
-        const RandomVariable& lat = sig_it->second;
-        
-        Expression mean_expr = lat->mean_expr();
-        Expression std_expr = lat->std_expr();
-        Expression score_expr = mean_expr + std_expr;
-        sum_exp = sum_exp + exp(score_expr);
     }
     
     Expression objective = log(sum_exp);
-    results.objective_value = objective->value();
+    {
+        PROFILE_SCOPE("objective_value");
+        results.objective_value = objective->value();
+    }
     
     // Step 5: Compute gradients via backward pass
-    objective->backward();
+    {
+        PROFILE_SCOPE("backward");
+        objective->backward();
+    }
     
     // Step 6: Collect gate sensitivities from cloned delays
     // instance_to_delays_ contains the actual cloned delays used in the Expression tree

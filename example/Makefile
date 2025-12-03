@@ -1,6 +1,7 @@
 SHELL = /bin/sh
 
 all: 
+	@cd ../src && $(MAKE) DEBUG=0
 	sh ./nhssta_test
 
 clean:

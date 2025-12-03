@@ -574,4 +574,8 @@ private:
 Expression make_custom_call(const CustomFunctionHandle& func,
                             const std::vector<Expression>& args);
 
+// Profiling statistics for CustomFunction
+void reset_custom_function_stats();
+void print_custom_function_stats();
+
 #endif  // EXPRESSION__H

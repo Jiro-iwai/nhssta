@@ -11,6 +11,8 @@
 #include <sstream>
 #include <string>
 
+#include "profiling.hpp"
+
 void usage(const char* first, const char* last) {
     std::cerr << "usage: nhssta" << std::endl;
     std::cerr << " -d, --dlib         specifies .dlib file" << std::endl;
@@ -331,7 +333,13 @@ int main(int argc, char* argv[]) {
 
         if (ssta.is_sensitivity()) {
             std::cout << std::endl;
+#ifdef DEBUG
+            Profiling::Profiler::getInstance().enable();
+#endif
             Nh::SensitivityResults sens_results = ssta.getSensitivityResults();
+#ifdef DEBUG
+            Profiling::Profiler::getInstance().printReport();
+#endif
             std::cout << formatSensitivityResults(sens_results);
         }
 
@@ -351,5 +359,16 @@ int main(int argc, char* argv[]) {
         return 3;
     }
 
+#ifdef DEBUG
+    // Print profiling report before exiting
+    Profiling::Profiler::getInstance().printReport();
+    
+    // Print cov_expr detailed analysis
+    RandomVariable::print_cov_expr_stats();
+    
+    // Print custom function detailed analysis
+    print_custom_function_stats();
+#endif
+    
     return 0;
 }

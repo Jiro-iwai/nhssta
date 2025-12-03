@@ -3,6 +3,7 @@
 
 #include "statistical_functions.hpp"
 #include "expression.hpp"
+#include "profiling.hpp"
 #include "util_numerical.hpp"
 
 #include <cmath>
@@ -146,6 +147,7 @@ Expression max0_var_expr(const Expression& mu, const Expression& sigma) {
 //   ∂Φ₂/∂k = φ(k) × Φ((h - ρk)/√(1-ρ²))
 //   ∂Φ₂/∂ρ = φ₂(h, k; ρ) (bivariate normal PDF)
 Expression Phi2_expr(const Expression& h, const Expression& k, const Expression& rho) {
+    PROFILE_FUNCTION();
     // Create Native type custom function
     static CustomFunction phi2_func = CustomFunction::create_native(
         3,
@@ -230,6 +232,7 @@ static CustomFunction expected_prod_pos_func = CustomFunction::create(
 Expression expected_prod_pos_expr(const Expression& mu0, const Expression& sigma0,
                                   const Expression& mu1, const Expression& sigma1,
                                   const Expression& rho) {
+    PROFILE_FUNCTION();
     // E[D0⁺ D1⁺] where D0, D1 are bivariate normal
     return expected_prod_pos_func(mu0, sigma0, mu1, sigma1, rho);
 }

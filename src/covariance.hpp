@@ -70,10 +70,14 @@ double covariance(const RandomVariable& a, const RandomVariable& b);
 
 // Expression-based covariance for automatic differentiation (Phase C-5 of #167)
 // Returns an Expression representing Cov(a, b) that can be differentiated
-Expression cov_expr(const RandomVariable& a, const RandomVariable& b);
+Expression cov_expr(const RandomVariable& a, const RandomVariable& b, int depth = 0);
 
 // Clear the cov_expr cache (for testing)
 void clear_cov_expr_cache();
+
+// Profiling statistics for cov_expr
+void reset_cov_expr_stats();
+void print_cov_expr_stats();
 
 CovarianceMatrix& get_covariance_matrix();
 }  // namespace RandomVariable

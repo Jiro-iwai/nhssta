@@ -12,7 +12,17 @@ else
 endif
 
 CXX ?= g++
-CXXFLAGS = -g -Wall -std=c++17 
+# DEBUG mode: set DEBUG=1 to enable profiling and debug features
+# Usage: make DEBUG=1
+DEBUG ?= 1
+ifeq ($(DEBUG),1)
+    CXXFLAGS = -g -Wall -std=c++17 -DDEBUG
+else
+    CXXFLAGS = -O2 -Wall -std=c++17
+endif
+# Profiling flags (use PROFILE=1 to enable)
+PROFILE_FLAGS = -pg
+PROFILE_LIBS = -pg 
 # Boost dependencies have been removed in Phase 1
 # If you need Boost for legacy code, uncomment and set BOOST_DIR:
 # BOOST_DIR = /opt/homebrew/opt/boost
@@ -81,12 +91,18 @@ LIB_OBJS = ../build/src/covariance.o ../build/src/max.o ../build/src/sub.o ../bu
 $(TARGET) : $(OBJS) 
 	$(Q)mkdir -p ../build/bin
 	$(ECHO) "Linking $(TARGET) from $(words $(OBJS)) object files"
-	$(Q)$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS)
+	$(Q)if [ "$(PROFILE)" = "1" ]; then \
+		$(CXX) $(CXXFLAGS) $(PROFILE_FLAGS) $(INCLUDE) -o $(TARGET) $(OBJS) $(PROFILE_LIBS); \
+	else \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) -o $(TARGET) $(OBJS); \
+	fi
 
 ../build/src/%.o : %.cpp
 	$(Q)mkdir -p ../build/src
 	$(ECHO) "Compiling $< -> $@"
-	$(Q)if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
+	$(Q)if [ "$(PROFILE)" = "1" ]; then \
+		$(CXX) $(CXXFLAGS) $(PROFILE_FLAGS) $(INCLUDE) -c $< -o $@; \
+	elif echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
 		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) -c $< -o $@; \
 	else \
 		$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@; \

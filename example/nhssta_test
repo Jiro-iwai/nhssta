@@ -168,15 +168,25 @@ run_test() {
     # For other tests, filter out comment lines
     if echo "${OPTIONS}" | grep -q "\-s"; then
         # Sensitivity test: keep comment lines, filter version and OK line
-        if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^nhssta " | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
+        if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | \
+            grep -v "^nhssta " | \
+            grep -v "^OK$" | \
+            grep -v "RandomVariableImpl.*is creating" | \
+            grep -v "RandomVariableImpl.*is deleting" \
+            > "${TEMP_RESULT_FILE}"; then
             print_failure "  ✗ FAILED (nhssta execution failed)"
             FAILED_TESTS=$((FAILED_TESTS + 1))
             return 1
         fi
     else
         # Regular test: filter comments, version, timestamp, and OK line
-        if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | grep -v "^#" | grep -v "^nhssta " | grep -v "^OK$" > "${TEMP_RESULT_FILE}"; then
-            print_failure "  ✗ FAILED (nhssta execution failed)"
+        if ! ${NHSSTA} ${OPTIONS} -d "${DLIB_FILE}" -b "${BENCH_FILE}" 2>&1 | \
+            grep -v "^#" | \
+            grep -v "^nhssta " | \
+            grep -v "^OK$" | \
+            grep -v "RandomVariableImpl.*is creating" | \
+            grep -v "RandomVariableImpl.*is deleting" \
+            > "${TEMP_RESULT_FILE}"; then
             FAILED_TESTS=$((FAILED_TESTS + 1))
             return 1
         fi

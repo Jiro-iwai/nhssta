@@ -2,6 +2,7 @@
 // Author: Jiro Iwai
 
 #include "expression.hpp"
+#include "profiling.hpp"
 #include "util_numerical.hpp"
 
 #include <algorithm>
@@ -23,6 +24,90 @@ int ExpressionImpl::current_id_ = 0;
 
 // Flag to track if eTbl has been destroyed
 static bool eTbl_destroyed = false;
+
+#ifdef DEBUG
+// Profiling statistics for CustomFunction
+struct CustomFunctionStats {
+    size_t total_calls = 0;
+    size_t eval_with_gradient_calls = 0;
+    size_t value_calls = 0;
+    size_t gradient_calls = 0;
+    size_t value_and_gradient_calls = 0;
+    
+    size_t graph_type_calls = 0;
+    size_t native_type_calls = 0;
+    
+    size_t cache_hits = 0;  // Graph型でのキャッシュヒット（has_cached_value_ && args_equal）
+    size_t cache_misses = 0;
+    
+    std::unordered_map<std::string, size_t> function_name_counts;  // 関数名ごとの呼び出し回数
+    std::unordered_map<size_t, size_t> input_dim_counts;  // 入力次元ごとの呼び出し回数
+    
+    void reset() {
+        total_calls = 0;
+        eval_with_gradient_calls = 0;
+        value_calls = 0;
+        gradient_calls = 0;
+        value_and_gradient_calls = 0;
+        graph_type_calls = 0;
+        native_type_calls = 0;
+        cache_hits = 0;
+        cache_misses = 0;
+        function_name_counts.clear();
+        input_dim_counts.clear();
+    }
+    
+    void print(std::ostream& os = std::cerr) const {
+        os << "\n=== CustomFunction Detailed Analysis ===" << std::endl;
+        os << "Total calls: " << total_calls << std::endl;
+        os << "\nCall type breakdown:" << std::endl;
+        os << "  eval_with_gradient: " << eval_with_gradient_calls << std::endl;
+        os << "  value: " << value_calls << std::endl;
+        os << "  gradient: " << gradient_calls << std::endl;
+        os << "  value_and_gradient: " << value_and_gradient_calls << std::endl;
+        os << "\nImplementation type:" << std::endl;
+        os << "  Graph: " << graph_type_calls << std::endl;
+        os << "  Native: " << native_type_calls << std::endl;
+        if (eval_with_gradient_calls > 0) {
+            // Graph型のeval_with_gradient呼び出し回数を推定
+            // (cache_hits + cache_misses が Graph型のeval_with_gradient呼び出し回数)
+            size_t graph_eval_with_gradient = cache_hits + cache_misses;
+            if (graph_eval_with_gradient > 0) {
+                os << "\nCache efficiency (Graph type eval_with_gradient):" << std::endl;
+                os << "  Total Graph eval_with_gradient calls: " << graph_eval_with_gradient << std::endl;
+                os << "  Cache hits: " << cache_hits << " (" 
+                   << std::fixed << std::setprecision(2)
+                   << (100.0 * cache_hits / graph_eval_with_gradient) << "%)" << std::endl;
+                os << "  Cache misses: " << cache_misses << " (" 
+                   << (100.0 * cache_misses / graph_eval_with_gradient) << "%)" << std::endl;
+            }
+        }
+        os << "\nFunction name distribution:" << std::endl;
+        for (const auto& pair : function_name_counts) {
+            os << "  " << pair.first << ": " << pair.second << std::endl;
+        }
+        os << "\nInput dimension distribution:" << std::endl;
+        for (const auto& pair : input_dim_counts) {
+            os << "  " << pair.first << " args: " << pair.second << std::endl;
+        }
+        os << std::endl;
+    }
+};
+
+static CustomFunctionStats custom_function_stats;
+
+void reset_custom_function_stats() {
+    custom_function_stats.reset();
+}
+
+void print_custom_function_stats() {
+    custom_function_stats.print();
+}
+#else
+// Dummy implementations for non-DEBUG builds
+void reset_custom_function_stats() {}
+void print_custom_function_stats() {}
+#endif
 
 // Function-local static to avoid static destruction order issues
 // This ensures eTbl is not destroyed while ExpressionImpl objects still exist
@@ -105,6 +190,7 @@ ExpressionImpl::~ExpressionImpl() {
 }
 
 double ExpressionImpl::value() {
+    PROFILE_FUNCTION();
     if (!is_set_value()) {
         // Check CUSTOM_FUNCTION operation first
         if (op_ == CUSTOM_FUNCTION) {
@@ -328,6 +414,7 @@ static void topo_sort_dfs(ExpressionImpl* node,
 }
 
 void ExpressionImpl::backward(double upstream) {
+    PROFILE_FUNCTION();
     // Build topological order (children before parents)
     std::set<ExpressionImpl*> visited;
     std::vector<ExpressionImpl*> topo_order;
@@ -819,12 +906,22 @@ bool CustomFunctionImpl::args_equal(const std::vector<double>& a,
 }
 
 double CustomFunctionImpl::value(const std::vector<double>& x) {
+#ifdef DEBUG
+    custom_function_stats.total_calls++;
+    custom_function_stats.value_calls++;
+    custom_function_stats.function_name_counts[name_]++;
+    custom_function_stats.input_dim_counts[input_dim_]++;
+#endif
+    
     if (x.size() != input_dim_) {
         throw Nh::RuntimeException(
             "CustomFunctionImpl::value: input dimension mismatch");
     }
 
     if (kind_ == ImplKind::Graph) {
+#ifdef DEBUG
+        custom_function_stats.graph_type_calls++;
+#endif
         set_inputs_and_clear(x);
         double v = output_->value();
         // Cache the value and arguments for potential reuse in eval_with_gradient
@@ -834,6 +931,9 @@ double CustomFunctionImpl::value(const std::vector<double>& x) {
         return v;
     }
     // Native
+#ifdef DEBUG
+    custom_function_stats.native_type_calls++;
+#endif
     double v = 0.0;
     if (native_value_) {
         v = native_value_(x);
@@ -850,12 +950,22 @@ double CustomFunctionImpl::value(const std::vector<double>& x) {
 }
 
 std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
+#ifdef DEBUG
+    custom_function_stats.total_calls++;
+    custom_function_stats.gradient_calls++;
+    custom_function_stats.function_name_counts[name_]++;
+    custom_function_stats.input_dim_counts[input_dim_]++;
+#endif
+    
     if (x.size() != input_dim_) {
         throw Nh::RuntimeException(
             "CustomFunctionImpl::gradient: input dimension mismatch");
     }
 
     if (kind_ == ImplKind::Graph) {
+#ifdef DEBUG
+        custom_function_stats.graph_type_calls++;
+#endif
         set_inputs_and_clear(x);
         output_->value();
         output_->backward(1.0);
@@ -867,6 +977,9 @@ std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
         return grad;
     }
     // Native
+#ifdef DEBUG
+    custom_function_stats.native_type_calls++;
+#endif
     std::vector<double> grad;
     if (native_grad_) {
         grad = native_grad_(x);
@@ -888,12 +1001,22 @@ std::vector<double> CustomFunctionImpl::gradient(const std::vector<double>& x) {
 
 std::pair<double, std::vector<double>>
 CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
+#ifdef DEBUG
+    custom_function_stats.total_calls++;
+    custom_function_stats.value_and_gradient_calls++;
+    custom_function_stats.function_name_counts[name_]++;
+    custom_function_stats.input_dim_counts[input_dim_]++;
+#endif
+    
     if (x.size() != input_dim_) {
         throw Nh::RuntimeException(
             "CustomFunctionImpl::value_and_gradient: input dimension mismatch");
     }
 
     if (kind_ == ImplKind::Graph) {
+#ifdef DEBUG
+        custom_function_stats.graph_type_calls++;
+#endif
         set_inputs_and_clear(x);
         double v = output_->value();
         output_->backward(1.0);
@@ -910,6 +1033,9 @@ CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
         return {v, std::move(grad)};
     }
     // Native
+#ifdef DEBUG
+    custom_function_stats.native_type_calls++;
+#endif
     double v = 0.0;
     std::vector<double> g;
     if (native_value_grad_) {
@@ -934,16 +1060,29 @@ CustomFunctionImpl::value_and_gradient(const std::vector<double>& x) {
 
 std::pair<double, std::vector<double>>
 CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
+#ifdef DEBUG
+    custom_function_stats.total_calls++;
+    custom_function_stats.eval_with_gradient_calls++;
+    custom_function_stats.function_name_counts[name_]++;
+    custom_function_stats.input_dim_counts[input_dim_]++;
+#endif
+    
     if (args_values.size() != input_dim_) {
         throw Nh::RuntimeException(
             "CustomFunctionImpl::eval_with_gradient: size mismatch");
     }
 
     if (kind_ == ImplKind::Graph) {
+#ifdef DEBUG
+        custom_function_stats.graph_type_calls++;
+#endif
         // Optimization: if value was already computed with the same arguments,
         // reuse it and only compute gradient
         double v = 0.0;
         if (has_cached_value_ && args_equal(args_values, last_args_)) {
+#ifdef DEBUG
+            custom_function_stats.cache_hits++;  // キャッシュヒット
+#endif
             // Reuse cached value, only compute gradient
             v = last_value_;
             // Still need to set inputs for gradient computation
@@ -951,8 +1090,21 @@ CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
             // Value is already computed, skip value() call
             output_->backward(1.0);
         } else {
+#ifdef DEBUG
+            custom_function_stats.cache_misses++;  // キャッシュミス
+            // Compute both value and gradient
+            // Note: value_and_gradient内でも統計が記録されるが、これはeval_with_gradient経由なので
+            // 統計の重複を避けるため、ここでは記録しない
+            auto result = value_and_gradient(args_values);
+            // value_and_gradientの統計を調整（eval_with_gradient経由なので除外）
+            custom_function_stats.total_calls--;  // 重複カウントを削除
+            custom_function_stats.value_and_gradient_calls--;  // 重複カウントを削除
+            custom_function_stats.graph_type_calls--;  // 重複カウントを削除
+            return result;
+#else
             // Compute both value and gradient
             return value_and_gradient(args_values);
+#endif
         }
 
         std::vector<double> grad(input_dim_);
@@ -962,6 +1114,9 @@ CustomFunctionImpl::eval_with_gradient(const std::vector<double>& args_values) {
         return {v, std::move(grad)};
     }
     // Native doesn't have internal state, so just call value_and_gradient
+#ifdef DEBUG
+    custom_function_stats.native_type_calls++;
+#endif
     return value_and_gradient(args_values);
 }
 
