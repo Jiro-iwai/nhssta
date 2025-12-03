@@ -16,15 +16,19 @@
 namespace RandomVariable {
 
 // Custom hash function for std::pair<RandomVariable, RandomVariable>
-// Uses the underlying shared_ptr addresses for hashing
+// Uses symmetric hashing for normalized keys (a <= b)
 struct PairHash {
     template <class T1, class T2>
     std::size_t operator()(const std::pair<T1, T2>& p) const {
         // Hash based on the underlying shared_ptr addresses
         auto h1 = std::hash<const void*>{}(p.first.get());
         auto h2 = std::hash<const void*>{}(p.second.get());
-        // Combine hashes
-        return h1 ^ (h2 << 1);
+        // Symmetric hash: use min/max to ensure same hash for (a,b) and (b,a)
+        // after normalization
+        auto lo = std::min(h1, h2);
+        auto hi = std::max(h1, h2);
+        // Use golden ratio multiplier for better hash distribution
+        return lo ^ (hi * 0x9e3779b9);
     }
 };
 
@@ -39,7 +43,7 @@ class CovarianceMatrixImpl {
     bool lookup(const RandomVariable& a, const RandomVariable& b, double& cov) const;
 
     void set(const RandomVariable& a, const RandomVariable& b, double cov) {
-        RowCol rowcol(a, b);
+        RowCol rowcol = normalize(a, b);
         cmat[rowcol] = cov;
     }
 
@@ -48,6 +52,15 @@ class CovarianceMatrixImpl {
     [[nodiscard]] size_t size() const { return cmat.size(); }
 
    private:
+    // Normalize key to ensure consistent ordering (a <= b by pointer address)
+    // This allows (a, b) and (b, a) to use the same cache entry
+    static RowCol normalize(const RandomVariable& a, const RandomVariable& b) {
+        if (a.get() <= b.get()) {
+            return {a, b};
+        }
+        return {b, a};
+    }
+
     Matrix cmat;
 };
 

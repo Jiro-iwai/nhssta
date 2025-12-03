@@ -26,15 +26,9 @@ CovarianceMatrix& get_covariance_matrix() {
 
 bool CovarianceMatrixImpl::lookup(const RandomVariable& a, const RandomVariable& b,
                                 double& cov) const {
-    RowCol rowcol0(a, b);
-    auto i = cmat.find(rowcol0);
-    if (i != cmat.end()) {
-        cov = i->second;
-        return true;
-    }
-
-    RowCol rowcol1(b, a);
-    i = cmat.find(rowcol1);
+    // Normalize key to ensure consistent lookup (single search instead of two)
+    RowCol rowcol = normalize(a, b);
+    auto i = cmat.find(rowcol);
     if (i != cmat.end()) {
         cov = i->second;
         return true;
