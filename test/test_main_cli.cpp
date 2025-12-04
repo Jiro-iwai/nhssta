@@ -236,12 +236,17 @@ TEST_F(CommandLineTest, TestCriticalPathShortOptionWithCount) {
         << "Critical path output should include LAT-style table header";
 }
 
-// Test: critical path option (--path invalid) falls back to default count
+// Test: critical path option (--path invalid) shows clear error message
 TEST_F(CommandLineTest, TestCriticalPathLongOptionInvalidArgument) {
     std::string output = run_nhssta(
         {"--path", "invalid", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
-    EXPECT_NE(output.find("usage"), std::string::npos)
-        << "Invalid numeric argument should currently be treated as an error";
+    // Should show error message about invalid number format
+    EXPECT_NE(output.find("error"), std::string::npos)
+        << "Invalid numeric argument should show error message. Got: " << output.substr(0, 300);
+    bool has_invalid_message = output.find("Invalid number format") != std::string::npos ||
+                                output.find("invalid") != std::string::npos;
+    EXPECT_TRUE(has_invalid_message)
+        << "Error message should mention invalid number format";
 }
 
 // Test: critical path option with negative count should trigger usage (treated as invalid flag)
@@ -332,4 +337,59 @@ TEST_F(CommandLineTest, TestSensitivityTopN) {
     // Both should contain sensitivity analysis
     EXPECT_NE(output_n2.find("Sensitivity Analysis"), std::string::npos);
     EXPECT_NE(output_n3.find("Sensitivity Analysis"), std::string::npos);
+}
+
+// Test: Invalid number format for -p option should show clear error message
+TEST_F(CommandLineTest, TestInvalidNumberFormatForPathOption) {
+    std::string output = run_nhssta(
+        {"-p", "abc", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Should show error message about invalid number format
+    EXPECT_NE(output.find("error"), std::string::npos)
+        << "Should show error message for invalid number format. Got: " << output.substr(0, 300);
+    bool has_invalid_message = output.find("Invalid number format") != std::string::npos ||
+                                output.find("invalid") != std::string::npos ||
+                                output.find("abc") != std::string::npos;
+    EXPECT_TRUE(has_invalid_message)
+        << "Error message should mention invalid number format or the invalid value";
+}
+
+// Test: Invalid number format (decimal) for -p option should show clear error message
+TEST_F(CommandLineTest, TestInvalidDecimalNumberFormatForPathOption) {
+    std::string output = run_nhssta(
+        {"-p", "12.34", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Should show error message about invalid number format
+    EXPECT_NE(output.find("error"), std::string::npos)
+        << "Should show error message for invalid number format. Got: " << output.substr(0, 300);
+}
+
+// Test: Invalid number format for -n option should show clear error message
+TEST_F(CommandLineTest, TestInvalidNumberFormatForTopNOption) {
+    std::string output = run_nhssta(
+        {"-s", "-n", "xyz", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Should show error message about invalid number format
+    EXPECT_NE(output.find("error"), std::string::npos)
+        << "Should show error message for invalid number format. Got: " << output.substr(0, 300);
+    bool has_invalid_message = output.find("Invalid number format") != std::string::npos ||
+                                output.find("invalid") != std::string::npos ||
+                                output.find("xyz") != std::string::npos;
+    EXPECT_TRUE(has_invalid_message)
+        << "Error message should mention invalid number format or the invalid value";
+}
+
+// Test: Out of range number for -p option should show clear error message
+TEST_F(CommandLineTest, TestOutOfRangeNumberForPathOption) {
+    // Use a number that exceeds size_t max value
+    std::string output = run_nhssta(
+        {"-p", "999999999999999999999999999", "-d", example_path("ex4_gauss.dlib"), "-b", example_path("ex4.bench")});
+    
+    // Should show error message about number out of range
+    EXPECT_NE(output.find("error"), std::string::npos)
+        << "Should show error message for out of range number. Got: " << output.substr(0, 300);
+    bool has_range_message = output.find("out of range") != std::string::npos ||
+                             output.find("range") != std::string::npos;
+    EXPECT_TRUE(has_range_message)
+        << "Error message should mention out of range";
 }

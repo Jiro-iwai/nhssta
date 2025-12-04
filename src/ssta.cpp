@@ -763,8 +763,11 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
                 if (pin_idx < input_signals.size()) {
                     input_signal = input_signals[pin_idx];
                 }
-            } catch (...) {
-                // Keep pin_name if not a number
+            } catch (const std::invalid_argument& e) {
+                // Keep pin_name if not a number (this is acceptable for non-numeric pin names)
+            } catch (const std::out_of_range& e) {
+                // Pin index out of range - this is an error condition
+                throw Nh::RuntimeException("Pin index out of range: " + pin_name);
             }
             
             // Get gradients from the cloned Expression
