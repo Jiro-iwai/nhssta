@@ -29,13 +29,6 @@ namespace Nh {
 // DFF gate name constant
 static const std::string DFF_GATE_NAME = "dff";
 
-// DFF clock input is treated as arriving at time 0 (start of clock cycle)
-static constexpr double DFF_CLOCK_ARRIVAL_TIME = 0.0;
-
-// Threshold for gradient values to consider non-zero
-// Used to filter out negligible gradients in sensitivity analysis
-static constexpr double GRADIENT_THRESHOLD = 1e-10;
-
 Ssta::Ssta() = default;
 
 Ssta::~Ssta() {
