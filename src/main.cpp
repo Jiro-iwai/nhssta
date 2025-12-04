@@ -140,6 +140,35 @@ void set_option(int argc, char* argv[], Nh::Ssta* ssta) {
     }
 }
 
+// Helper function to format section header (common pattern for all format functions)
+static void formatSectionHeader(std::ostringstream& oss, const std::string& title) {
+    oss << "#" << std::endl;
+    oss << "# " << title << std::endl;
+    oss << "#" << std::endl;
+}
+
+// Helper function to format separator line (common pattern for tables)
+static void formatSeparator(std::ostringstream& oss, size_t width) {
+    oss << "#";
+    for (size_t i = 0; i < width; i++) {
+        oss << "-";
+    }
+    oss << std::endl;
+}
+
+// Helper function to format LAT-style table row (common pattern for node stats)
+static void formatLatRow(std::ostringstream& oss, const std::string& node_name, double mean, double std_dev, size_t name_width = 15) {
+    oss << std::left << std::setw(static_cast<int>(name_width)) << node_name;
+    oss << std::right << std::setw(10) << std::fixed << std::setprecision(3) << mean;
+    oss << std::setw(9) << std::fixed << std::setprecision(3) << std_dev << std::endl;
+}
+
+// Helper function to format LAT-style table header (common pattern)
+static void formatLatHeader(std::ostringstream& oss, size_t name_width = 15) {
+    oss << std::left << std::setw(static_cast<int>(name_width)) << "#node" 
+        << std::right << std::setw(10) << "mu" << std::setw(9) << "std" << std::endl;
+}
+
 // Helper function to get version string (moved from Ssta constructor)
 std::string get_version_string() {
     auto now = std::time(nullptr);
@@ -160,30 +189,22 @@ std::string get_version_string() {
 // Helper function to format LAT results (matching report_lat() format)
 std::string formatLatResults(const Nh::LatResults& results) {
     std::ostringstream oss;
-    oss << "#" << std::endl;
-    oss << "# LAT" << std::endl;
-    oss << "#" << std::endl;
-    oss << std::left << std::setw(15) << "#node" << std::right << std::setw(10) << "mu" << std::setw(9) << "std" << std::endl;
-    oss << "#---------------------------------" << std::endl;
+    formatSectionHeader(oss, "LAT");
+    formatLatHeader(oss);
+    formatSeparator(oss, 34);
 
     for (const auto& result : results) {
-        oss << std::left << std::setw(15) << result.node_name;
-        oss << std::right << std::setw(10) << std::fixed << std::setprecision(3)
-            << result.mean;
-        oss << std::right << std::setw(9) << std::fixed << std::setprecision(3)
-            << result.std_dev << std::endl;
+        formatLatRow(oss, result.node_name, result.mean, result.std_dev);
     }
 
-    oss << "#---------------------------------" << std::endl;
+    formatSeparator(oss, 34);
     return oss.str();
 }
 
 // Helper function to format correlation matrix (matching report_correlation() format)
 std::string formatCorrelationMatrix(const Nh::CorrelationMatrix& matrix) {
     std::ostringstream oss;
-    oss << "#" << std::endl;
-    oss << "# correlation matrix" << std::endl;
-    oss << "#" << std::endl;
+    formatSectionHeader(oss, "correlation matrix");
 
     oss << "#\t";
     for (const auto& node_name : matrix.node_names) {
@@ -222,9 +243,7 @@ std::string formatCorrelationMatrix(const Nh::CorrelationMatrix& matrix) {
 // Helper function to format sensitivity analysis results
 std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
     std::ostringstream oss;
-    oss << "#" << std::endl;
-    oss << "# Sensitivity Analysis" << std::endl;
-    oss << "#" << std::endl;
+    formatSectionHeader(oss, "Sensitivity Analysis");
     oss << "# Objective: log(Σ exp(LAT + σ)) = " << std::fixed << std::setprecision(3) 
         << results.objective_value << std::endl;
     oss << "#" << std::endl;
@@ -235,7 +254,7 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
         << std::right << std::setw(10) << "LAT" 
         << std::setw(9) << "sigma" 
         << std::setw(10) << "score" << std::endl;
-    oss << "#-----------------------------------------" << std::endl;
+    formatSeparator(oss, 41);
     
     for (const auto& path : results.top_paths) {
         oss << std::left << std::setw(18) << path.endpoint;
@@ -244,10 +263,8 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
         oss << std::setw(10) << std::fixed << std::setprecision(3) << path.score << std::endl;
     }
     
-    oss << "#-----------------------------------------" << std::endl;
-    oss << "#" << std::endl;
-    oss << "# Gate Sensitivities (∂F/∂μ, ∂F/∂σ):" << std::endl;
-    oss << "#" << std::endl;
+    formatSeparator(oss, 41);
+    formatSectionHeader(oss, "Gate Sensitivities (∂F/∂μ, ∂F/∂σ):");
     
     oss << std::left << std::setw(12) << "#instance" 
         << std::setw(10) << "output"
@@ -255,7 +272,7 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
         << std::setw(8) << "type"
         << std::right << std::setw(12) << "dF/dmu" 
         << std::setw(12) << "dF/dsigma" << std::endl;
-    oss << "#-------------------------------------------------------------" << std::endl;
+    formatSeparator(oss, 61);  // 62 characters total: "#" + 61 "-"
     
     for (const auto& sens : results.gate_sensitivities) {
         oss << std::left << std::setw(12) << sens.instance;
@@ -266,7 +283,7 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
         oss << std::setw(12) << std::fixed << std::setprecision(6) << sens.grad_sigma << std::endl;
     }
     
-    oss << "#-------------------------------------------------------------" << std::endl;
+    formatSeparator(oss, 61);
     
     return oss.str();
 }
@@ -274,31 +291,25 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
 // Helper function to format critical paths
 std::string formatCriticalPaths(const Nh::CriticalPaths& paths) {
     std::ostringstream oss;
-    oss << "#" << std::endl;
-    oss << "# critical paths" << std::endl;
-    oss << "#" << std::endl;
+    formatSectionHeader(oss, "critical paths");
     
     for (size_t i = 0; i < paths.size(); i++) {
         const auto& path = paths[i];
         oss << "# Path " << (i + 1) << " (delay: " << std::fixed << std::setprecision(3) << path.delay_mean << ")" << std::endl;
-        oss << std::left << std::setw(15) << "#node" << std::right << std::setw(10) << "mu" << std::setw(9) << "std" << std::endl;
-        oss << "#---------------------------------" << std::endl;
+        formatLatHeader(oss);
+        formatSeparator(oss, 34);
 
         if (!path.node_stats.empty()) {
             for (const auto& entry : path.node_stats) {
-                oss << std::left << std::setw(15) << entry.node_name;
-                oss << std::right << std::setw(10) << std::fixed << std::setprecision(3) << entry.mean;
-                oss << std::right << std::setw(9) << std::fixed << std::setprecision(3) << entry.std_dev << std::endl;
+                formatLatRow(oss, entry.node_name, entry.mean, entry.std_dev);
             }
         } else {
             for (const auto& node_name : path.node_names) {
-                oss << std::left << std::setw(15) << node_name;
-                oss << std::right << std::setw(10) << std::fixed << std::setprecision(3) << 0.0;
-                oss << std::right << std::setw(9) << std::fixed << std::setprecision(3) << 0.0 << std::endl;
+                formatLatRow(oss, node_name, 0.0, 0.0);
             }
         }
 
-        oss << "#---------------------------------" << std::endl;
+        formatSeparator(oss, 34);
         if (i + 1 < paths.size()) {
             oss << std::endl;
         }

@@ -26,10 +26,6 @@ static const std::string DFF_GATE_NAME = "dff";
 // DFF clock input is treated as arriving at time 0 (start of clock cycle)
 static constexpr double DFF_CLOCK_ARRIVAL_TIME = 0.0;
 
-// Tolerance for critical path contribution comparison
-// Used to account for floating point errors and MAX operation approximations
-static constexpr double CRITICAL_PATH_TOLERANCE = 5.0;
-
 // Threshold for gradient values to consider non-zero
 // Used to filter out negligible gradients in sensitivity analysis
 static constexpr double GRADIENT_THRESHOLD = 1e-10;
@@ -587,9 +583,7 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
                 const Normal& gate_delay = delay_it->second;
                 double contribution = input_lat + gate_delay->mean();
                 
-                // Check if this input contributes to the output LAT (within tolerance)
-                // Use a more relaxed tolerance to account for floating point errors
-                // and MAX operation approximations (MAX operation can cause larger differences)
+                // Check if this input contributes to the output LAT
                 if (contribution > max_contribution) {
                     // Always track the maximum contribution
                     max_contribution = contribution;
