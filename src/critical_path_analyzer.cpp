@@ -14,25 +14,25 @@
 namespace Nh {
 
 CriticalPathAnalyzer::CriticalPathAnalyzer(const CircuitGraph& graph)
-    : graph_(graph) {
+    : graph_(&graph) {
 }
 
 CriticalPaths CriticalPathAnalyzer::analyze(size_t top_n) const {
     CriticalPaths paths;
     
-    const auto& outputs = graph_.outputs();
-    const auto& dff_inputs = graph_.dff_inputs();
+    const auto& outputs = graph_->outputs();
+    const auto& dff_inputs = graph_->dff_inputs();
     
     if ((outputs.empty() && dff_inputs.empty()) || top_n == 0) {
         return paths;
     }
     
-    const auto& signals = graph_.signals();
-    const auto& signal_to_instance = graph_.signal_to_instance();
-    const auto& instance_to_inputs = graph_.instance_to_inputs();
-    const auto& instance_to_delays = graph_.instance_to_delays();
-    const auto& inputs = graph_.inputs();
-    const auto& dff_outputs = graph_.dff_outputs();
+    const auto& signals = graph_->signals();
+    const auto& signal_to_instance = graph_->signal_to_instance();
+    const auto& instance_to_inputs = graph_->instance_to_inputs();
+    const auto& instance_to_delays = graph_->instance_to_delays();
+    const auto& inputs = graph_->inputs();
+    const auto& dff_outputs = graph_->dff_outputs();
     
     auto build_node_stats = [&](const std::vector<std::string>& ordered_nodes) {
         LatResults stats;

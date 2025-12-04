@@ -16,7 +16,7 @@ public:
     [[nodiscard]] CriticalPaths analyze(size_t top_n) const;
     
 private:
-    const CircuitGraph& graph_;
+    const CircuitGraph* graph_;
 };
 
 }  // namespace Nh
