@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <fstream>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -23,6 +24,54 @@ int ExpressionImpl::current_id_ = 0;
 
 // Flag to track if eTbl has been destroyed
 static bool eTbl_destroyed = false;
+
+// Debug flags for backward() tracing
+static bool DEBUG_BACKWARD = false;
+static std::ofstream* DEBUG_LOG_FILE = nullptr;
+static int DEBUG_NODE_COUNT = 0;
+
+// Enable/disable debug output for backward()
+void ExpressionImpl::enable_backward_debug(bool enable, const std::string& log_file) {
+    DEBUG_BACKWARD = enable;
+    DEBUG_NODE_COUNT = 0;
+    if (enable) {
+        if (DEBUG_LOG_FILE) {
+            delete DEBUG_LOG_FILE;
+        }
+        DEBUG_LOG_FILE = new std::ofstream(log_file);
+    } else {
+        if (DEBUG_LOG_FILE) {
+            DEBUG_LOG_FILE->close();
+            delete DEBUG_LOG_FILE;
+            DEBUG_LOG_FILE = nullptr;
+        }
+    }
+}
+
+std::ostream& get_debug_log() {
+    if (DEBUG_BACKWARD && DEBUG_LOG_FILE && DEBUG_LOG_FILE->is_open()) {
+        return *DEBUG_LOG_FILE;
+    }
+    return std::cout;
+}
+
+static std::string op_str(ExpressionImpl::Op op) {
+    switch (op) {
+        case ExpressionImpl::CONST: return "CONST";
+        case ExpressionImpl::PARAM: return "PARAM";
+        case ExpressionImpl::PLUS: return "PLUS";
+        case ExpressionImpl::MINUS: return "MINUS";
+        case ExpressionImpl::MUL: return "MUL";
+        case ExpressionImpl::DIV: return "DIV";
+        case ExpressionImpl::POWER: return "POWER";
+        case ExpressionImpl::EXP: return "EXP";
+        case ExpressionImpl::LOG: return "LOG";
+        case ExpressionImpl::ERF: return "ERF";
+        case ExpressionImpl::SQRT: return "SQRT";
+        case ExpressionImpl::CUSTOM_FUNCTION: return "CUSTOM_FUNCTION";
+        default: return "UNKNOWN";
+    }
+}
 
 // Function-local static to avoid static destruction order issues
 // This ensures eTbl is not destroyed while ExpressionImpl objects still exist
@@ -227,13 +276,29 @@ size_t ExpressionImpl::node_count() {
 void ExpressionImpl::propagate_gradient() {
     // For leaf nodes, nothing to propagate
     if (op_ == CONST || op_ == PARAM) {
+        if (DEBUG_BACKWARD) {
+            get_debug_log() << "  Leaf node " << id_ << " (op=" << op_str(op_) << ") - no propagation\n";
+        }
         return;
     }
     
     double upstream = gradient_;
     
+    if (DEBUG_BACKWARD) {
+        DEBUG_NODE_COUNT++;
+        get_debug_log() << "\n=== propagate_gradient() #" << DEBUG_NODE_COUNT << " ===\n";
+        get_debug_log() << "  Node[" << id_ << "] (op=" << op_str(op_) << ")\n";
+        get_debug_log() << "  Upstream gradient: " << upstream << "\n";
+        get_debug_log() << "  Value: " << value_ << "\n";
+    }
+    
     // Check CUSTOM_FUNCTION operation first
     if (op_ == CUSTOM_FUNCTION) {
+        if (DEBUG_BACKWARD) {
+            get_debug_log() << "  CUSTOM_FUNCTION node\n";
+            get_debug_log() << "  Args count: " << custom_args_.size() << "\n";
+        }
+        
         std::vector<double> args_values;
         args_values.reserve(custom_args_.size());
         for (const Expression& e : custom_args_) {
@@ -248,9 +313,25 @@ void ExpressionImpl::propagate_gradient() {
                 "CustomFunction::eval_with_gradient: gradient size mismatch");
         }
 
+        if (DEBUG_BACKWARD) {
+            get_debug_log() << "  Gradients to propagate:\n";
+        }
+        
         for (size_t i = 0; i < n; ++i) {
             double contrib = upstream * grad_vec[i];
+            double old_grad = custom_args_[i]->gradient_;
             custom_args_[i]->gradient_ += contrib;
+            
+            if (DEBUG_BACKWARD) {
+                get_debug_log() << "    arg[" << i << "]: upstream=" << upstream 
+                               << " × grad[" << i << "]=" << grad_vec[i] 
+                               << " = contrib=" << contrib << "\n";
+                get_debug_log() << "    arg[" << i << "] gradient: " << old_grad 
+                               << " -> " << custom_args_[i]->gradient_ << "\n";
+                if (contrib < -1e-10) {
+                    get_debug_log() << "    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!\n";
+                }
+            }
         }
         return;
     }
@@ -259,40 +340,84 @@ void ExpressionImpl::propagate_gradient() {
     if (left() != null && right() != null) {
         double l = left()->value();
         double r = right()->value();
+        
+        double left_grad = 0.0;
+        double right_grad = 0.0;
 
         if (op_ == PLUS) {
+            left_grad = upstream;
+            right_grad = upstream;
             left()->gradient_ += upstream;
             right()->gradient_ += upstream;
         } else if (op_ == MINUS) {
+            left_grad = upstream;
+            right_grad = -upstream;
             left()->gradient_ += upstream;
             right()->gradient_ += -upstream;
         } else if (op_ == MUL) {
+            left_grad = upstream * r;
+            right_grad = upstream * l;
             left()->gradient_ += upstream * r;
             right()->gradient_ += upstream * l;
         } else if (op_ == DIV) {
+            left_grad = upstream / r;
+            right_grad = -upstream * l / (r * r);
             left()->gradient_ += upstream / r;
             right()->gradient_ += -upstream * l / (r * r);
         } else if (op_ == POWER) {
             double f_val = value();
+            left_grad = upstream * r * std::pow(l, r - 1);
             left()->gradient_ += upstream * r * std::pow(l, r - 1);
             if (l > 0) {
+                right_grad = upstream * f_val * std::log(l);
                 right()->gradient_ += upstream * f_val * std::log(l);
             }
+        }
+        
+        if (DEBUG_BACKWARD) {
+            get_debug_log() << "  Binary operation: " << op_str(op_) << "\n";
+            get_debug_log() << "  Left: Node[" << left()->id() << "] (value=" << l << ")\n";
+            get_debug_log() << "  Right: Node[" << right()->id() << "] (value=" << r << ")\n";
+            get_debug_log() << "  Propagating to left: " << left_grad << "\n";
+            get_debug_log() << "  Propagating to right: " << right_grad << "\n";
+            if (left_grad < -1e-10) {
+                get_debug_log() << "  ⚠️  NEGATIVE LEFT GRADIENT!\n";
+            }
+            if (right_grad < -1e-10) {
+                get_debug_log() << "  ⚠️  NEGATIVE RIGHT GRADIENT!\n";
+            }
+            get_debug_log() << "  Left gradient after: " << left()->gradient_ << "\n";
+            get_debug_log() << "  Right gradient after: " << right()->gradient_ << "\n";
         }
     } else if (left() != null) {
         // Unary operations
         double l = left()->value();
+        double left_grad = 0.0;
 
         if (op_ == EXP) {
+            left_grad = upstream * value();
             left()->gradient_ += upstream * value();
         } else if (op_ == LOG) {
+            left_grad = upstream / l;
             left()->gradient_ += upstream / l;
         } else if (op_ == ERF) {
             static constexpr double TWO_OVER_SQRT_PI = 1.1283791670955126;
+            left_grad = upstream * TWO_OVER_SQRT_PI * std::exp(-l * l);
             left()->gradient_ += upstream * TWO_OVER_SQRT_PI * std::exp(-l * l);
         } else if (op_ == SQRT) {
             double sqrt_l = value();
+            left_grad = upstream / (2.0 * sqrt_l);
             left()->gradient_ += upstream / (2.0 * sqrt_l);
+        }
+        
+        if (DEBUG_BACKWARD) {
+            get_debug_log() << "  Unary operation: " << op_str(op_) << "\n";
+            get_debug_log() << "  Left: Node[" << left()->id() << "] (value=" << l << ")\n";
+            get_debug_log() << "  Propagating to left: " << left_grad << "\n";
+            if (left_grad < -1e-10) {
+                get_debug_log() << "  ⚠️  NEGATIVE LEFT GRADIENT!\n";
+            }
+            get_debug_log() << "  Left gradient after: " << left()->gradient_ << "\n";
         }
     }
 }
@@ -328,20 +453,47 @@ static void topo_sort_dfs(ExpressionImpl* node,
 }
 
 void ExpressionImpl::backward(double upstream) {
+    if (DEBUG_BACKWARD) {
+        get_debug_log() << "\n" << std::string(80, '=') << "\n";
+        get_debug_log() << "backward() called with upstream = " << upstream << "\n";
+        get_debug_log() << "Root node: Node[" << id_ << "] (op=" << op_str(op_) << ")\n";
+        get_debug_log() << std::string(80, '=') << "\n";
+        DEBUG_NODE_COUNT = 0;
+    }
+    
     // Build topological order (children before parents)
     std::set<ExpressionImpl*> visited;
     std::vector<ExpressionImpl*> topo_order;
     topo_sort_dfs(this, visited, topo_order);
     
+    if (DEBUG_BACKWARD) {
+        get_debug_log() << "\nTopological order (" << topo_order.size() << " nodes):\n";
+        for (size_t i = 0; i < topo_order.size(); ++i) {
+            get_debug_log() << "  [" << i << "] Node[" << topo_order[i]->id() 
+                           << "] (op=" << op_str(topo_order[i]->op()) << ")\n";
+        }
+    }
+    
     // Set initial gradient at the root
     gradient_ += upstream;
     is_gradient_set_ = true;
+    
+    if (DEBUG_BACKWARD) {
+        get_debug_log() << "\nInitial gradient at root: " << gradient_ << "\n";
+        get_debug_log() << "\nProcessing nodes in reverse topological order:\n";
+    }
     
     // Process in reverse order (parents before children)
     // This ensures all upstream gradients are accumulated before propagation
     for (auto it = topo_order.rbegin(); it != topo_order.rend(); ++it) {
         (*it)->propagate_gradient();
         (*it)->is_gradient_set_ = true;
+    }
+    
+    if (DEBUG_BACKWARD) {
+        get_debug_log() << "\n" << std::string(80, '=') << "\n";
+        get_debug_log() << "backward() completed\n";
+        get_debug_log() << std::string(80, '=') << "\n\n";
     }
 }
 
