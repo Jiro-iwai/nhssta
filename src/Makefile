@@ -23,6 +23,7 @@ CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
 	parser.cpp ssta.cpp expression.cpp statistical_functions.cpp main.cpp
 OBJS = $(addprefix ../build/src/,$(CXXSRCS:.cpp=.o))
 DEPS = $(addprefix ../build/src/,$(CXXSRCS:.cpp=.d))
+TIDY_MARKERS = $(addprefix ../build/tidy/,$(CXXSRCS:.cpp=.tidy))
 TARGET = ../build/bin/nhssta
 
 # Google Test configuration
@@ -103,11 +104,31 @@ $(TARGET) : $(OBJS)
 		$(CXX) -MM $(CXXFLAGS) $(INCLUDE) $< | sed "s|\($*\)\.o|../build/src/\1.o $@|g" > $@; \
 	fi
 
-.PHONY: test test-build tidy coverage coverage-clean
+# clang-tidy marker files (only run on changed files)
+../build/tidy/%.tidy: %.cpp
+	$(Q)mkdir -p ../build/tidy
+	$(ECHO) "Running clang-tidy on $<..."
+	@CLANG_TIDY=$$(which clang-tidy 2>/dev/null || echo "/opt/homebrew/opt/llvm/bin/clang-tidy"); \
+	if [ ! -f "$$CLANG_TIDY" ]; then \
+		echo "clang-tidy not found. Install with: brew install llvm"; \
+		echo "If installed, ensure /opt/homebrew/opt/llvm/bin is in your PATH"; \
+		echo "Skipping clang-tidy check for $<."; \
+		touch $@; \
+	else \
+		$$CLANG_TIDY $< -- $(CXXFLAGS) $(INCLUDE) 2>&1 | head -100 || true; \
+		touch $@; \
+	fi
 
-# Test target (includes unit tests and clang-tidy)
-test: $(TARGET) $(TEST_TARGET)
-	@echo "Running clang-tidy..."
+.PHONY: test test-all test-build tidy tidy-clean coverage coverage-clean
+
+# Test target (includes clang-tidy for changed files and unit tests)
+test: $(TARGET) $(TEST_TARGET) $(TIDY_MARKERS)
+	@echo "Running unit tests..."
+	@cd .. && ./build/bin/nhssta_test || echo "Note: Some tests may require Boost dependencies to be resolved"
+
+# Combined target for both clang-tidy (all files) and unit tests
+test-all: $(TARGET) $(TEST_TARGET)
+	@echo "Running clang-tidy on all files..."
 	@CLANG_TIDY=$$(which clang-tidy 2>/dev/null || echo "/opt/homebrew/opt/llvm/bin/clang-tidy"); \
 	if [ ! -f "$$CLANG_TIDY" ]; then \
 		echo "clang-tidy not found. Install with: brew install llvm"; \
@@ -121,9 +142,9 @@ test: $(TARGET) $(TEST_TARGET)
 	@echo "Running unit tests..."
 	@cd .. && ./build/bin/nhssta_test || echo "Note: Some tests may require Boost dependencies to be resolved"
 
-# clang-tidy target
-tidy:
-	@echo "Running clang-tidy..."
+# clang-tidy target (all files, force recheck)
+tidy: tidy-clean
+	@echo "Running clang-tidy on all files..."
 	@CLANG_TIDY=$$(which clang-tidy 2>/dev/null || echo "/opt/homebrew/opt/llvm/bin/clang-tidy"); \
 	if [ ! -f "$$CLANG_TIDY" ]; then \
 		echo "clang-tidy not found. Install with: brew install llvm"; \
@@ -132,7 +153,13 @@ tidy:
 	else \
 		echo "Using clang-tidy: $$CLANG_TIDY"; \
 		$$CLANG_TIDY $(CXXSRCS) -- $(CXXFLAGS) $(INCLUDE) 2>&1 | head -100 || true; \
+		mkdir -p ../build/tidy; \
+		touch $(TIDY_MARKERS); \
 	fi
+
+# Clean clang-tidy markers to force recheck
+tidy-clean:
+	@rm -f $(TIDY_MARKERS)
 
 # Build test target only (without running)
 test-build: $(TEST_TARGET)
@@ -216,6 +243,7 @@ $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
 	rm -f $(TEST_OBJS) $(TEST_DEPS) ../build/bin/nhssta_test
+	rm -f $(TIDY_MARKERS)
 	rm -rf ../build
 	@find . -name "*.gcno" -delete 2>/dev/null || true
 
@@ -227,10 +255,11 @@ $(OBJS): | ../build/src
 $(DEPS): | ../build/src
 $(TEST_OBJS): | ../build/test
 $(TEST_DEPS): | ../build/test
+$(TIDY_MARKERS): | ../build/tidy
 $(TARGET): | ../build/bin
 $(TEST_TARGET): | ../build/bin
 
-../build/src ../build/test ../build/bin:
+../build/src ../build/test ../build/tidy ../build/bin:
 	$(Q)mkdir -p $@
 
 -include $(DEPS)
