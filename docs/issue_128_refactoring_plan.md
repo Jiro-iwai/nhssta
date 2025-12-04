@@ -41,7 +41,8 @@ class DlibParser { /* .dlib ファイルパース */ };
 class BenchParser { /* .bench ファイルパース */ };
 class CircuitGraph { /* グラフ構造の管理 */ };
 class CriticalPathAnalyzer { /* クリティカルパス解析 */ };
-class SstaResults { /* 結果データの生成 */ };
+class SensitivityAnalyzer { /* 感度解析 */ };
+class SstaResults { /* 結果データの生成（LAT、相関行列） */ };
 
 class Ssta {
     // 上記クラスを組み合わせて統合
@@ -181,6 +182,38 @@ private:
 - `Ssta::getCriticalPaths()` → `CriticalPathAnalyzer::analyze()`
 - `Ssta::track_path()` → `CriticalPathAnalyzer::track_path()`
 
+### Phase 3.5: 感度解析の分離
+
+#### 3.2 SensitivityAnalyzerクラスの作成
+
+**責務**: 感度解析の実行（目的関数の構築、勾配計算、ゲート感度の収集）
+
+**インターフェース**:
+```cpp
+class SensitivityAnalyzer {
+public:
+    explicit SensitivityAnalyzer(const CircuitGraph& graph);
+    SensitivityResults analyze(size_t top_n) const;
+    
+private:
+    std::vector<SensitivityPath> collect_endpoint_paths() const;
+    Expression build_objective_function(const std::vector<SensitivityPath>& endpoint_paths) const;
+    void collect_gate_sensitivities(SensitivityResults& results) const;
+    const CircuitGraph& graph_;
+    static constexpr double GRADIENT_THRESHOLD = 1e-10;
+    static constexpr double MIN_VARIANCE = 1e-10;
+};
+```
+
+**移行対象メソッド**:
+- `Ssta::getSensitivityResults()` → `SensitivityAnalyzer::analyze()`
+- 感度解析に関連するロジック（約140行）を分離
+
+**注意点**:
+- 感度解析は`instance_to_delays_`（クローンされた遅延）に依存している
+- `CircuitGraph`が`instance_to_delays_`を提供する必要がある
+- `zero_all_grad()`などのExpression関連の関数へのアクセスが必要
+
 ### Phase 4: 結果データ生成の分離
 
 #### 4.1 SstaResultsクラスの作成
@@ -194,7 +227,6 @@ public:
     explicit SstaResults(const CircuitGraph& graph);
     LatResults getLatResults() const;
     CorrelationMatrix getCorrelationMatrix() const;
-    SensitivityResults getSensitivityResults(size_t top_n) const;
     
 private:
     const CircuitGraph& graph_;
@@ -204,7 +236,8 @@ private:
 **移行対象メソッド**:
 - `Ssta::getLatResults()` → `SstaResults::getLatResults()`
 - `Ssta::getCorrelationMatrix()` → `SstaResults::getCorrelationMatrix()`
-- `Ssta::getSensitivityResults()` → `SstaResults::getSensitivityResults()`
+
+**注意**: 感度解析は`SensitivityAnalyzer`クラスに分離されるため、`SstaResults`には含めない
 
 ### Phase 5: Sstaクラスの統合
 
@@ -233,7 +266,13 @@ public:
     LatResults getLatResults() const;
     CorrelationMatrix getCorrelationMatrix() const;
     CriticalPaths getCriticalPaths(size_t top_n) const;
+    CriticalPaths getCriticalPaths() const {
+        return getCriticalPaths(critical_path_count_);
+    }
     SensitivityResults getSensitivityResults(size_t top_n) const;
+    SensitivityResults getSensitivityResults() const {
+        return getSensitivityResults(sensitivity_top_n_);
+    }
     
 private:
     std::string dlib_;
@@ -250,6 +289,7 @@ private:
     std::unique_ptr<BenchParser> bench_parser_;
     std::unique_ptr<CircuitGraph> circuit_graph_;
     std::unique_ptr<CriticalPathAnalyzer> path_analyzer_;
+    std::unique_ptr<SensitivityAnalyzer> sensitivity_analyzer_;
     std::unique_ptr<SstaResults> results_;
 };
 ```
@@ -261,9 +301,10 @@ private:
 3. ⏳ Phase 1: BenchParserクラスの作成とテスト
 4. ⏳ Phase 2: CircuitGraphクラスの作成とテスト
 5. ⏳ Phase 3: CriticalPathAnalyzerクラスの作成とテスト
-6. ⏳ Phase 4: SstaResultsクラスの作成とテスト
-7. ⏳ Phase 5: Sstaクラスの統合と既存テストの確認
-8. ⏳ リファクタリング完了後のクリーンアップ
+6. ⏳ Phase 3.5: SensitivityAnalyzerクラスの作成とテスト
+7. ⏳ Phase 4: SstaResultsクラスの作成とテスト
+8. ⏳ Phase 5: Sstaクラスの統合と既存テストの確認
+9. ⏳ リファクタリング完了後のクリーンアップ
 
 ## メリット
 
