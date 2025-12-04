@@ -17,7 +17,7 @@ const std::string CircuitGraph::DFF_GATE_NAME = "dff";
 void CircuitGraph::build(const Gates& gates, const Net& net, 
                          const Pins& inputs, const Pins& outputs,
                          const Pins& dff_outputs, const Pins& dff_inputs,
-                         TrackPathCallback track_path_callback) {
+                         const TrackPathCallback& track_path_callback) {
     // Initialize input signals
     initialize_input_signals(inputs);
     
@@ -39,7 +39,7 @@ void CircuitGraph::initialize_input_signals(const Pins& inputs) {
     }
 }
 
-void CircuitGraph::connect_instances(const Gates& gates, Net& net, TrackPathCallback track_path_callback) {
+void CircuitGraph::connect_instances(const Gates& gates, Net& net, const TrackPathCallback& track_path_callback) {
     while (!net.empty()) {
         unsigned int size = net.size();
 
@@ -110,7 +110,7 @@ void CircuitGraph::set_instance_input(const Instance& inst, const NetLineIns& in
     }
 }
 
-void CircuitGraph::set_dff_out(const std::string& out_signal_name, const Gates& gates, TrackPathCallback track_path_callback) {
+void CircuitGraph::set_dff_out(const std::string& out_signal_name, const Gates& gates, const TrackPathCallback& track_path_callback) {
     // Clock arrival time is 0 (reference point for the clock cycle)
     Normal clock_arrival(DFF_CLOCK_ARRIVAL_TIME, ::RandomVariable::MINIMUM_VARIANCE);
     

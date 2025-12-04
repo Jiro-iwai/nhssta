@@ -30,7 +30,7 @@ public:
     void build(const Gates& gates, const Net& net, 
                const Pins& inputs, const Pins& outputs,
                const Pins& dff_outputs, const Pins& dff_inputs,
-               TrackPathCallback track_path_callback = nullptr);
+               const TrackPathCallback& track_path_callback = nullptr);
     
     [[nodiscard]] const Signals& signals() const { return signals_; }
     [[nodiscard]] const std::unordered_map<std::string, std::string>& signal_to_instance() const {
@@ -51,9 +51,9 @@ public:
     }
     
 private:
-    void connect_instances(const Gates& gates, Net& net, TrackPathCallback track_path_callback);
+    void connect_instances(const Gates& gates, Net& net, const TrackPathCallback& track_path_callback);
     void set_instance_input(const Instance& inst, const NetLineIns& ins);
-    void set_dff_out(const std::string& out_signal_name, const Gates& gates, TrackPathCallback track_path_callback);
+    void set_dff_out(const std::string& out_signal_name, const Gates& gates, const TrackPathCallback& track_path_callback);
     void track_path(const std::string& signal_name, const Instance& inst, const NetLineIns& ins, const std::string& gate_type);
     [[nodiscard]] bool is_line_ready(const NetLine& line) const;
     void check_signal(const std::string& signal_name) const;
