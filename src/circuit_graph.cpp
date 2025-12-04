@@ -18,6 +18,12 @@ void CircuitGraph::build(const Gates& gates, const Net& net,
                          const Pins& inputs, const Pins& outputs,
                          const Pins& dff_outputs, const Pins& dff_inputs,
                          const TrackPathCallback& track_path_callback) {
+    // Store pins for later access
+    inputs_ = inputs;
+    outputs_ = outputs;
+    dff_outputs_ = dff_outputs;
+    dff_inputs_ = dff_inputs;
+    
     // Initialize input signals
     initialize_input_signals(inputs);
     

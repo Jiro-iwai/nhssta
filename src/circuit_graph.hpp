@@ -33,6 +33,10 @@ public:
                const TrackPathCallback& track_path_callback = nullptr);
     
     [[nodiscard]] const Signals& signals() const { return signals_; }
+    [[nodiscard]] const Pins& inputs() const { return inputs_; }
+    [[nodiscard]] const Pins& outputs() const { return outputs_; }
+    [[nodiscard]] const Pins& dff_outputs() const { return dff_outputs_; }
+    [[nodiscard]] const Pins& dff_inputs() const { return dff_inputs_; }
     [[nodiscard]] const std::unordered_map<std::string, std::string>& signal_to_instance() const {
         return signal_to_instance_;
     }
@@ -62,6 +66,10 @@ private:
     
     Signals signals_;
     std::string bench_file_;
+    Pins inputs_;
+    Pins outputs_;
+    Pins dff_outputs_;
+    Pins dff_inputs_;
     std::unordered_map<std::string, std::string> signal_to_instance_;
     std::unordered_map<std::string, std::vector<std::string>> instance_to_inputs_;
     std::unordered_map<std::string, std::string> instance_to_gate_type_;
