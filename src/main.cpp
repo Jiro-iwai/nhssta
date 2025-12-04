@@ -264,7 +264,7 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
     }
     
     formatSeparator(oss, 41);
-    formatSectionHeader(oss, "Gate Sensitivities (∂F/∂μ, ∂F/∂σ)");
+    formatSectionHeader(oss, "Gate Sensitivities (∂F/∂μ, ∂F/∂σ):");
     
     oss << std::left << std::setw(12) << "#instance" 
         << std::setw(10) << "output"
