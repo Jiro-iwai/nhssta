@@ -1,6 +1,6 @@
 // -*- c++ -*-
-// Unit tests for SstaResults class
-// Phase 4: Results data generation separation
+// Unit tests for CriticalPathAnalyzer class
+// Phase 3: Critical path analysis separation
 
 #include <gtest/gtest.h>
 #include <sys/stat.h>
@@ -8,22 +8,20 @@
 #include <cstdio>
 #include <fstream>
 #include <sstream>
-#include <cmath>
 
-#include "../src/ssta_results.hpp"
+#include "../src/critical_path_analyzer.hpp"
 #include "../src/circuit_graph.hpp"
 #include "../src/dlib_parser.hpp"
 #include "../src/bench_parser.hpp"
 #include <nhssta/ssta_results.hpp>
 
-using Nh::SstaResults;
+using Nh::CriticalPathAnalyzer;
 using Nh::CircuitGraph;
 using Nh::DlibParser;
 using Nh::BenchParser;
-using Nh::LatResults;
-using Nh::CorrelationMatrix;
+using Nh::CriticalPaths;
 
-class SstaResultsTest : public ::testing::Test {
+class CriticalPathAnalyzerTest : public ::testing::Test {
    protected:
     void SetUp() override {
         test_dir = "../test/test_data";
@@ -39,11 +37,11 @@ class SstaResultsTest : public ::testing::Test {
             "inv  0  y  gauss  (15.0, 2.0)\n"
             "nand  0  y  gauss  (24.0, 3.0)\n"
             "nand  1  y  gauss  (20.0, 3.0)\n";
-        dlib_path = createTestFile("test_results.dlib", dlib_content);
+        dlib_path = createTestFile("test_cpa.dlib", dlib_content);
     }
 
     void TearDown() override {
-        deleteTestFile("test_results.dlib");
+        deleteTestFile("test_cpa.dlib");
     }
 
     std::string createTestFile(const std::string& filename, const std::string& content) {
@@ -65,8 +63,8 @@ class SstaResultsTest : public ::testing::Test {
     std::string dlib_path;
 };
 
-// Test: SstaResults getLatResults with simple circuit
-TEST_F(SstaResultsTest, GetLatResultsSimple) {
+// Test: CriticalPathAnalyzer with simple circuit
+TEST_F(CriticalPathAnalyzerTest, AnalyzeSimpleCircuit) {
     // Parse dlib
     DlibParser dlib_parser(dlib_path);
     dlib_parser.parse();
@@ -77,9 +75,9 @@ TEST_F(SstaResultsTest, GetLatResultsSimple) {
         "INPUT(A)\n"
         "OUTPUT(Y)\n"
         "Y = INV(A)\n";
-    std::string bench_path = createTestFile("test_lat.bench", bench_content);
+    std::string bench_path = createTestFile("test_simple_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -88,21 +86,99 @@ TEST_F(SstaResultsTest, GetLatResultsSimple) {
                 bench_parser.inputs(), bench_parser.outputs(),
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
-    // Get LAT results
-    SstaResults results(graph);
-    LatResults lat_results = results.getLatResults();
+    // Analyze critical paths
+    CriticalPathAnalyzer analyzer(&graph);
+    CriticalPaths paths = analyzer.analyze(5);
     
-    EXPECT_EQ(lat_results.size(), 2);  // A and Y
-    // Results should be sorted by signal name
-    EXPECT_EQ(lat_results[0].node_name, "A");
-    EXPECT_EQ(lat_results[1].node_name, "Y");
-    EXPECT_GT(lat_results[1].mean, 0.0);
+    EXPECT_EQ(paths.size(), 1);
+    EXPECT_EQ(paths[0].node_names.size(), 2);  // A -> Y
+    EXPECT_EQ(paths[0].node_names[0], "A");
+    EXPECT_EQ(paths[0].node_names[1], "Y");
+    EXPECT_GT(paths[0].delay_mean, 0.0);
     
-    deleteTestFile("test_lat.bench");
+    deleteTestFile("test_simple_cpa.bench");
 }
 
-// Test: SstaResults getLatResults with multiple signals
-TEST_F(SstaResultsTest, GetLatResultsMultiple) {
+// Test: CriticalPathAnalyzer with multiple paths
+TEST_F(CriticalPathAnalyzerTest, AnalyzeMultiplePaths) {
+    // Parse dlib
+    DlibParser dlib_parser(dlib_path);
+    dlib_parser.parse();
+    const auto& gates = dlib_parser.gates();
+    
+    // Parse bench with multiple outputs
+    std::string bench_content = 
+        "INPUT(A)\n"
+        "INPUT(B)\n"
+        "OUTPUT(Y1)\n"
+        "OUTPUT(Y2)\n"
+        "N1 = INV(A)\n"
+        "Y1 = INV(N1)\n"
+        "Y2 = INV(B)\n";
+    std::string bench_path = createTestFile("test_multiple_cpa.bench", bench_content);
+    BenchParser bench_parser(bench_path);
+    bench_parser.parse(gates);
+    
+    // Build circuit graph
+    CircuitGraph graph;
+    graph.set_bench_file(bench_path);
+    graph.build(gates, bench_parser.net(), 
+                bench_parser.inputs(), bench_parser.outputs(),
+                bench_parser.dff_outputs(), bench_parser.dff_inputs());
+    
+    // Analyze critical paths
+    CriticalPathAnalyzer analyzer(&graph);
+    CriticalPaths paths = analyzer.analyze(5);
+    
+    EXPECT_GE(paths.size(), 2);
+    // Paths should be sorted by delay (descending)
+    if (paths.size() >= 2) {
+        EXPECT_GE(paths[0].delay_mean, paths[1].delay_mean);
+    }
+    
+    deleteTestFile("test_multiple_cpa.bench");
+}
+
+// Test: CriticalPathAnalyzer with top_n limit
+TEST_F(CriticalPathAnalyzerTest, AnalyzeWithTopN) {
+    // Parse dlib
+    DlibParser dlib_parser(dlib_path);
+    dlib_parser.parse();
+    const auto& gates = dlib_parser.gates();
+    
+    // Parse bench with multiple outputs
+    std::string bench_content = 
+        "INPUT(A)\n"
+        "INPUT(B)\n"
+        "INPUT(C)\n"
+        "OUTPUT(Y1)\n"
+        "OUTPUT(Y2)\n"
+        "OUTPUT(Y3)\n"
+        "Y1 = INV(A)\n"
+        "Y2 = INV(B)\n"
+        "Y3 = INV(C)\n";
+    std::string bench_path = createTestFile("test_topn_cpa.bench", bench_content);
+    BenchParser bench_parser(bench_path);
+    bench_parser.parse(gates);
+    
+    // Build circuit graph
+    CircuitGraph graph;
+    graph.set_bench_file(bench_path);
+    graph.build(gates, bench_parser.net(), 
+                bench_parser.inputs(), bench_parser.outputs(),
+                bench_parser.dff_outputs(), bench_parser.dff_inputs());
+    
+    // Analyze critical paths with top_n = 2
+    CriticalPathAnalyzer analyzer(&graph);
+    CriticalPaths paths = analyzer.analyze(2);
+    
+    EXPECT_LE(paths.size(), 2);
+    
+    deleteTestFile("test_topn_cpa.bench");
+}
+
+// Test: CriticalPathAnalyzer with zero top_n
+TEST_F(CriticalPathAnalyzerTest, AnalyzeWithZeroTopN) {
     // Parse dlib
     DlibParser dlib_parser(dlib_path);
     dlib_parser.parse();
@@ -111,13 +187,45 @@ TEST_F(SstaResultsTest, GetLatResultsMultiple) {
     // Parse bench
     std::string bench_content = 
         "INPUT(A)\n"
-        "INPUT(B)\n"
+        "OUTPUT(Y)\n"
+        "Y = INV(A)\n";
+    std::string bench_path = createTestFile("test_zero_cpa.bench", bench_content);
+    BenchParser bench_parser(bench_path);
+    bench_parser.parse(gates);
+    
+    // Build circuit graph
+    CircuitGraph graph;
+    graph.set_bench_file(bench_path);
+    graph.build(gates, bench_parser.net(), 
+                bench_parser.inputs(), bench_parser.outputs(),
+                bench_parser.dff_outputs(), bench_parser.dff_inputs());
+    
+    // Analyze critical paths with top_n = 0
+    CriticalPathAnalyzer analyzer(&graph);
+    CriticalPaths paths = analyzer.analyze(0);
+    
+    EXPECT_EQ(paths.size(), 0);
+    
+    deleteTestFile("test_zero_cpa.bench");
+}
+
+// Test: CriticalPathAnalyzer with complex path
+TEST_F(CriticalPathAnalyzerTest, AnalyzeComplexPath) {
+    // Parse dlib
+    DlibParser dlib_parser(dlib_path);
+    dlib_parser.parse();
+    const auto& gates = dlib_parser.gates();
+    
+    // Parse bench with longer path
+    std::string bench_content = 
+        "INPUT(A)\n"
         "OUTPUT(Y)\n"
         "N1 = INV(A)\n"
-        "Y = INV(N1)\n";
-    std::string bench_path = createTestFile("test_lat_multiple.bench", bench_content);
+        "N2 = INV(N1)\n"
+        "Y = INV(N2)\n";
+    std::string bench_path = createTestFile("test_complex_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -126,74 +234,37 @@ TEST_F(SstaResultsTest, GetLatResultsMultiple) {
                 bench_parser.inputs(), bench_parser.outputs(),
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
-    // Get LAT results
-    SstaResults results(graph);
-    LatResults lat_results = results.getLatResults();
+    // Analyze critical paths
+    CriticalPathAnalyzer analyzer(&graph);
+    CriticalPaths paths = analyzer.analyze(5);
     
-    EXPECT_EQ(lat_results.size(), 3);  // A, N1, Y
-    // Results should be sorted alphabetically
-    EXPECT_EQ(lat_results[0].node_name, "A");
-    EXPECT_EQ(lat_results[1].node_name, "N1");
-    EXPECT_EQ(lat_results[2].node_name, "Y");
+    EXPECT_EQ(paths.size(), 1);
+    EXPECT_GE(paths[0].node_names.size(), 3);  // A -> N1 -> N2 -> Y
+    EXPECT_EQ(paths[0].node_names[0], "A");
+    EXPECT_EQ(paths[0].node_names.back(), "Y");
     
-    deleteTestFile("test_lat_multiple.bench");
+    deleteTestFile("test_complex_cpa.bench");
 }
 
-// Test: SstaResults getCorrelationMatrix with simple circuit
-TEST_F(SstaResultsTest, GetCorrelationMatrixSimple) {
+// Test: CriticalPathAnalyzer path ordering
+TEST_F(CriticalPathAnalyzerTest, PathOrdering) {
     // Parse dlib
     DlibParser dlib_parser(dlib_path);
     dlib_parser.parse();
     const auto& gates = dlib_parser.gates();
     
-    // Parse bench
-    std::string bench_content = 
-        "INPUT(A)\n"
-        "OUTPUT(Y)\n"
-        "Y = INV(A)\n";
-    std::string bench_path = createTestFile("test_corr.bench", bench_content);
-    BenchParser bench_parser(bench_path);
-    bench_parser.parse();
-    
-    // Build circuit graph
-    CircuitGraph graph;
-    graph.set_bench_file(bench_path);
-    graph.build(gates, bench_parser.net(), 
-                bench_parser.inputs(), bench_parser.outputs(),
-                bench_parser.dff_outputs(), bench_parser.dff_inputs());
-    
-    // Get correlation matrix
-    SstaResults results(graph);
-    CorrelationMatrix matrix = results.getCorrelationMatrix();
-    
-    EXPECT_EQ(matrix.node_names.size(), 2);  // A and Y
-    EXPECT_EQ(matrix.node_names[0], "A");
-    EXPECT_EQ(matrix.node_names[1], "Y");
-    
-    // Check self-correlation (should be 1.0)
-    EXPECT_DOUBLE_EQ(matrix.getCorrelation("A", "A"), 1.0);
-    EXPECT_DOUBLE_EQ(matrix.getCorrelation("Y", "Y"), 1.0);
-    
-    deleteTestFile("test_corr.bench");
-}
-
-// Test: SstaResults getCorrelationMatrix with multiple signals
-TEST_F(SstaResultsTest, GetCorrelationMatrixMultiple) {
-    // Parse dlib
-    DlibParser dlib_parser(dlib_path);
-    dlib_parser.parse();
-    const auto& gates = dlib_parser.gates();
-    
-    // Parse bench
+    // Parse bench with paths of different delays
     std::string bench_content = 
         "INPUT(A)\n"
         "INPUT(B)\n"
-        "OUTPUT(Y)\n"
-        "N1 = INV(A)\n"
-        "Y = INV(N1)\n";
-    std::string bench_path = createTestFile("test_corr_multiple.bench", bench_content);
+        "OUTPUT(Y1)\n"
+        "OUTPUT(Y2)\n"
+        "Y1 = INV(A)\n"  // Shorter path (1 gate)
+        "N1 = INV(B)\n"
+        "Y2 = INV(N1)\n";  // Longer path (2 gates, should have higher delay)
+    std::string bench_path = createTestFile("test_ordering_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -202,83 +273,17 @@ TEST_F(SstaResultsTest, GetCorrelationMatrixMultiple) {
                 bench_parser.inputs(), bench_parser.outputs(),
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
-    // Get correlation matrix
-    SstaResults results(graph);
-    CorrelationMatrix matrix = results.getCorrelationMatrix();
+    // Analyze critical paths
+    CriticalPathAnalyzer analyzer(&graph);
+    CriticalPaths paths = analyzer.analyze(5);
     
-    EXPECT_EQ(matrix.node_names.size(), 3);  // A, N1, Y
+    EXPECT_GE(paths.size(), 2);
+    // Paths should be sorted by delay (descending)
+    // Longer path (Y2) should have higher delay and come first
+    if (paths.size() >= 2) {
+        EXPECT_GE(paths[0].delay_mean, paths[1].delay_mean);
+    }
     
-    // Check correlations are calculated
-    double corr_ay = matrix.getCorrelation("A", "Y");
-    EXPECT_GE(corr_ay, 0.0);
-    EXPECT_LE(corr_ay, 1.0);
-    
-    deleteTestFile("test_corr_multiple.bench");
+    deleteTestFile("test_ordering_cpa.bench");
 }
 
-// Test: SstaResults getCorrelationMatrix symmetry
-TEST_F(SstaResultsTest, GetCorrelationMatrixSymmetry) {
-    // Parse dlib
-    DlibParser dlib_parser(dlib_path);
-    dlib_parser.parse();
-    const auto& gates = dlib_parser.gates();
-    
-    // Parse bench
-    std::string bench_content = 
-        "INPUT(A)\n"
-        "INPUT(B)\n"
-        "OUTPUT(Y)\n"
-        "Y = INV(A)\n";
-    std::string bench_path = createTestFile("test_corr_symmetry.bench", bench_content);
-    BenchParser bench_parser(bench_path);
-    bench_parser.parse();
-    
-    // Build circuit graph
-    CircuitGraph graph;
-    graph.set_bench_file(bench_path);
-    graph.build(gates, bench_parser.net(), 
-                bench_parser.inputs(), bench_parser.outputs(),
-                bench_parser.dff_outputs(), bench_parser.dff_inputs());
-    
-    // Get correlation matrix
-    SstaResults results(graph);
-    CorrelationMatrix matrix = results.getCorrelationMatrix();
-    
-    // Correlation should be symmetric
-    double corr_ab = matrix.getCorrelation("A", "B");
-    double corr_ba = matrix.getCorrelation("B", "A");
-    EXPECT_DOUBLE_EQ(corr_ab, corr_ba);
-    
-    deleteTestFile("test_corr_symmetry.bench");
-}
-
-// Test: SstaResults getLatResults with empty circuit
-TEST_F(SstaResultsTest, GetLatResultsEmpty) {
-    // Parse dlib
-    DlibParser dlib_parser(dlib_path);
-    dlib_parser.parse();
-    const auto& gates = dlib_parser.gates();
-    
-    // Parse bench with only inputs (no gates)
-    std::string bench_content = 
-        "INPUT(A)\n"
-        "INPUT(B)\n";
-    std::string bench_path = createTestFile("test_lat_empty.bench", bench_content);
-    BenchParser bench_parser(bench_path);
-    bench_parser.parse();
-    
-    // Build circuit graph
-    CircuitGraph graph;
-    graph.set_bench_file(bench_path);
-    graph.build(gates, bench_parser.net(), 
-                bench_parser.inputs(), bench_parser.outputs(),
-                bench_parser.dff_outputs(), bench_parser.dff_inputs());
-    
-    // Get LAT results
-    SstaResults results(graph);
-    LatResults lat_results = results.getLatResults();
-    
-    EXPECT_EQ(lat_results.size(), 2);  // A and B (inputs)
-    
-    deleteTestFile("test_lat_empty.bench");
-}

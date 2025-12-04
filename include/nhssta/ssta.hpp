@@ -20,9 +20,13 @@
 
 namespace Nh {
 
-// Forward declaration for Parser (internal implementation detail)
-// Parser is defined in src/parser.hpp within the Nh namespace
-class Parser;
+// Forward declarations for refactored components (Phase 5)
+class DlibParser;
+class BenchParser;
+class CircuitGraph;
+class CriticalPathAnalyzer;
+class SensitivityAnalyzer;
+class SstaResults;
 
 // Default number of critical paths to report when -p/--path option
 // is specified without an explicit count.
@@ -38,19 +42,7 @@ class Ssta {
     void read_bench();
 
    private:
-
-    void read_dlib_line(Parser& parser);
-    void read_bench_input(Parser& parser);
-    void read_bench_output(Parser& parser);
-    void read_bench_net(Parser& parser, const std::string& out_signal_name);
-    void set_dff_out(const std::string& out_signal_name);
-    void connect_instances();
-    [[nodiscard]] bool is_line_ready(const NetLine& line) const;
-    void set_instance_input(const Instance& inst, const NetLineIns& ins);
-    void check_signal(const std::string& signal_name) const;
-    void track_path(const std::string& signal_name, const Instance& inst, const NetLineIns& ins, const std::string& gate_type);
-
-    void node_error(const std::string& head, const std::string& signal_name) const;
+    // Old methods removed - functionality moved to refactored classes (Phase 5)
 
     ////
 
@@ -67,18 +59,17 @@ class Ssta {
     bool is_sensitivity_ = false;
     size_t critical_path_count_ = DEFAULT_CRITICAL_PATH_COUNT;
     size_t sensitivity_top_n_ = DEFAULT_CRITICAL_PATH_COUNT;
-    Gates gates_;
-    Signals signals_;
-    Net net_;
-    Pins inputs_;
-    Pins outputs_;
-    Pins dff_outputs_;
-    Pins dff_inputs_;  // DFF入力（D端子）信号名
-    // Path tracking data structures
-    std::unordered_map<std::string, std::string> signal_to_instance_;  // signal name -> instance name
-    std::unordered_map<std::string, std::vector<std::string>> instance_to_inputs_;  // instance name -> input signal names
-    std::unordered_map<std::string, std::string> instance_to_gate_type_;  // instance name -> gate type name
-    std::unordered_map<std::string, std::unordered_map<std::string, Normal>> instance_to_delays_;  // instance name -> (pin_name -> delay)
+    
+    // Refactored components (Phase 5)
+    std::unique_ptr<DlibParser> dlib_parser_;
+    std::unique_ptr<BenchParser> bench_parser_;
+    std::unique_ptr<CircuitGraph> circuit_graph_;
+    std::unique_ptr<CriticalPathAnalyzer> path_analyzer_;
+    std::unique_ptr<SensitivityAnalyzer> sensitivity_analyzer_;
+    std::unique_ptr<SstaResults> results_;
+    
+    // Gatesは感度解析が有効な場合のみ保持（メモリ最適化）
+    Gates gates_;  // DlibParserから取得後、感度解析が無効ならクリア
 
    public:
     void set_lat() {
