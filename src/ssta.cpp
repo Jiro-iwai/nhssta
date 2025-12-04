@@ -114,10 +114,6 @@ void Ssta::read_bench() {
     }
 }
 
-// bench //
-
-// Pure logic functions (Phase 2: I/O separation)
-
 LatResults Ssta::getLatResults() const {
     // Use SstaResults (Phase 5: refactoring)
     if (!results_) {
@@ -133,8 +129,6 @@ CorrelationMatrix Ssta::getCorrelationMatrix() const {
     }
     return results_->getCorrelationMatrix();
 }
-
-// Old methods removed - functionality moved to CircuitGraph (Phase 5)
 
 CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
     // Use CriticalPathAnalyzer (Phase 5: refactoring)
