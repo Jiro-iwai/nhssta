@@ -20,7 +20,7 @@ CXXFLAGS = -g -Wall -std=c++17
 INCLUDE = -I../include 
 CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
 	random_variable.cpp add.cpp util_numerical.cpp gate.cpp \
-	parser.cpp dlib_parser.cpp bench_parser.cpp circuit_graph.cpp critical_path_analyzer.cpp ssta.cpp expression.cpp statistical_functions.cpp main.cpp
+	parser.cpp dlib_parser.cpp bench_parser.cpp circuit_graph.cpp critical_path_analyzer.cpp sensitivity_analyzer.cpp ssta.cpp expression.cpp statistical_functions.cpp main.cpp
 OBJS = $(addprefix ../build/src/,$(CXXSRCS:.cpp=.o))
 DEPS = $(addprefix ../build/src/,$(CXXSRCS:.cpp=.d))
 TIDY_MARKERS = $(addprefix ../build/tidy/,$(CXXSRCS:.cpp=.tidy))
@@ -71,7 +71,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_expression_node_count.cpp ../test/test_expression_cache_investigation.cpp \
 	../test/test_expression_helpers.cpp ../test/test_custom_function.cpp \
 	../test/test_custom_function_native.cpp ../test/test_simple_circuit.cpp \
-	../test/test_covariance_cache_normalization.cpp ../test/test_dlib_parser.cpp ../test/test_bench_parser.cpp ../test/test_circuit_graph.cpp ../test/test_critical_path_analyzer.cpp
+	../test/test_covariance_cache_normalization.cpp ../test/test_dlib_parser.cpp ../test/test_bench_parser.cpp ../test/test_circuit_graph.cpp ../test/test_critical_path_analyzer.cpp ../test/test_sensitivity_analyzer.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_DEPS = $(patsubst ../test/%.cpp,../build/test/%.d,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
@@ -79,7 +79,7 @@ TEST_TARGET = ../build/bin/nhssta_test
 # Core library objects (without main.cpp)
 LIB_OBJS = ../build/src/covariance.o ../build/src/max.o ../build/src/sub.o ../build/src/normal.o \
 	../build/src/random_variable.o ../build/src/add.o ../build/src/util_numerical.o ../build/src/gate.o \
-	../build/src/parser.o ../build/src/dlib_parser.o ../build/src/bench_parser.o ../build/src/circuit_graph.o ../build/src/critical_path_analyzer.o ../build/src/ssta.o ../build/src/expression.o ../build/src/statistical_functions.o
+	../build/src/parser.o ../build/src/dlib_parser.o ../build/src/bench_parser.o ../build/src/circuit_graph.o ../build/src/critical_path_analyzer.o ../build/src/sensitivity_analyzer.o ../build/src/ssta.o ../build/src/expression.o ../build/src/statistical_functions.o
 
 $(TARGET) : $(OBJS) 
 	$(Q)mkdir -p ../build/bin
