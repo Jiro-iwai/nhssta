@@ -72,6 +72,7 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_custom_function_native.cpp ../test/test_simple_circuit.cpp \
 	../test/test_covariance_cache_normalization.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
+TEST_DEPS = $(patsubst ../test/%.cpp,../build/test/%.d,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 
 # Core library objects (without main.cpp)
@@ -207,14 +208,14 @@ $(TEST_TARGET): $(TEST_OBJS) $(LIB_OBJS)
 	$(Q)mkdir -p ../build/test
 	$(ECHO) "Compiling $< -> $@"
 	$(Q)if echo "$(CXXFLAGS)" | grep -q "coverage\|profile-arcs"; then \
-		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+		$(CXX) $(CXXFLAGS) $(COVERAGE_FLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -MMD -MP -MF ../build/test/$*.d -c $< -o $@; \
 	else \
-		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -c $< -o $@; \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $(GTEST_INCLUDE) -I. -I../test -MMD -MP -MF ../build/test/$*.d -c $< -o $@; \
 	fi
 
 clean :
 	rm -f $(OBJS) $(DEPS) $(TARGET)
-	rm -f $(TEST_OBJS) ../build/bin/nhssta_test
+	rm -f $(TEST_OBJS) $(TEST_DEPS) ../build/bin/nhssta_test
 	rm -rf ../build
 	@find . -name "*.gcno" -delete 2>/dev/null || true
 
@@ -225,6 +226,7 @@ tags :
 $(OBJS): | ../build/src
 $(DEPS): | ../build/src
 $(TEST_OBJS): | ../build/test
+$(TEST_DEPS): | ../build/test
 $(TARGET): | ../build/bin
 $(TEST_TARGET): | ../build/bin
 
@@ -232,3 +234,4 @@ $(TEST_TARGET): | ../build/bin
 	$(Q)mkdir -p $@
 
 -include $(DEPS)
+-include $(TEST_DEPS)
