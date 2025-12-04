@@ -106,10 +106,15 @@ private:
 ```
 
 **移行対象メソッド**:
-- `Ssta::read_bench()` → `BenchParser::parse()`
+- `Ssta::read_bench()` → `BenchParser::parse()`（ただし、`connect_instances()`の呼び出しは除く）
 - `Ssta::read_bench_input()` → `BenchParser::parse_input()`
 - `Ssta::read_bench_output()` → `BenchParser::parse_output()`
 - `Ssta::read_bench_net()` → `BenchParser::parse_net()`
+- `Ssta::node_error()` → `BenchParser::node_error()`（エラーメッセージ生成）
+
+**注意点**:
+- `read_bench()`内の`connect_instances()`呼び出しは`Ssta`クラスで管理する
+- `read_bench()`内の`gates_.clear()`も`Ssta`クラスで管理する（感度解析が有効な場合は保持）
 
 ### Phase 2: グラフ構築の分離
 
@@ -121,9 +126,15 @@ private:
 ```cpp
 class CircuitGraph {
 public:
+    using TrackPathCallback = std::function<void(const std::string& signal_name, 
+                                                  const Instance& inst, 
+                                                  const NetLineIns& ins, 
+                                                  const std::string& gate_type)>;
+    
     void build(const Gates& gates, const Net& net, 
                const Pins& inputs, const Pins& outputs,
-               const Pins& dff_outputs, const Pins& dff_inputs);
+               const Pins& dff_outputs, const Pins& dff_inputs,
+               TrackPathCallback track_path_callback = nullptr);
     const Signals& signals() const { return signals_; }
     const std::unordered_map<std::string, std::string>& signal_to_instance() const {
         return signal_to_instance_;
@@ -139,12 +150,15 @@ public:
     }
     
 private:
-    void connect_instances(const Gates& gates, const Net& net);
+    void connect_instances(const Gates& gates, const Net& net, TrackPathCallback track_path_callback);
     void set_instance_input(const Instance& inst, const NetLineIns& ins);
-    void set_dff_out(const std::string& out_signal_name);
+    void set_dff_out(const std::string& out_signal_name, TrackPathCallback track_path_callback);
     bool is_line_ready(const NetLine& line) const;
+    void check_signal(const std::string& signal_name) const;
+    void node_error(const std::string& head, const std::string& signal_name) const;
     
     Signals signals_;
+    std::string bench_file_;  // エラーメッセージ用
     std::unordered_map<std::string, std::string> signal_to_instance_;
     std::unordered_map<std::string, std::vector<std::string>> instance_to_inputs_;
     std::unordered_map<std::string, std::string> instance_to_gate_type_;
@@ -153,10 +167,15 @@ private:
 ```
 
 **移行対象メソッド**:
-- `Ssta::connect_instances()` → `CircuitGraph::connect_instances()`
+- `Ssta::connect_instances()` → `CircuitGraph::build()`（`connect_instances()`を内部で呼ぶ）
 - `Ssta::set_instance_input()` → `CircuitGraph::set_instance_input()`
 - `Ssta::set_dff_out()` → `CircuitGraph::set_dff_out()`
 - `Ssta::is_line_ready()` → `CircuitGraph::is_line_ready()`
+- `Ssta::check_signal()` → `CircuitGraph::check_signal()`（信号の重複チェック）
+
+**注意点**:
+- `connect_instances()`内で`track_path()`が呼ばれているが、これは`CircuitGraph::build()`時にコールバックとして受け取る
+- `build()`メソッドのシグネチャ: `void build(..., std::function<void(...)> track_path_callback = nullptr)`
 
 ### Phase 3: クリティカルパス解析の分離
 
@@ -180,7 +199,11 @@ private:
 
 **移行対象メソッド**:
 - `Ssta::getCriticalPaths()` → `CriticalPathAnalyzer::analyze()`
-- `Ssta::track_path()` → `CriticalPathAnalyzer::track_path()`
+- `Ssta::track_path()` → `CriticalPathAnalyzer::track_path()`（CircuitGraphのコールバックから呼ばれる）
+
+**注意点**:
+- `track_path()`は`CircuitGraph::build()`時にコールバックとして渡される
+- `CriticalPathAnalyzer`は`CircuitGraph`のデータ構造を参照してパス情報を構築する
 
 ### Phase 3.5: 感度解析の分離
 
@@ -209,10 +232,15 @@ private:
 - `Ssta::getSensitivityResults()` → `SensitivityAnalyzer::analyze()`
 - 感度解析に関連するロジック（約140行）を分離
 
+**移行対象メソッド**:
+- `Ssta::getSensitivityResults()` → `SensitivityAnalyzer::analyze()`
+- 感度解析に関連するロジック（約140行）を分離
+
 **注意点**:
 - 感度解析は`instance_to_delays_`（クローンされた遅延）に依存している
 - `CircuitGraph`が`instance_to_delays_`を提供する必要がある
 - `zero_all_grad()`などのExpression関連の関数へのアクセスが必要
+- `track_path()`は`CircuitGraph::build()`時にコールバックとして渡される（CriticalPathAnalyzerと共有）
 
 ### Phase 4: 結果データ生成の分離
 
@@ -250,7 +278,7 @@ public:
     
     void check();
     void read_dlib();
-    void read_bench();
+    void read_bench();  // BenchParser::parse() + CircuitGraph::build()を呼ぶ
     
     // 設定メソッド
     void set_lat() { is_lat_ = true; }
@@ -291,6 +319,9 @@ private:
     std::unique_ptr<CriticalPathAnalyzer> path_analyzer_;
     std::unique_ptr<SensitivityAnalyzer> sensitivity_analyzer_;
     std::unique_ptr<SstaResults> results_;
+    
+    // Gatesは感度解析が有効な場合のみ保持（メモリ最適化）
+    Gates gates_;  // DlibParserから取得後、感度解析が無効ならクリア
 };
 ```
 
@@ -319,4 +350,18 @@ private:
 2. **後方互換性**: 既存のAPIを維持し、内部実装のみを変更する
 3. **テスト**: 各フェーズで既存テストがパスすることを確認する
 4. **パフォーマンス**: 分離によるオーバーヘッドを最小限に抑える
+5. **コールバックの設計**: `CircuitGraph::build()`時に`track_path()`コールバックを渡すことで、クリティカルパス解析と感度解析の両方に対応
+6. **メモリ管理**: 感度解析が無効な場合、`gates_`をクリアしてメモリを節約（`Ssta`クラスで管理）
+
+## 追加で考慮すべき点
+
+### 未カバーのメソッド
+
+以下のメソッドは既に計画に含まれていますが、明示的に記載します：
+
+1. **check()** - 設定の検証 → `Ssta`クラスに残す
+2. **node_error()** - エラーメッセージ生成 → `BenchParser`と`CircuitGraph`に移動
+3. **check_signal()** - 信号の重複チェック → `CircuitGraph`に移動
+4. **set_*() / is_*()** - 設定メソッド → `Ssta`クラスに残す
+5. **デストラクタ** - 静的キャッシュのクリア → `Ssta`クラスに残す
 
