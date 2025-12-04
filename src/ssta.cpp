@@ -26,6 +26,14 @@ static const std::string DFF_GATE_NAME = "dff";
 // DFF clock input is treated as arriving at time 0 (start of clock cycle)
 static constexpr double DFF_CLOCK_ARRIVAL_TIME = 0.0;
 
+// Tolerance for critical path contribution comparison
+// Used to account for floating point errors and MAX operation approximations
+static constexpr double CRITICAL_PATH_TOLERANCE = 5.0;
+
+// Threshold for gradient values to consider non-zero
+// Used to filter out negligible gradients in sensitivity analysis
+static constexpr double GRADIENT_THRESHOLD = 1e-10;
+
 Ssta::Ssta() = default;
 
 Ssta::~Ssta() {
@@ -580,7 +588,7 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
                 double contribution = input_lat + gate_delay->mean();
                 
                 // Check if this input contributes to the output LAT (within tolerance)
-                // Use a more relaxed tolerance (5.0) to account for floating point errors
+                // Use a more relaxed tolerance to account for floating point errors
                 // and MAX operation approximations (MAX operation can cause larger differences)
                 if (contribution > max_contribution) {
                     // Always track the maximum contribution
@@ -785,7 +793,7 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
             double grad_sigma = delay->std_expr()->gradient();
             
             // Only include gates with non-zero gradients
-            if (std::abs(grad_mu) > 1e-10 || std::abs(grad_sigma) > 1e-10) {
+            if (std::abs(grad_mu) > GRADIENT_THRESHOLD || std::abs(grad_sigma) > GRADIENT_THRESHOLD) {
                 results.gate_sensitivities.emplace_back(
                     instance_name, output_node, input_signal, gate_type,
                     grad_mu, grad_sigma);

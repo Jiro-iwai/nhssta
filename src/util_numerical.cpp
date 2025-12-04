@@ -213,6 +213,14 @@ double MeanMax2(double a) {
 // Standard normal distribution functions for Cov(max, max) calculation
 // ============================================================================
 
+// Threshold for correlation coefficient to use analytical formulas (near ±1)
+// Used to avoid numerical issues when rho is very close to ±1.0
+static constexpr double RHO_THRESHOLD = 0.9999;
+
+// Threshold for correlation coefficient to consider as near-zero
+// Used to simplify calculations when correlation is effectively zero
+static constexpr double NEAR_ZERO_CORRELATION_THRESHOLD = 1e-10;
+
 static constexpr double SQRT_2PI = 2.5066282746310005024;  // √(2π)
 static constexpr double SQRT_2 = 1.4142135623730950488;    // √2
 
@@ -343,7 +351,6 @@ double expected_prod_pos(double mu0, double sigma0,
     // Use analytical formulas for ρ ≈ ±1 to avoid numerical issues
     // Note: After clamping, |rho| <= 1.0, so we check for |rho| >= RHO_THRESHOLD
     // to allow perfect correlation cases (rho = 1.0 or -1.0)
-    constexpr double RHO_THRESHOLD = 0.9999;
     if (rho >= RHO_THRESHOLD) {
         // For rho >= RHO_THRESHOLD (including rho = 1.0), use analytical formula
         return expected_prod_pos_rho1(mu0, sigma0, mu1, sigma1);
@@ -426,7 +433,7 @@ double covariance_max0_max0(double mu0, double sigma0,
 
 double bivariate_normal_pdf(double x, double y, double rho) {
     // Bivariate normal PDF: φ₂(x, y; ρ)
-    if (std::abs(rho) > 0.9999) {
+    if (std::abs(rho) > RHO_THRESHOLD) {
         // Degenerate case - return a small value
         return 0.0;
     }
@@ -445,13 +452,13 @@ double bivariate_normal_cdf(double h, double k, double rho, int n_points) {
     // Bivariate normal CDF: Φ₂(h, k; ρ) using Simpson's rule
     // 128 points provides 8-digit accuracy with good performance (~1.6μs)
     // Handle edge cases
-    if (std::abs(rho) > 0.9999) {
+    if (std::abs(rho) > RHO_THRESHOLD) {
         if (rho > 0) {
             return normal_cdf(std::min(h, k));
         }
         return std::max(0.0, normal_cdf(h) + normal_cdf(k) - 1.0);
     }
-    if (std::abs(rho) < 1e-10) {
+    if (std::abs(rho) < NEAR_ZERO_CORRELATION_THRESHOLD) {
         return normal_cdf(h) * normal_cdf(k);
     }
 
