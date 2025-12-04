@@ -1,0 +1,5018 @@
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[253] (op=PLUS)
+================================================================================
+
+Topological order (74 nodes):
+  [0] Node[180] (op=PARAM)
+  [1] Node[182] (op=PARAM)
+  [2] Node[184] (op=MINUS)
+  [3] Node[183] (op=PARAM)
+  [4] Node[185] (op=MUL)
+  [5] Node[188] (op=CONST)
+  [6] Node[187] (op=CONST)
+  [7] Node[189] (op=MUL)
+  [8] Node[190] (op=MINUS)
+  [9] Node[181] (op=PARAM)
+  [10] Node[186] (op=MUL)
+  [11] Node[191] (op=PLUS)
+  [12] Node[192] (op=SQRT)
+  [13] Node[193] (op=CUSTOM_FUNCTION)
+  [14] Node[194] (op=PLUS)
+  [15] Node[195] (op=PARAM)
+  [16] Node[197] (op=MINUS)
+  [17] Node[196] (op=PARAM)
+  [18] Node[198] (op=MUL)
+  [19] Node[200] (op=CONST)
+  [20] Node[199] (op=CONST)
+  [21] Node[201] (op=MUL)
+  [22] Node[202] (op=MINUS)
+  [23] Node[203] (op=PLUS)
+  [24] Node[204] (op=SQRT)
+  [25] Node[205] (op=CUSTOM_FUNCTION)
+  [26] Node[206] (op=PLUS)
+  [27] Node[207] (op=MINUS)
+  [28] Node[213] (op=CONST)
+  [29] Node[209] (op=MINUS)
+  [30] Node[210] (op=DIV)
+  [31] Node[211] (op=CUSTOM_FUNCTION)
+  [32] Node[212] (op=MUL)
+  [33] Node[214] (op=MUL)
+  [34] Node[215] (op=PLUS)
+  [35] Node[208] (op=CUSTOM_FUNCTION)
+  [36] Node[216] (op=PLUS)
+  [37] Node[247] (op=CONST)
+  [38] Node[226] (op=MINUS)
+  [39] Node[227] (op=DIV)
+  [40] Node[228] (op=CUSTOM_FUNCTION)
+  [41] Node[229] (op=MUL)
+  [42] Node[230] (op=PLUS)
+  [43] Node[231] (op=CONST)
+  [44] Node[232] (op=MINUS)
+  [45] Node[233] (op=DIV)
+  [46] Node[234] (op=CUSTOM_FUNCTION)
+  [47] Node[235] (op=MUL)
+  [48] Node[236] (op=MINUS)
+  [49] Node[237] (op=MINUS)
+  [50] Node[240] (op=MUL)
+  [51] Node[241] (op=DIV)
+  [52] Node[242] (op=CUSTOM_FUNCTION)
+  [53] Node[238] (op=CUSTOM_FUNCTION)
+  [54] Node[239] (op=CUSTOM_FUNCTION)
+  [55] Node[243] (op=MUL)
+  [56] Node[244] (op=MINUS)
+  [57] Node[245] (op=PLUS)
+  [58] Node[246] (op=PLUS)
+  [59] Node[248] (op=MUL)
+  [60] Node[249] (op=MINUS)
+  [61] Node[222] (op=CONST)
+  [62] Node[218] (op=MINUS)
+  [63] Node[219] (op=DIV)
+  [64] Node[220] (op=CUSTOM_FUNCTION)
+  [65] Node[221] (op=MUL)
+  [66] Node[223] (op=MUL)
+  [67] Node[224] (op=PLUS)
+  [68] Node[217] (op=CUSTOM_FUNCTION)
+  [69] Node[225] (op=PLUS)
+  [70] Node[250] (op=PLUS)
+  [71] Node[251] (op=SQRT)
+  [72] Node[252] (op=CUSTOM_FUNCTION)
+  [73] Node[253] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[253] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[194] (value=12.286)
+  Right: Node[252] (value=0.109185)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[252] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.109185
+  CUSTOM_FUNCTION node
+  Args count: 2
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[47] (op=PLUS)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[41] (op=PARAM)
+  [1] Node[42] (op=PARAM)
+  [2] Node[2] (op=CONST)
+  [3] Node[43] (op=DIV)
+  [4] Node[44] (op=MUL)
+  [5] Node[45] (op=CUSTOM_FUNCTION)
+  [6] Node[46] (op=MUL)
+  [7] Node[47] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[47] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[41] (value=-2.05911)
+  Right: Node[46] (value=2.16829)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[46] (op=MUL)
+  Upstream gradient: 1
+  Value: 2.16829
+  Binary operation: MUL
+  Left: Node[42] (value=1.78072)
+  Right: Node[45] (value=1.21765)
+  Propagating to left: 1.21765
+  Propagating to right: 1.78072
+  Left gradient after: 1.21765
+  Right gradient after: 1.78072
+
+=== propagate_gradient() #3 ===
+  Node[45] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1.78072
+  Value: 1.21765
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[25] (op=PLUS)
+================================================================================
+
+Topological order (5 nodes):
+  [0] Node[21] (op=PARAM)
+  [1] Node[22] (op=CUSTOM_FUNCTION)
+  [2] Node[23] (op=CUSTOM_FUNCTION)
+  [3] Node[24] (op=MUL)
+  [4] Node[25] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[25] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[22] (value=0.204437)
+  Right: Node[24] (value=1.01322)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[24] (op=MUL)
+  Upstream gradient: 1
+  Value: 1.01322
+  Binary operation: MUL
+  Left: Node[21] (value=1.15634)
+  Right: Node[23] (value=0.876228)
+  Propagating to left: 0.876228
+  Propagating to right: 1.15634
+  Left gradient after: 0.876228
+  Right gradient after: 1.15634
+
+=== propagate_gradient() #3 ===
+  Node[23] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1.15634
+  Value: 0.876228
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.75246)
+  Propagating to left: 1.75246
+  Propagating to right: 0.5
+  Left gradient after: 1.75246
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.75246
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.752457)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.752457
+  Unary operation: ERF
+  Left: Node[17] (value=0.817654)
+  Propagating to left: 0.289117
+  Left gradient after: 0.289117
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.289117
+  Value: 0.817654
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=1.15634)
+  Propagating to left: 0.334317
+  Propagating to right: 0.204437
+  Left gradient after: 0.334317
+  Right gradient after: 0.204437
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1.15634 × grad[0]=0.204437 = contrib=0.236398
+    arg[0] gradient: 0.876228 -> 1.11263
+
+=== propagate_gradient() #5 ===
+  Node[22] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.204437
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.512447)
+  Propagating to left: 0.512447
+  Propagating to right: 0.398942
+  Left gradient after: 0.512447
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.512447
+  Unary operation: EXP
+  Left: Node[9] (value=-0.668558)
+  Propagating to left: 0.204437
+  Left gradient after: 0.204437
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.204437
+  Value: -0.668558
+  Binary operation: DIV
+  Left: Node[7] (value=-1.33712)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.102218
+  Propagating to right: 0.0683389
+  Left gradient after: 0.102218
+  Right gradient after: 0.0683389
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.102218
+  Value: -1.33712
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=1.33712)
+  Propagating to left: 0.136678
+  Propagating to right: -0.102218
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.136678
+  Right gradient after: -0.102218
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.102218
+  Value: 1.33712
+  Binary operation: MUL
+  Left: Node[5] (value=1.15634)
+  Right: Node[5] (value=1.15634)
+  Propagating to left: -0.118199
+  Propagating to right: -0.118199
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.236398
+  Right gradient after: -0.236398
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=-0.236398 = contrib=-0.236398
+    arg[0] gradient: 1.11263 -> 0.876228
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+  Leaf node 21 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1.78072 × grad[0]=0.876228 = contrib=1.56031
+    arg[0] gradient: 0 -> 1.56031
+
+=== propagate_gradient() #6 ===
+  Node[44] (op=MUL)
+  Upstream gradient: 1.56031
+  Value: 1.15634
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[43] (value=-1.15634)
+  Propagating to left: -1.80425
+  Propagating to right: -1.56031
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -1.66757
+  Right gradient after: -1.56031
+
+=== propagate_gradient() #7 ===
+  Node[43] (op=DIV)
+  Upstream gradient: -1.56031
+  Value: -1.15634
+  Binary operation: DIV
+  Left: Node[41] (value=-2.05911)
+  Right: Node[42] (value=1.78072)
+  Propagating to left: -0.876228
+  Propagating to right: -1.01322
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.123772
+  Right gradient after: 0.204437
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 42 (op=PARAM) - no propagation
+  Leaf node 41 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=0.123772 = contrib=0.123772
+    arg[0] gradient: 0 -> 0.123772
+    arg[1]: upstream=1 × grad[1]=0.204437 = contrib=0.204437
+    arg[1] gradient: 0 -> 0.204437
+
+=== propagate_gradient() #8 ===
+  Node[251] (op=SQRT)
+  Upstream gradient: 0.204437
+  Value: 1.78072
+  Unary operation: SQRT
+  Left: Node[250] (value=3.17095)
+  Propagating to left: 0.057403
+  Left gradient after: 0.057403
+
+=== propagate_gradient() #9 ===
+  Node[250] (op=PLUS)
+  Upstream gradient: 0.057403
+  Value: 3.17095
+  Binary operation: PLUS
+  Left: Node[249] (value=1.41048)
+  Right: Node[225] (value=1.76047)
+  Propagating to left: 0.057403
+  Propagating to right: 0.057403
+  Left gradient after: 0.057403
+  Right gradient after: 0.057403
+
+=== propagate_gradient() #10 ===
+  Node[225] (op=PLUS)
+  Upstream gradient: 0.057403
+  Value: 1.76047
+  Binary operation: PLUS
+  Left: Node[224] (value=1.17157)
+  Right: Node[217] (value=0.588899)
+  Propagating to left: 0.057403
+  Propagating to right: 0.057403
+  Left gradient after: 0.057403
+  Right gradient after: 0.057403
+
+=== propagate_gradient() #11 ===
+  Node[217] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.057403
+  Value: 0.588899
+  CUSTOM_FUNCTION node
+  Args count: 2
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[57] (op=MUL)
+================================================================================
+
+Topological order (11 nodes):
+  [0] Node[49] (op=PARAM)
+  [1] Node[54] (op=MUL)
+  [2] Node[2] (op=CONST)
+  [3] Node[48] (op=PARAM)
+  [4] Node[50] (op=DIV)
+  [5] Node[51] (op=MUL)
+  [6] Node[53] (op=CUSTOM_FUNCTION)
+  [7] Node[52] (op=CUSTOM_FUNCTION)
+  [8] Node[55] (op=MUL)
+  [9] Node[56] (op=MINUS)
+  [10] Node[57] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[57] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[54] (value=6)
+  Right: Node[56] (value=0.0981499)
+  Propagating to left: 0.0981499
+  Propagating to right: 6
+  Left gradient after: 0.0981499
+  Right gradient after: 6
+
+=== propagate_gradient() #2 ===
+  Node[56] (op=MINUS)
+  Upstream gradient: 6
+  Value: 0.0981499
+  Binary operation: MINUS
+  Left: Node[53] (value=0.969102)
+  Right: Node[55] (value=0.870952)
+  Propagating to left: 6
+  Propagating to right: -6
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 6
+  Right gradient after: -6
+
+=== propagate_gradient() #3 ===
+  Node[55] (op=MUL)
+  Upstream gradient: -6
+  Value: 0.870952
+  Binary operation: MUL
+  Left: Node[52] (value=0.933248)
+  Right: Node[52] (value=0.933248)
+  Propagating to left: -5.59949
+  Propagating to right: -5.59949
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -11.199
+  Right gradient after: -11.199
+
+=== propagate_gradient() #4 ===
+  Node[52] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -11.199
+  Value: 0.933248
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[25] (op=PLUS)
+================================================================================
+
+Topological order (5 nodes):
+  [0] Node[21] (op=PARAM)
+  [1] Node[22] (op=CUSTOM_FUNCTION)
+  [2] Node[23] (op=CUSTOM_FUNCTION)
+  [3] Node[24] (op=MUL)
+  [4] Node[25] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[25] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[22] (value=0.285855)
+  Right: Node[24] (value=0.647394)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[24] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.647394
+  Binary operation: MUL
+  Left: Node[21] (value=0.816497)
+  Right: Node[23] (value=0.792892)
+  Propagating to left: 0.792892
+  Propagating to right: 0.816497
+  Left gradient after: 0.792892
+  Right gradient after: 0.816497
+
+=== propagate_gradient() #3 ===
+  Node[23] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.816497
+  Value: 0.792892
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.58578)
+  Propagating to left: 1.58578
+  Propagating to right: 0.5
+  Left gradient after: 1.58578
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.58578
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.585784)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.585784
+  Unary operation: ERF
+  Left: Node[17] (value=0.57735)
+  Propagating to left: 0.40426
+  Left gradient after: 0.40426
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.40426
+  Value: 0.57735
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.816497)
+  Propagating to left: 0.330077
+  Propagating to right: 0.285855
+  Left gradient after: 0.330077
+  Right gradient after: 0.285855
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.816497 × grad[0]=0.285855 = contrib=0.233399
+    arg[0] gradient: 0.792892 -> 1.02629
+
+=== propagate_gradient() #5 ===
+  Node[22] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.285855
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.716531)
+  Propagating to left: 0.716531
+  Propagating to right: 0.398942
+  Left gradient after: 0.716531
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.716531
+  Unary operation: EXP
+  Left: Node[9] (value=-0.333333)
+  Propagating to left: 0.285855
+  Left gradient after: 0.285855
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.285855
+  Value: -0.333333
+  Binary operation: DIV
+  Left: Node[7] (value=-0.666667)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.142927
+  Propagating to right: 0.0476424
+  Left gradient after: 0.142927
+  Right gradient after: 0.0476424
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.142927
+  Value: -0.666667
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.666667)
+  Propagating to left: 0.0952849
+  Propagating to right: -0.142927
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0952849
+  Right gradient after: -0.142927
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.142927
+  Value: 0.666667
+  Binary operation: MUL
+  Left: Node[5] (value=0.816497)
+  Right: Node[5] (value=0.816497)
+  Propagating to left: -0.1167
+  Propagating to right: -0.1167
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.233399
+  Right gradient after: -0.233399
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=-0.233399 = contrib=-0.233399
+    arg[0] gradient: 1.02629 -> 0.792892
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+  Leaf node 21 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-11.199 × grad[0]=0.792892 = contrib=-8.87958
+    arg[0] gradient: 0 -> -8.87958
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #6 ===
+  Node[53] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 6
+  Value: 0.969102
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[36] (op=PLUS)
+================================================================================
+
+Topological order (11 nodes):
+  [0] Node[27] (op=CONST)
+  [1] Node[26] (op=PARAM)
+  [2] Node[28] (op=MUL)
+  [3] Node[29] (op=CONST)
+  [4] Node[30] (op=MINUS)
+  [5] Node[31] (op=CUSTOM_FUNCTION)
+  [6] Node[32] (op=MUL)
+  [7] Node[33] (op=PLUS)
+  [8] Node[34] (op=CUSTOM_FUNCTION)
+  [9] Node[35] (op=MUL)
+  [10] Node[36] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[36] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[33] (value=0.735703)
+  Right: Node[35] (value=0.233399)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[35] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.233399
+  Binary operation: MUL
+  Left: Node[26] (value=0.816497)
+  Right: Node[34] (value=0.285855)
+  Propagating to left: 0.285855
+  Propagating to right: 0.816497
+  Left gradient after: 0.285855
+  Right gradient after: 0.816497
+
+=== propagate_gradient() #3 ===
+  Node[34] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.816497
+  Value: 0.285855
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.716531)
+  Propagating to left: 0.716531
+  Propagating to right: 0.398942
+  Left gradient after: 0.716531
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.716531
+  Unary operation: EXP
+  Left: Node[9] (value=-0.333333)
+  Propagating to left: 0.285855
+  Left gradient after: 0.285855
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.285855
+  Value: -0.333333
+  Binary operation: DIV
+  Left: Node[7] (value=-0.666667)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.142927
+  Propagating to right: 0.0476424
+  Left gradient after: 0.142927
+  Right gradient after: 0.0476424
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.142927
+  Value: -0.666667
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.666667)
+  Propagating to left: 0.0952849
+  Propagating to right: -0.142927
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0952849
+  Right gradient after: -0.142927
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.142927
+  Value: 0.666667
+  Binary operation: MUL
+  Left: Node[5] (value=0.816497)
+  Right: Node[5] (value=0.816497)
+  Propagating to left: -0.1167
+  Propagating to right: -0.1167
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.233399
+  Right gradient after: -0.233399
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.816497 × grad[0]=-0.233399 = contrib=-0.19057
+    arg[0] gradient: 0.285855 -> 0.0952849
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #6 ===
+  Node[33] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0.735703
+  Binary operation: PLUS
+  Left: Node[27] (value=1)
+  Right: Node[32] (value=-0.264297)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #7 ===
+  Node[32] (op=MUL)
+  Upstream gradient: 1
+  Value: -0.264297
+  Binary operation: MUL
+  Left: Node[30] (value=-0.333333)
+  Right: Node[31] (value=0.792892)
+  Propagating to left: 0.792892
+  Propagating to right: -0.333333
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.792892
+  Right gradient after: -0.333333
+
+=== propagate_gradient() #8 ===
+  Node[31] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.333333
+  Value: 0.792892
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.58578)
+  Propagating to left: 1.58578
+  Propagating to right: 0.5
+  Left gradient after: 1.58578
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.58578
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.585784)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.585784
+  Unary operation: ERF
+  Left: Node[17] (value=0.57735)
+  Propagating to left: 0.40426
+  Left gradient after: 0.40426
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.40426
+  Value: 0.57735
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.816497)
+  Propagating to left: 0.330077
+  Propagating to right: 0.285855
+  Left gradient after: 0.330077
+  Right gradient after: 0.285855
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.333333 × grad[0]=0.285855 = contrib=-0.0952849
+    arg[0] gradient: 0.0952849 -> 0
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #5 ===
+  Node[30] (op=MINUS)
+  Upstream gradient: 0.792892
+  Value: -0.333333
+  Binary operation: MINUS
+  Left: Node[28] (value=0.666667)
+  Right: Node[29] (value=1)
+  Propagating to left: 0.792892
+  Propagating to right: -0.792892
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.792892
+  Right gradient after: -0.792892
+  Leaf node 29 (op=CONST) - no propagation
+
+=== propagate_gradient() #6 ===
+  Node[28] (op=MUL)
+  Upstream gradient: 0.792892
+  Value: 0.666667
+  Binary operation: MUL
+  Left: Node[26] (value=0.816497)
+  Right: Node[26] (value=0.816497)
+  Propagating to left: 0.647394
+  Propagating to right: 0.647394
+  Left gradient after: 1.29479
+  Right gradient after: 1.29479
+  Leaf node 26 (op=PARAM) - no propagation
+  Leaf node 27 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=6 × grad[0]=1.29479 = contrib=7.76872
+    arg[0] gradient: -8.87958 -> -1.11086
+
+=== propagate_gradient() #7 ===
+  Node[51] (op=MUL)
+  Upstream gradient: -1.11086
+  Value: 0.816497
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[50] (value=-0.816497)
+  Propagating to left: 0.907011
+  Propagating to right: 1.11086
+  Left gradient after: 1.0023
+  Right gradient after: 1.11086
+
+=== propagate_gradient() #8 ===
+  Node[50] (op=DIV)
+  Upstream gradient: 1.11086
+  Value: -0.816497
+  Binary operation: DIV
+  Left: Node[48] (value=-2)
+  Right: Node[49] (value=2.44949)
+  Propagating to left: 0.453505
+  Propagating to right: 0.370286
+  Left gradient after: 0.453505
+  Right gradient after: 0.370286
+  Leaf node 48 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+
+=== propagate_gradient() #9 ===
+  Node[54] (op=MUL)
+  Upstream gradient: 0.0981499
+  Value: 6
+  Binary operation: MUL
+  Left: Node[49] (value=2.44949)
+  Right: Node[49] (value=2.44949)
+  Propagating to left: 0.240417
+  Propagating to right: 0.240417
+  Left gradient after: 0.85112
+  Right gradient after: 0.85112
+  Leaf node 49 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.057403 × grad[0]=0.453505 = contrib=0.0260326
+    arg[0] gradient: 0 -> 0.0260326
+    arg[1]: upstream=0.057403 × grad[1]=0.85112 = contrib=0.0488568
+    arg[1] gradient: 0 -> 0.0488568
+
+=== propagate_gradient() #10 ===
+  Node[224] (op=PLUS)
+  Upstream gradient: 0.057403
+  Value: 1.17157
+  Binary operation: PLUS
+  Left: Node[186] (value=2)
+  Right: Node[223] (value=-0.828432)
+  Propagating to left: 0.057403
+  Propagating to right: 0.057403
+  Left gradient after: 0.057403
+  Right gradient after: 0.057403
+
+=== propagate_gradient() #11 ===
+  Node[223] (op=MUL)
+  Upstream gradient: 0.057403
+  Value: -0.828432
+  Binary operation: MUL
+  Left: Node[222] (value=2)
+  Right: Node[221] (value=-0.414216)
+  Propagating to left: -0.0237772
+  Propagating to right: 0.114806
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0237772
+  Right gradient after: 0.114806
+
+=== propagate_gradient() #12 ===
+  Node[221] (op=MUL)
+  Upstream gradient: 0.114806
+  Value: -0.414216
+  Binary operation: MUL
+  Left: Node[218] (value=-2)
+  Right: Node[220] (value=0.207108)
+  Propagating to left: 0.0237772
+  Propagating to right: -0.229612
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0237772
+  Right gradient after: -0.229612
+
+=== propagate_gradient() #13 ===
+  Node[220] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.229612
+  Value: 0.207108
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.207108
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=0.414216)
+  Propagating to left: 0.414216
+  Propagating to right: 0.5
+  Left gradient after: 0.414216
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 0.414216
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=-0.585784)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: -0.585784
+  Unary operation: ERF
+  Left: Node[17] (value=-0.57735)
+  Propagating to left: 0.40426
+  Left gradient after: 0.40426
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.40426
+  Value: -0.57735
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=-0.816497)
+  Propagating to left: -0.330077
+  Propagating to right: 0.285855
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.330077
+  Right gradient after: 0.285855
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.229612 × grad[0]=0.285855 = contrib=-0.0656356
+    arg[0] gradient: 0 -> -0.0656356
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #5 ===
+  Node[219] (op=DIV)
+  Upstream gradient: -0.0656356
+  Value: -0.816497
+  Binary operation: DIV
+  Left: Node[184] (value=-2)
+  Right: Node[192] (value=2.44949)
+  Propagating to left: -0.0267956
+  Propagating to right: -0.0218785
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.000763076
+  Right gradient after: 0.0269783
+
+=== propagate_gradient() #6 ===
+  Node[218] (op=MINUS)
+  Upstream gradient: 0.0237772
+  Value: -2
+  Binary operation: MINUS
+  Left: Node[187] (value=0)
+  Right: Node[186] (value=2)
+  Propagating to left: 0.0237772
+  Propagating to right: -0.0237772
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0237772
+  Right gradient after: 0.0336257
+  Leaf node 222 (op=CONST) - no propagation
+
+=== propagate_gradient() #7 ===
+  Node[249] (op=MINUS)
+  Upstream gradient: 0.057403
+  Value: 1.41048
+  Binary operation: MINUS
+  Left: Node[216] (value=2.93814)
+  Right: Node[248] (value=1.52766)
+  Propagating to left: 0.057403
+  Propagating to right: -0.057403
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.057403
+  Right gradient after: -0.057403
+
+=== propagate_gradient() #8 ===
+  Node[248] (op=MUL)
+  Upstream gradient: -0.057403
+  Value: 1.52766
+  Binary operation: MUL
+  Left: Node[247] (value=2)
+  Right: Node[246] (value=0.763829)
+  Propagating to left: -0.043846
+  Propagating to right: -0.114806
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.043846
+  Right gradient after: -0.114806
+
+=== propagate_gradient() #9 ===
+  Node[246] (op=PLUS)
+  Upstream gradient: -0.114806
+  Value: 0.763829
+  Binary operation: PLUS
+  Left: Node[230] (value=0.828432)
+  Right: Node[245] (value=-0.0646038)
+  Propagating to left: -0.114806
+  Propagating to right: -0.114806
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.114806
+  Right gradient after: -0.114806
+
+=== propagate_gradient() #10 ===
+  Node[245] (op=PLUS)
+  Upstream gradient: -0.114806
+  Value: -0.0646038
+  Binary operation: PLUS
+  Left: Node[235] (value=0)
+  Right: Node[244] (value=-0.0646038)
+  Propagating to left: -0.114806
+  Propagating to right: -0.114806
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.114806
+  Right gradient after: -0.114806
+
+=== propagate_gradient() #11 ===
+  Node[244] (op=MINUS)
+  Upstream gradient: -0.114806
+  Value: -0.0646038
+  Binary operation: MINUS
+  Left: Node[242] (value=0.000277926)
+  Right: Node[243] (value=0.0648818)
+  Propagating to left: -0.114806
+  Propagating to right: 0.114806
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.114806
+  Right gradient after: 0.114806
+
+=== propagate_gradient() #12 ===
+  Node[243] (op=MUL)
+  Upstream gradient: 0.114806
+  Value: 0.0648818
+  Binary operation: MUL
+  Left: Node[238] (value=0.226874)
+  Right: Node[239] (value=0.285982)
+  Propagating to left: 0.0328324
+  Propagating to right: 0.0260465
+  Left gradient after: 0.0328324
+  Right gradient after: 0.0260465
+
+=== propagate_gradient() #13 ===
+  Node[239] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.0260465
+  Value: 0.285982
+  CUSTOM_FUNCTION node
+  Args count: 2
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[47] (op=PLUS)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[41] (op=PARAM)
+  [1] Node[42] (op=PARAM)
+  [2] Node[2] (op=CONST)
+  [3] Node[43] (op=DIV)
+  [4] Node[44] (op=MUL)
+  [5] Node[45] (op=CUSTOM_FUNCTION)
+  [6] Node[46] (op=MUL)
+  [7] Node[47] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[47] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0.285982
+  Binary operation: PLUS
+  Left: Node[41] (value=-2)
+  Right: Node[46] (value=2.28598)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[46] (op=MUL)
+  Upstream gradient: 1
+  Value: 2.28598
+  Binary operation: MUL
+  Left: Node[42] (value=2.44949)
+  Right: Node[45] (value=0.933248)
+  Propagating to left: 0.933248
+  Propagating to right: 2.44949
+  Left gradient after: 0.933248
+  Right gradient after: 2.44949
+
+=== propagate_gradient() #3 ===
+  Node[45] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 2.44949
+  Value: 0.933248
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[25] (op=PLUS)
+================================================================================
+
+Topological order (5 nodes):
+  [0] Node[21] (op=PARAM)
+  [1] Node[22] (op=CUSTOM_FUNCTION)
+  [2] Node[23] (op=CUSTOM_FUNCTION)
+  [3] Node[24] (op=MUL)
+  [4] Node[25] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[25] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[22] (value=0.285855)
+  Right: Node[24] (value=0.647394)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[24] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.647394
+  Binary operation: MUL
+  Left: Node[21] (value=0.816497)
+  Right: Node[23] (value=0.792892)
+  Propagating to left: 0.792892
+  Propagating to right: 0.816497
+  Left gradient after: 0.792892
+  Right gradient after: 0.816497
+
+=== propagate_gradient() #3 ===
+  Node[23] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.816497
+  Value: 0.792892
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.58578)
+  Propagating to left: 1.58578
+  Propagating to right: 0.5
+  Left gradient after: 1.58578
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.58578
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.585784)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.585784
+  Unary operation: ERF
+  Left: Node[17] (value=0.57735)
+  Propagating to left: 0.40426
+  Left gradient after: 0.40426
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.40426
+  Value: 0.57735
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.816497)
+  Propagating to left: 0.330077
+  Propagating to right: 0.285855
+  Left gradient after: 0.330077
+  Right gradient after: 0.285855
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.816497 × grad[0]=0.285855 = contrib=0.233399
+    arg[0] gradient: 0.792892 -> 1.02629
+
+=== propagate_gradient() #5 ===
+  Node[22] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.285855
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.716531)
+  Propagating to left: 0.716531
+  Propagating to right: 0.398942
+  Left gradient after: 0.716531
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.716531
+  Unary operation: EXP
+  Left: Node[9] (value=-0.333333)
+  Propagating to left: 0.285855
+  Left gradient after: 0.285855
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.285855
+  Value: -0.333333
+  Binary operation: DIV
+  Left: Node[7] (value=-0.666667)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.142927
+  Propagating to right: 0.0476424
+  Left gradient after: 0.142927
+  Right gradient after: 0.0476424
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.142927
+  Value: -0.666667
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.666667)
+  Propagating to left: 0.0952849
+  Propagating to right: -0.142927
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0952849
+  Right gradient after: -0.142927
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.142927
+  Value: 0.666667
+  Binary operation: MUL
+  Left: Node[5] (value=0.816497)
+  Right: Node[5] (value=0.816497)
+  Propagating to left: -0.1167
+  Propagating to right: -0.1167
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.233399
+  Right gradient after: -0.233399
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=-0.233399 = contrib=-0.233399
+    arg[0] gradient: 1.02629 -> 0.792892
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+  Leaf node 21 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=2.44949 × grad[0]=0.792892 = contrib=1.94218
+    arg[0] gradient: 0 -> 1.94218
+
+=== propagate_gradient() #6 ===
+  Node[44] (op=MUL)
+  Upstream gradient: 1.94218
+  Value: 0.816497
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[43] (value=-0.816497)
+  Propagating to left: -1.58578
+  Propagating to right: -1.94218
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -1.4905
+  Right gradient after: -1.94218
+
+=== propagate_gradient() #7 ===
+  Node[43] (op=DIV)
+  Upstream gradient: -1.94218
+  Value: -0.816497
+  Binary operation: DIV
+  Left: Node[41] (value=-2)
+  Right: Node[42] (value=2.44949)
+  Propagating to left: -0.792892
+  Propagating to right: -0.647394
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.207108
+  Right gradient after: 0.285855
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 42 (op=PARAM) - no propagation
+  Leaf node 41 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.0260465 × grad[0]=0.207108 = contrib=0.00539443
+    arg[0] gradient: -0.000763076 -> 0.00463136
+    arg[1]: upstream=0.0260465 × grad[1]=0.285855 = contrib=0.0074455
+    arg[1] gradient: 0.0269783 -> 0.0344238
+
+=== propagate_gradient() #8 ===
+  Node[238] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.0328324
+  Value: 0.226874
+  CUSTOM_FUNCTION node
+  Args count: 2
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[47] (op=PLUS)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[41] (op=PARAM)
+  [1] Node[42] (op=PARAM)
+  [2] Node[2] (op=CONST)
+  [3] Node[43] (op=DIV)
+  [4] Node[44] (op=MUL)
+  [5] Node[45] (op=CUSTOM_FUNCTION)
+  [6] Node[46] (op=MUL)
+  [7] Node[47] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[47] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0.226874
+  Binary operation: PLUS
+  Left: Node[41] (value=-2)
+  Right: Node[46] (value=2.22687)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[46] (op=MUL)
+  Upstream gradient: 1
+  Value: 2.22687
+  Binary operation: MUL
+  Left: Node[42] (value=2.23607)
+  Right: Node[45] (value=0.995888)
+  Propagating to left: 0.995888
+  Propagating to right: 2.23607
+  Left gradient after: 0.995888
+  Right gradient after: 2.23607
+
+=== propagate_gradient() #3 ===
+  Node[45] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 2.23607
+  Value: 0.995888
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[25] (op=PLUS)
+================================================================================
+
+Topological order (5 nodes):
+  [0] Node[21] (op=PARAM)
+  [1] Node[22] (op=CUSTOM_FUNCTION)
+  [2] Node[23] (op=CUSTOM_FUNCTION)
+  [3] Node[24] (op=MUL)
+  [4] Node[25] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[25] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[22] (value=0.267419)
+  Right: Node[24] (value=0.728469)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[24] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.728469
+  Binary operation: MUL
+  Left: Node[21] (value=0.894427)
+  Right: Node[23] (value=0.814453)
+  Propagating to left: 0.814453
+  Propagating to right: 0.894427
+  Left gradient after: 0.814453
+  Right gradient after: 0.894427
+
+=== propagate_gradient() #3 ===
+  Node[23] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.894427
+  Value: 0.814453
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.62891)
+  Propagating to left: 1.62891
+  Propagating to right: 0.5
+  Left gradient after: 1.62891
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.62891
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.628907)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.628907
+  Unary operation: ERF
+  Left: Node[17] (value=0.632456)
+  Propagating to left: 0.378188
+  Left gradient after: 0.378188
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.378188
+  Value: 0.632456
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.894427)
+  Propagating to left: 0.338261
+  Propagating to right: 0.267419
+  Left gradient after: 0.338261
+  Right gradient after: 0.267419
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.894427 × grad[0]=0.267419 = contrib=0.239187
+    arg[0] gradient: 0.814453 -> 1.05364
+
+=== propagate_gradient() #5 ===
+  Node[22] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.267419
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.67032)
+  Propagating to left: 0.67032
+  Propagating to right: 0.398942
+  Left gradient after: 0.67032
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.67032
+  Unary operation: EXP
+  Left: Node[9] (value=-0.4)
+  Propagating to left: 0.267419
+  Left gradient after: 0.267419
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.267419
+  Value: -0.4
+  Binary operation: DIV
+  Left: Node[7] (value=-0.8)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.13371
+  Propagating to right: 0.0534838
+  Left gradient after: 0.13371
+  Right gradient after: 0.0534838
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.13371
+  Value: -0.8
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.8)
+  Propagating to left: 0.106968
+  Propagating to right: -0.13371
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.106968
+  Right gradient after: -0.13371
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.13371
+  Value: 0.8
+  Binary operation: MUL
+  Left: Node[5] (value=0.894427)
+  Right: Node[5] (value=0.894427)
+  Propagating to left: -0.119593
+  Propagating to right: -0.119593
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.239187
+  Right gradient after: -0.239187
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=-0.239187 = contrib=-0.239187
+    arg[0] gradient: 1.05364 -> 0.814453
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+  Leaf node 21 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=2.23607 × grad[0]=0.814453 = contrib=1.82117
+    arg[0] gradient: 0 -> 1.82117
+
+=== propagate_gradient() #6 ===
+  Node[44] (op=MUL)
+  Upstream gradient: 1.82117
+  Value: 0.894427
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[43] (value=-0.894427)
+  Propagating to left: -1.62891
+  Propagating to right: -1.82117
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -1.52194
+  Right gradient after: -1.82117
+
+=== propagate_gradient() #7 ===
+  Node[43] (op=DIV)
+  Upstream gradient: -1.82117
+  Value: -0.894427
+  Binary operation: DIV
+  Left: Node[41] (value=-2)
+  Right: Node[42] (value=2.23607)
+  Propagating to left: -0.814453
+  Propagating to right: -0.728469
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.185547
+  Right gradient after: 0.267419
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 42 (op=PARAM) - no propagation
+  Leaf node 41 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.0328324 × grad[0]=0.185547 = contrib=0.00609195
+    arg[0] gradient: 0 -> 0.00609195
+    arg[1]: upstream=0.0328324 × grad[1]=0.267419 = contrib=0.00878001
+    arg[1] gradient: 0 -> 0.00878001
+
+=== propagate_gradient() #8 ===
+  Node[242] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.114806
+  Value: 0.000277926
+  CUSTOM_FUNCTION node
+  Args count: 5
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[113] (op=PLUS)
+================================================================================
+
+Topological order (57 nodes):
+  [0] Node[58] (op=PARAM)
+  [1] Node[60] (op=PARAM)
+  [2] Node[98] (op=MUL)
+  [3] Node[59] (op=PARAM)
+  [4] Node[63] (op=DIV)
+  [5] Node[61] (op=PARAM)
+  [6] Node[64] (op=DIV)
+  [7] Node[62] (op=PARAM)
+  [8] Node[69] (op=CUSTOM_FUNCTION)
+  [9] Node[99] (op=MUL)
+  [10] Node[100] (op=MUL)
+  [11] Node[71] (op=CUSTOM_FUNCTION)
+  [12] Node[101] (op=MUL)
+  [13] Node[72] (op=MUL)
+  [14] Node[73] (op=MINUS)
+  [15] Node[65] (op=CONST)
+  [16] Node[66] (op=MUL)
+  [17] Node[67] (op=MINUS)
+  [18] Node[68] (op=SQRT)
+  [19] Node[74] (op=DIV)
+  [20] Node[75] (op=CUSTOM_FUNCTION)
+  [21] Node[102] (op=MUL)
+  [22] Node[111] (op=PLUS)
+  [23] Node[103] (op=MUL)
+  [24] Node[70] (op=CUSTOM_FUNCTION)
+  [25] Node[104] (op=MUL)
+  [26] Node[76] (op=MUL)
+  [27] Node[77] (op=MINUS)
+  [28] Node[78] (op=DIV)
+  [29] Node[79] (op=CUSTOM_FUNCTION)
+  [30] Node[105] (op=MUL)
+  [31] Node[112] (op=PLUS)
+  [32] Node[106] (op=MUL)
+  [33] Node[107] (op=MUL)
+  [34] Node[80] (op=CONST)
+  [35] Node[81] (op=CONST)
+  [36] Node[82] (op=MUL)
+  [37] Node[83] (op=DIV)
+  [38] Node[2] (op=CONST)
+  [39] Node[84] (op=MUL)
+  [40] Node[85] (op=CONST)
+  [41] Node[86] (op=MUL)
+  [42] Node[87] (op=MUL)
+  [43] Node[88] (op=MUL)
+  [44] Node[89] (op=MINUS)
+  [45] Node[90] (op=MUL)
+  [46] Node[91] (op=PLUS)
+  [47] Node[92] (op=DIV)
+  [48] Node[93] (op=MUL)
+  [49] Node[94] (op=CONST)
+  [50] Node[95] (op=DIV)
+  [51] Node[96] (op=EXP)
+  [52] Node[97] (op=MUL)
+  [53] Node[108] (op=MUL)
+  [54] Node[109] (op=PLUS)
+  [55] Node[110] (op=MUL)
+  [56] Node[113] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[113] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[112] (value=-0.0350075)
+  Right: Node[110] (value=0.0352854)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[110] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.0352854
+  Binary operation: MUL
+  Left: Node[106] (value=5.47723)
+  Right: Node[109] (value=0.00644221)
+  Propagating to left: 0.00644221
+  Propagating to right: 5.47723
+  Left gradient after: 0.00644221
+  Right gradient after: 5.47723
+
+=== propagate_gradient() #3 ===
+  Node[109] (op=PLUS)
+  Upstream gradient: 5.47723
+  Value: 0.00644221
+  Binary operation: PLUS
+  Left: Node[107] (value=-0.000760973)
+  Right: Node[108] (value=0.00720318)
+  Propagating to left: 5.47723
+  Propagating to right: 5.47723
+  Left gradient after: 5.47723
+  Right gradient after: 5.47723
+
+=== propagate_gradient() #4 ===
+  Node[108] (op=MUL)
+  Upstream gradient: 5.47723
+  Value: 0.00720318
+  Binary operation: MUL
+  Left: Node[67] (value=0.466667)
+  Right: Node[97] (value=0.0154354)
+  Propagating to left: 0.0845431
+  Propagating to right: 2.55604
+  Left gradient after: 0.0845431
+  Right gradient after: 2.55604
+
+=== propagate_gradient() #5 ===
+  Node[97] (op=MUL)
+  Upstream gradient: 2.55604
+  Value: 0.0154354
+  Binary operation: MUL
+  Left: Node[83] (value=0.232979)
+  Right: Node[96] (value=0.0662523)
+  Propagating to left: 0.169343
+  Propagating to right: 0.595503
+  Left gradient after: 0.169343
+  Right gradient after: 0.595503
+
+=== propagate_gradient() #6 ===
+  Node[96] (op=EXP)
+  Upstream gradient: 0.595503
+  Value: 0.0662523
+  Unary operation: EXP
+  Left: Node[95] (value=-2.71429)
+  Propagating to left: 0.0394534
+  Left gradient after: 0.0394534
+
+=== propagate_gradient() #7 ===
+  Node[95] (op=DIV)
+  Upstream gradient: 0.0394534
+  Value: -2.71429
+  Binary operation: DIV
+  Left: Node[93] (value=-5.42857)
+  Right: Node[94] (value=2)
+  Propagating to left: 0.0197267
+  Propagating to right: 0.053544
+  Left gradient after: 0.0197267
+  Right gradient after: 0.053544
+  Leaf node 94 (op=CONST) - no propagation
+
+=== propagate_gradient() #8 ===
+  Node[93] (op=MUL)
+  Upstream gradient: 0.0197267
+  Value: -5.42857
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[92] (value=5.42857)
+  Propagating to left: 0.107088
+  Propagating to right: -0.0197267
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.107088
+  Right gradient after: -0.0197267
+
+=== propagate_gradient() #9 ===
+  Node[92] (op=DIV)
+  Upstream gradient: -0.0197267
+  Value: 5.42857
+  Binary operation: DIV
+  Left: Node[91] (value=2.53333)
+  Right: Node[67] (value=0.466667)
+  Propagating to left: -0.0422715
+  Propagating to right: 0.229474
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0422715
+  Right gradient after: 0.314017
+
+=== propagate_gradient() #10 ===
+  Node[91] (op=PLUS)
+  Upstream gradient: -0.0422715
+  Value: 2.53333
+  Binary operation: PLUS
+  Left: Node[89] (value=1.86667)
+  Right: Node[90] (value=0.666667)
+  Propagating to left: -0.0422715
+  Propagating to right: -0.0422715
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.0422715
+  Right gradient after: -0.0422715
+
+=== propagate_gradient() #11 ===
+  Node[90] (op=MUL)
+  Upstream gradient: -0.0422715
+  Value: 0.666667
+  Binary operation: MUL
+  Left: Node[64] (value=-0.816497)
+  Right: Node[64] (value=-0.816497)
+  Propagating to left: 0.0345146
+  Propagating to right: 0.0345146
+  Left gradient after: 0.0690291
+  Right gradient after: 0.0690291
+
+=== propagate_gradient() #12 ===
+  Node[89] (op=MINUS)
+  Upstream gradient: -0.0422715
+  Value: 1.86667
+  Binary operation: MINUS
+  Left: Node[84] (value=0.8)
+  Right: Node[88] (value=-1.06667)
+  Propagating to left: -0.0422715
+  Propagating to right: 0.0422715
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0422715
+  Right gradient after: 0.0422715
+
+=== propagate_gradient() #13 ===
+  Node[88] (op=MUL)
+  Upstream gradient: 0.0422715
+  Value: -1.06667
+  Binary operation: MUL
+  Left: Node[87] (value=1.30639)
+  Right: Node[64] (value=-0.816497)
+  Propagating to left: -0.0345146
+  Propagating to right: 0.0552233
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0345146
+  Right gradient after: 0.124252
+
+=== propagate_gradient() #14 ===
+  Node[87] (op=MUL)
+  Upstream gradient: -0.0345146
+  Value: 1.30639
+  Binary operation: MUL
+  Left: Node[86] (value=-1.46059)
+  Right: Node[63] (value=-0.894427)
+  Propagating to left: 0.0308708
+  Propagating to right: 0.0504118
+  Left gradient after: 0.0308708
+  Right gradient after: 0.0504118
+
+=== propagate_gradient() #15 ===
+  Node[86] (op=MUL)
+  Upstream gradient: 0.0308708
+  Value: -1.46059
+  Binary operation: MUL
+  Left: Node[85] (value=2)
+  Right: Node[62] (value=-0.730297)
+  Propagating to left: -0.0225448
+  Propagating to right: 0.0617415
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0225448
+  Right gradient after: 0.0617415
+  Leaf node 85 (op=CONST) - no propagation
+
+=== propagate_gradient() #16 ===
+  Node[84] (op=MUL)
+  Upstream gradient: -0.0422715
+  Value: 0.8
+  Binary operation: MUL
+  Left: Node[63] (value=-0.894427)
+  Right: Node[63] (value=-0.894427)
+  Propagating to left: 0.0378088
+  Propagating to right: 0.0378088
+  Left gradient after: 0.126029
+  Right gradient after: 0.126029
+  Leaf node 2 (op=CONST) - no propagation
+
+=== propagate_gradient() #17 ===
+  Node[83] (op=DIV)
+  Upstream gradient: 0.169343
+  Value: 0.232979
+  Binary operation: DIV
+  Left: Node[80] (value=1)
+  Right: Node[82] (value=4.29223)
+  Propagating to left: 0.0394534
+  Propagating to right: -0.00919182
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0394534
+  Right gradient after: -0.00919182
+
+=== propagate_gradient() #18 ===
+  Node[82] (op=MUL)
+  Upstream gradient: -0.00919182
+  Value: 4.29223
+  Binary operation: MUL
+  Left: Node[81] (value=6.28319)
+  Right: Node[68] (value=0.68313)
+  Propagating to left: -0.00627921
+  Propagating to right: -0.0577539
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.00627921
+  Right gradient after: -0.0577539
+  Leaf node 81 (op=CONST) - no propagation
+  Leaf node 80 (op=CONST) - no propagation
+
+=== propagate_gradient() #19 ===
+  Node[107] (op=MUL)
+  Upstream gradient: 5.47723
+  Value: -0.000760973
+  Binary operation: MUL
+  Left: Node[62] (value=-0.730297)
+  Right: Node[69] (value=0.00104201)
+  Propagating to left: 0.0057073
+  Propagating to right: -4
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0674488
+  Right gradient after: -4
+
+=== propagate_gradient() #20 ===
+  Node[106] (op=MUL)
+  Upstream gradient: 0.00644221
+  Value: 5.47723
+  Binary operation: MUL
+  Left: Node[59] (value=2.23607)
+  Right: Node[61] (value=2.44949)
+  Propagating to left: 0.0157801
+  Propagating to right: 0.0144052
+  Left gradient after: 0.0157801
+  Right gradient after: 0.0144052
+
+=== propagate_gradient() #21 ===
+  Node[112] (op=PLUS)
+  Upstream gradient: 1
+  Value: -0.0350075
+  Binary operation: PLUS
+  Left: Node[111] (value=-0.0162052)
+  Right: Node[105] (value=-0.0188023)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #22 ===
+  Node[105] (op=MUL)
+  Upstream gradient: 1
+  Value: -0.0188023
+  Binary operation: MUL
+  Left: Node[104] (value=-1.19593)
+  Right: Node[79] (value=0.0157219)
+  Propagating to left: 0.0157219
+  Propagating to right: -1.19593
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0157219
+  Right gradient after: -1.19593
+
+=== propagate_gradient() #23 ===
+  Node[79] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -1.19593
+  Value: 0.0157219
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=0.0314437)
+  Propagating to left: 0.0314437
+  Propagating to right: 0.5
+  Left gradient after: 0.0314437
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 0.0314437
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=-0.968556)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: -0.968556
+  Unary operation: ERF
+  Left: Node[17] (value=-1.52128)
+  Propagating to left: 0.0557627
+  Left gradient after: 0.0557627
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.0557627
+  Value: -1.52128
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=-2.15141)
+  Propagating to left: -0.119968
+  Propagating to right: 0.0394302
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.119968
+  Right gradient after: 0.0394302
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-1.19593 × grad[0]=0.0394302 = contrib=-0.0471559
+    arg[0] gradient: 0 -> -0.0471559
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #5 ===
+  Node[78] (op=DIV)
+  Upstream gradient: -0.0471559
+  Value: -2.15141
+  Binary operation: DIV
+  Left: Node[77] (value=-1.46969)
+  Right: Node[68] (value=0.68313)
+  Propagating to left: -0.0690291
+  Propagating to right: -0.14851
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.0690291
+  Right gradient after: -0.206264
+
+=== propagate_gradient() #6 ===
+  Node[77] (op=MINUS)
+  Upstream gradient: -0.0690291
+  Value: -1.46969
+  Binary operation: MINUS
+  Left: Node[64] (value=-0.816497)
+  Right: Node[76] (value=0.653197)
+  Propagating to left: -0.0690291
+  Propagating to right: 0.0690291
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: 0.0552233
+  Right gradient after: 0.0690291
+
+=== propagate_gradient() #7 ===
+  Node[76] (op=MUL)
+  Upstream gradient: 0.0690291
+  Value: 0.653197
+  Binary operation: MUL
+  Left: Node[62] (value=-0.730297)
+  Right: Node[63] (value=-0.894427)
+  Propagating to left: -0.0617415
+  Propagating to right: -0.0504118
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0057073
+  Right gradient after: 0.0756176
+
+=== propagate_gradient() #8 ===
+  Node[104] (op=MUL)
+  Upstream gradient: 0.0157219
+  Value: -1.19593
+  Binary operation: MUL
+  Left: Node[103] (value=-4.47214)
+  Right: Node[70] (value=0.267419)
+  Propagating to left: 0.00420433
+  Propagating to right: -0.0703103
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.00420433
+  Right gradient after: -0.0703103
+
+=== propagate_gradient() #9 ===
+  Node[70] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.0703103
+  Value: 0.267419
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.67032)
+  Propagating to left: 0.67032
+  Propagating to right: 0.398942
+  Left gradient after: 0.67032
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.67032
+  Unary operation: EXP
+  Left: Node[9] (value=-0.4)
+  Propagating to left: 0.267419
+  Left gradient after: 0.267419
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.267419
+  Value: -0.4
+  Binary operation: DIV
+  Left: Node[7] (value=-0.8)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.13371
+  Propagating to right: 0.0534838
+  Left gradient after: 0.13371
+  Right gradient after: 0.0534838
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.13371
+  Value: -0.8
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.8)
+  Propagating to left: 0.106968
+  Propagating to right: -0.13371
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.106968
+  Right gradient after: -0.13371
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.13371
+  Value: 0.8
+  Binary operation: MUL
+  Left: Node[5] (value=-0.894427)
+  Right: Node[5] (value=-0.894427)
+  Propagating to left: 0.119593
+  Propagating to right: 0.119593
+  Left gradient after: 0.239187
+  Right gradient after: 0.239187
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.0703103 × grad[0]=0.239187 = contrib=-0.0168173
+    arg[0] gradient: 0.0756176 -> 0.0588003
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #6 ===
+  Node[103] (op=MUL)
+  Upstream gradient: 0.00420433
+  Value: -4.47214
+  Binary operation: MUL
+  Left: Node[60] (value=-2)
+  Right: Node[59] (value=2.23607)
+  Propagating to left: 0.00940116
+  Propagating to right: -0.00840865
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.00940116
+  Right gradient after: 0.00737146
+
+=== propagate_gradient() #7 ===
+  Node[111] (op=PLUS)
+  Upstream gradient: 1
+  Value: -0.0162052
+  Binary operation: PLUS
+  Left: Node[99] (value=0.00416802)
+  Right: Node[102] (value=-0.0203732)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #8 ===
+  Node[102] (op=MUL)
+  Upstream gradient: 1
+  Value: -0.0203732
+  Binary operation: MUL
+  Left: Node[101] (value=-1.4004)
+  Right: Node[75] (value=0.0145482)
+  Propagating to left: 0.0145482
+  Propagating to right: -1.4004
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0145482
+  Right gradient after: -1.4004
+
+=== propagate_gradient() #9 ===
+  Node[75] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -1.4004
+  Value: 0.0145482
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.0145482
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=0.0290963)
+  Propagating to left: 0.0290963
+  Propagating to right: 0.5
+  Left gradient after: 0.0290963
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 0.0290963
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=-0.970904)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: -0.970904
+  Unary operation: ERF
+  Left: Node[17] (value=-1.54303)
+  Propagating to left: 0.0521664
+  Left gradient after: 0.0521664
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.0521664
+  Value: -1.54303
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=-2.18218)
+  Propagating to left: -0.113836
+  Propagating to right: 0.0368872
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.113836
+  Right gradient after: 0.0368872
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-1.4004 × grad[0]=0.0368872 = contrib=-0.0516567
+    arg[0] gradient: 0 -> -0.0516567
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #5 ===
+  Node[74] (op=DIV)
+  Upstream gradient: -0.0516567
+  Value: -2.18218
+  Binary operation: DIV
+  Left: Node[73] (value=-1.49071)
+  Right: Node[68] (value=0.68313)
+  Propagating to left: -0.0756176
+  Propagating to right: -0.165011
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.0756176
+  Right gradient after: -0.371275
+
+=== propagate_gradient() #6 ===
+  Node[68] (op=SQRT)
+  Upstream gradient: -0.371275
+  Value: 0.68313
+  Unary operation: SQRT
+  Left: Node[67] (value=0.466667)
+  Propagating to left: -0.271746
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: 0.0422715
+
+=== propagate_gradient() #7 ===
+  Node[67] (op=MINUS)
+  Upstream gradient: 0.0422715
+  Value: 0.466667
+  Binary operation: MINUS
+  Left: Node[65] (value=1)
+  Right: Node[66] (value=0.533333)
+  Propagating to left: 0.0422715
+  Propagating to right: -0.0422715
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0422715
+  Right gradient after: -0.0422715
+
+=== propagate_gradient() #8 ===
+  Node[66] (op=MUL)
+  Upstream gradient: -0.0422715
+  Value: 0.533333
+  Binary operation: MUL
+  Left: Node[62] (value=-0.730297)
+  Right: Node[62] (value=-0.730297)
+  Propagating to left: 0.0308708
+  Propagating to right: 0.0308708
+  Left gradient after: 0.0674488
+  Right gradient after: 0.0674488
+  Leaf node 65 (op=CONST) - no propagation
+
+=== propagate_gradient() #9 ===
+  Node[73] (op=MINUS)
+  Upstream gradient: -0.0756176
+  Value: -1.49071
+  Binary operation: MINUS
+  Left: Node[63] (value=-0.894427)
+  Right: Node[72] (value=0.596285)
+  Propagating to left: -0.0756176
+  Propagating to right: 0.0756176
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0168173
+  Right gradient after: 0.0756176
+
+=== propagate_gradient() #10 ===
+  Node[72] (op=MUL)
+  Upstream gradient: 0.0756176
+  Value: 0.596285
+  Binary operation: MUL
+  Left: Node[62] (value=-0.730297)
+  Right: Node[64] (value=-0.816497)
+  Propagating to left: -0.0617415
+  Propagating to right: -0.0552233
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0057073
+  Right gradient after: 9.79984e-17
+
+=== propagate_gradient() #11 ===
+  Node[101] (op=MUL)
+  Upstream gradient: 0.0145482
+  Value: -1.4004
+  Binary operation: MUL
+  Left: Node[100] (value=-4.89898)
+  Right: Node[71] (value=0.285855)
+  Propagating to left: 0.00415866
+  Propagating to right: -0.0712712
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.00415866
+  Right gradient after: -0.0712712
+
+=== propagate_gradient() #12 ===
+  Node[71] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.0712712
+  Value: 0.285855
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.285855
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.716531)
+  Propagating to left: 0.716531
+  Propagating to right: 0.398942
+  Left gradient after: 0.716531
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.716531
+  Unary operation: EXP
+  Left: Node[9] (value=-0.333333)
+  Propagating to left: 0.285855
+  Left gradient after: 0.285855
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.285855
+  Value: -0.333333
+  Binary operation: DIV
+  Left: Node[7] (value=-0.666667)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.142927
+  Propagating to right: 0.0476424
+  Left gradient after: 0.142927
+  Right gradient after: 0.0476424
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.142927
+  Value: -0.666667
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.666667)
+  Propagating to left: 0.0952849
+  Propagating to right: -0.142927
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0952849
+  Right gradient after: -0.142927
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.142927
+  Value: 0.666667
+  Binary operation: MUL
+  Left: Node[5] (value=-0.816497)
+  Right: Node[5] (value=-0.816497)
+  Propagating to left: 0.1167
+  Propagating to right: 0.1167
+  Left gradient after: 0.233399
+  Right gradient after: 0.233399
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.0712712 × grad[0]=0.233399 = contrib=-0.0166346
+    arg[0] gradient: 9.79984e-17 -> -0.0166346
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #6 ===
+  Node[100] (op=MUL)
+  Upstream gradient: 0.00415866
+  Value: -4.89898
+  Binary operation: MUL
+  Left: Node[58] (value=-2)
+  Right: Node[61] (value=2.44949)
+  Propagating to left: 0.0101866
+  Propagating to right: -0.00831732
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0101866
+  Right gradient after: 0.00608789
+
+=== propagate_gradient() #7 ===
+  Node[99] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.00416802
+  Binary operation: MUL
+  Left: Node[98] (value=4)
+  Right: Node[69] (value=0.00104201)
+  Propagating to left: 0.00104201
+  Propagating to right: 4
+  Left gradient after: 0.00104201
+  Right gradient after: 4.44089e-16
+
+=== propagate_gradient() #8 ===
+  Node[69] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 4.44089e-16
+  Value: 0.00104201
+  CUSTOM_FUNCTION node
+  Args count: 3
+  Gradients to propagate:
+    arg[0]: upstream=4.44089e-16 × grad[0]=0.00420433 = contrib=1.8671e-18
+    arg[0] gradient: -0.0168173 -> -0.0168173
+    arg[1]: upstream=4.44089e-16 × grad[1]=0.00415866 = contrib=1.84682e-18
+    arg[1] gradient: -0.0166346 -> -0.0166346
+    arg[2]: upstream=4.44089e-16 × grad[2]=0.0154354 = contrib=6.85469e-18
+    arg[2] gradient: 0.0057073 -> 0.0057073
+  Leaf node 62 (op=PARAM) - no propagation
+
+=== propagate_gradient() #9 ===
+  Node[64] (op=DIV)
+  Upstream gradient: -0.0166346
+  Value: -0.816497
+  Binary operation: DIV
+  Left: Node[60] (value=-2)
+  Right: Node[61] (value=2.44949)
+  Propagating to left: -0.00679106
+  Propagating to right: -0.00554488
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.00261009
+  Right gradient after: 0.000543008
+  Leaf node 61 (op=PARAM) - no propagation
+
+=== propagate_gradient() #10 ===
+  Node[63] (op=DIV)
+  Upstream gradient: -0.0168173
+  Value: -0.894427
+  Binary operation: DIV
+  Left: Node[58] (value=-2)
+  Right: Node[59] (value=2.23607)
+  Propagating to left: -0.00752093
+  Propagating to right: -0.00672692
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.00266567
+  Right gradient after: 0.000644543
+  Leaf node 59 (op=PARAM) - no propagation
+
+=== propagate_gradient() #11 ===
+  Node[98] (op=MUL)
+  Upstream gradient: 0.00104201
+  Value: 4
+  Binary operation: MUL
+  Left: Node[58] (value=-2)
+  Right: Node[60] (value=-2)
+  Propagating to left: -0.00208401
+  Propagating to right: -0.00208401
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.000581658
+  Right gradient after: 0.000526084
+  Leaf node 60 (op=PARAM) - no propagation
+  Leaf node 58 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.114806 × grad[0]=0.000581658 = contrib=-6.67778e-05
+    arg[0] gradient: 0.00609195 -> 0.00602517
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+    arg[1]: upstream=-0.114806 × grad[1]=0.000644543 = contrib=-7.39974e-05
+    arg[1] gradient: 0.00878001 -> 0.00870602
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+    arg[2]: upstream=-0.114806 × grad[2]=0.000526084 = contrib=-6.03975e-05
+    arg[2] gradient: 0.00463136 -> 0.00457096
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+    arg[3]: upstream=-0.114806 × grad[3]=0.000543008 = contrib=-6.23406e-05
+    arg[3] gradient: 0.0344238 -> 0.0343614
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+    arg[4]: upstream=-0.114806 × grad[4]=0.0057073 = contrib=-0.000655232
+    arg[4] gradient: 0 -> -0.000655232
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #12 ===
+  Node[241] (op=DIV)
+  Upstream gradient: -0.000655232
+  Value: -0.730297
+  Binary operation: DIV
+  Left: Node[237] (value=-4)
+  Right: Node[240] (value=5.47723)
+  Propagating to left: -0.000119628
+  Propagating to right: -8.73643e-05
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.000119628
+  Right gradient after: -8.73643e-05
+
+=== propagate_gradient() #13 ===
+  Node[240] (op=MUL)
+  Upstream gradient: -8.73643e-05
+  Value: 5.47723
+  Binary operation: MUL
+  Left: Node[204] (value=2.23607)
+  Right: Node[192] (value=2.44949)
+  Propagating to left: -0.000213998
+  Propagating to right: -0.000195352
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.00849202
+  Right gradient after: 0.0341661
+
+=== propagate_gradient() #14 ===
+  Node[237] (op=MINUS)
+  Upstream gradient: -0.000119628
+  Value: -4
+  Binary operation: MINUS
+  Left: Node[236] (value=0)
+  Right: Node[226] (value=4)
+  Propagating to left: -0.000119628
+  Propagating to right: 0.000119628
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.000119628
+  Right gradient after: 0.000119628
+
+=== propagate_gradient() #15 ===
+  Node[236] (op=MINUS)
+  Upstream gradient: -0.000119628
+  Value: 0
+  Binary operation: MINUS
+  Left: Node[199] (value=0)
+  Right: Node[231] (value=0)
+  Propagating to left: -0.000119628
+  Propagating to right: 0.000119628
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.000119628
+  Right gradient after: 0.000119628
+
+=== propagate_gradient() #16 ===
+  Node[235] (op=MUL)
+  Upstream gradient: -0.114806
+  Value: 0
+  Binary operation: MUL
+  Left: Node[232] (value=0)
+  Right: Node[234] (value=0.185547)
+  Propagating to left: -0.0213019
+  Propagating to right: -0
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0213019
+  Right gradient after: 0
+
+=== propagate_gradient() #17 ===
+  Node[234] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0
+  Value: 0.185547
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.185547
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=0.371093)
+  Propagating to left: 0.371093
+  Propagating to right: 0.5
+  Left gradient after: 0.371093
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 0.371093
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=-0.628907)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: -0.628907
+  Unary operation: ERF
+  Left: Node[17] (value=-0.632456)
+  Propagating to left: 0.378188
+  Left gradient after: 0.378188
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.378188
+  Value: -0.632456
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=-0.894427)
+  Propagating to left: -0.338261
+  Propagating to right: 0.267419
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.338261
+  Right gradient after: 0.267419
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0 × grad[0]=0.267419 = contrib=0
+    arg[0] gradient: 0 -> 0
+
+=== propagate_gradient() #5 ===
+  Node[233] (op=DIV)
+  Upstream gradient: 0
+  Value: -0.894427
+  Binary operation: DIV
+  Left: Node[197] (value=-2)
+  Right: Node[204] (value=2.23607)
+  Propagating to left: 0
+  Propagating to right: 0
+  Left gradient after: 0.00602517
+  Right gradient after: 0.00849202
+
+=== propagate_gradient() #6 ===
+  Node[232] (op=MINUS)
+  Upstream gradient: -0.0213019
+  Value: 0
+  Binary operation: MINUS
+  Left: Node[231] (value=0)
+  Right: Node[187] (value=0)
+  Propagating to left: -0.0213019
+  Propagating to right: 0.0213019
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0211822
+  Right gradient after: 0.0450791
+  Leaf node 231 (op=CONST) - no propagation
+
+=== propagate_gradient() #7 ===
+  Node[230] (op=PLUS)
+  Upstream gradient: -0.114806
+  Value: 0.828432
+  Binary operation: PLUS
+  Left: Node[187] (value=0)
+  Right: Node[229] (value=0.828432)
+  Propagating to left: -0.114806
+  Propagating to right: -0.114806
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.0697269
+  Right gradient after: -0.114806
+
+=== propagate_gradient() #8 ===
+  Node[229] (op=MUL)
+  Upstream gradient: -0.114806
+  Value: 0.828432
+  Binary operation: MUL
+  Left: Node[226] (value=4)
+  Right: Node[228] (value=0.207108)
+  Propagating to left: -0.0237772
+  Propagating to right: -0.459224
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.0236576
+  Right gradient after: -0.459224
+
+=== propagate_gradient() #9 ===
+  Node[228] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.459224
+  Value: 0.207108
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.207108
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=0.414216)
+  Propagating to left: 0.414216
+  Propagating to right: 0.5
+  Left gradient after: 0.414216
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 0.414216
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=-0.585784)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: -0.585784
+  Unary operation: ERF
+  Left: Node[17] (value=-0.57735)
+  Propagating to left: 0.40426
+  Left gradient after: 0.40426
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.40426
+  Value: -0.57735
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=-0.816497)
+  Propagating to left: -0.330077
+  Propagating to right: 0.285855
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.330077
+  Right gradient after: 0.285855
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.459224 × grad[0]=0.285855 = contrib=-0.131271
+    arg[0] gradient: 0 -> -0.131271
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #5 ===
+  Node[227] (op=DIV)
+  Upstream gradient: -0.131271
+  Value: -0.816497
+  Binary operation: DIV
+  Left: Node[184] (value=-2)
+  Right: Node[192] (value=2.44949)
+  Propagating to left: -0.0535913
+  Propagating to right: -0.0437571
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.0490203
+  Right gradient after: -0.00959101
+
+=== propagate_gradient() #6 ===
+  Node[226] (op=MINUS)
+  Upstream gradient: -0.0236576
+  Value: 4
+  Binary operation: MINUS
+  Left: Node[185] (value=4)
+  Right: Node[187] (value=0)
+  Propagating to left: -0.0236576
+  Propagating to right: 0.0236576
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0236576
+  Right gradient after: -0.0460692
+  Leaf node 247 (op=CONST) - no propagation
+
+=== propagate_gradient() #7 ===
+  Node[216] (op=PLUS)
+  Upstream gradient: 0.057403
+  Value: 2.93814
+  Binary operation: PLUS
+  Left: Node[215] (value=2.51563)
+  Right: Node[208] (value=0.422514)
+  Propagating to left: 0.057403
+  Propagating to right: 0.057403
+  Left gradient after: 0.057403
+  Right gradient after: 0.057403
+
+=== propagate_gradient() #8 ===
+  Node[208] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.057403
+  Value: 0.422514
+  CUSTOM_FUNCTION node
+  Args count: 2
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[57] (op=MUL)
+================================================================================
+
+Topological order (11 nodes):
+  [0] Node[49] (op=PARAM)
+  [1] Node[54] (op=MUL)
+  [2] Node[2] (op=CONST)
+  [3] Node[48] (op=PARAM)
+  [4] Node[50] (op=DIV)
+  [5] Node[51] (op=MUL)
+  [6] Node[53] (op=CUSTOM_FUNCTION)
+  [7] Node[52] (op=CUSTOM_FUNCTION)
+  [8] Node[55] (op=MUL)
+  [9] Node[56] (op=MINUS)
+  [10] Node[57] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[57] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.422514
+  Binary operation: MUL
+  Left: Node[54] (value=5)
+  Right: Node[56] (value=0.0845029)
+  Propagating to left: 0.0845029
+  Propagating to right: 5
+  Left gradient after: 0.0845029
+  Right gradient after: 5
+
+=== propagate_gradient() #2 ===
+  Node[56] (op=MINUS)
+  Upstream gradient: 5
+  Value: 0.0845029
+  Binary operation: MINUS
+  Left: Node[53] (value=1.0763)
+  Right: Node[55] (value=0.991793)
+  Propagating to left: 5
+  Propagating to right: -5
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 5
+  Right gradient after: -5
+
+=== propagate_gradient() #3 ===
+  Node[55] (op=MUL)
+  Upstream gradient: -5
+  Value: 0.991793
+  Binary operation: MUL
+  Left: Node[52] (value=0.995888)
+  Right: Node[52] (value=0.995888)
+  Propagating to left: -4.97944
+  Propagating to right: -4.97944
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -9.95888
+  Right gradient after: -9.95888
+
+=== propagate_gradient() #4 ===
+  Node[52] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -9.95888
+  Value: 0.995888
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[25] (op=PLUS)
+================================================================================
+
+Topological order (5 nodes):
+  [0] Node[21] (op=PARAM)
+  [1] Node[22] (op=CUSTOM_FUNCTION)
+  [2] Node[23] (op=CUSTOM_FUNCTION)
+  [3] Node[24] (op=MUL)
+  [4] Node[25] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[25] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[22] (value=0.267419)
+  Right: Node[24] (value=0.728469)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[24] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.728469
+  Binary operation: MUL
+  Left: Node[21] (value=0.894427)
+  Right: Node[23] (value=0.814453)
+  Propagating to left: 0.814453
+  Propagating to right: 0.894427
+  Left gradient after: 0.814453
+  Right gradient after: 0.894427
+
+=== propagate_gradient() #3 ===
+  Node[23] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.894427
+  Value: 0.814453
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.62891)
+  Propagating to left: 1.62891
+  Propagating to right: 0.5
+  Left gradient after: 1.62891
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.62891
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.628907)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.628907
+  Unary operation: ERF
+  Left: Node[17] (value=0.632456)
+  Propagating to left: 0.378188
+  Left gradient after: 0.378188
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.378188
+  Value: 0.632456
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.894427)
+  Propagating to left: 0.338261
+  Propagating to right: 0.267419
+  Left gradient after: 0.338261
+  Right gradient after: 0.267419
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.894427 × grad[0]=0.267419 = contrib=0.239187
+    arg[0] gradient: 0.814453 -> 1.05364
+
+=== propagate_gradient() #5 ===
+  Node[22] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.267419
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.67032)
+  Propagating to left: 0.67032
+  Propagating to right: 0.398942
+  Left gradient after: 0.67032
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.67032
+  Unary operation: EXP
+  Left: Node[9] (value=-0.4)
+  Propagating to left: 0.267419
+  Left gradient after: 0.267419
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.267419
+  Value: -0.4
+  Binary operation: DIV
+  Left: Node[7] (value=-0.8)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.13371
+  Propagating to right: 0.0534838
+  Left gradient after: 0.13371
+  Right gradient after: 0.0534838
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.13371
+  Value: -0.8
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.8)
+  Propagating to left: 0.106968
+  Propagating to right: -0.13371
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.106968
+  Right gradient after: -0.13371
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.13371
+  Value: 0.8
+  Binary operation: MUL
+  Left: Node[5] (value=0.894427)
+  Right: Node[5] (value=0.894427)
+  Propagating to left: -0.119593
+  Propagating to right: -0.119593
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.239187
+  Right gradient after: -0.239187
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=-0.239187 = contrib=-0.239187
+    arg[0] gradient: 1.05364 -> 0.814453
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+  Leaf node 21 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-9.95888 × grad[0]=0.814453 = contrib=-8.11104
+    arg[0] gradient: 0 -> -8.11104
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #6 ===
+  Node[53] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 5
+  Value: 1.0763
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[36] (op=PLUS)
+================================================================================
+
+Topological order (11 nodes):
+  [0] Node[27] (op=CONST)
+  [1] Node[26] (op=PARAM)
+  [2] Node[28] (op=MUL)
+  [3] Node[29] (op=CONST)
+  [4] Node[30] (op=MINUS)
+  [5] Node[31] (op=CUSTOM_FUNCTION)
+  [6] Node[32] (op=MUL)
+  [7] Node[33] (op=PLUS)
+  [8] Node[34] (op=CUSTOM_FUNCTION)
+  [9] Node[35] (op=MUL)
+  [10] Node[36] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[36] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[33] (value=0.837109)
+  Right: Node[35] (value=0.239187)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[35] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.239187
+  Binary operation: MUL
+  Left: Node[26] (value=0.894427)
+  Right: Node[34] (value=0.267419)
+  Propagating to left: 0.267419
+  Propagating to right: 0.894427
+  Left gradient after: 0.267419
+  Right gradient after: 0.894427
+
+=== propagate_gradient() #3 ===
+  Node[34] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.894427
+  Value: 0.267419
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.67032)
+  Propagating to left: 0.67032
+  Propagating to right: 0.398942
+  Left gradient after: 0.67032
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.67032
+  Unary operation: EXP
+  Left: Node[9] (value=-0.4)
+  Propagating to left: 0.267419
+  Left gradient after: 0.267419
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.267419
+  Value: -0.4
+  Binary operation: DIV
+  Left: Node[7] (value=-0.8)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.13371
+  Propagating to right: 0.0534838
+  Left gradient after: 0.13371
+  Right gradient after: 0.0534838
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.13371
+  Value: -0.8
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.8)
+  Propagating to left: 0.106968
+  Propagating to right: -0.13371
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.106968
+  Right gradient after: -0.13371
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.13371
+  Value: 0.8
+  Binary operation: MUL
+  Left: Node[5] (value=0.894427)
+  Right: Node[5] (value=0.894427)
+  Propagating to left: -0.119593
+  Propagating to right: -0.119593
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.239187
+  Right gradient after: -0.239187
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.894427 × grad[0]=-0.239187 = contrib=-0.213935
+    arg[0] gradient: 0.267419 -> 0.0534838
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #6 ===
+  Node[33] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0.837109
+  Binary operation: PLUS
+  Left: Node[27] (value=1)
+  Right: Node[32] (value=-0.162891)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #7 ===
+  Node[32] (op=MUL)
+  Upstream gradient: 1
+  Value: -0.162891
+  Binary operation: MUL
+  Left: Node[30] (value=-0.2)
+  Right: Node[31] (value=0.814453)
+  Propagating to left: 0.814453
+  Propagating to right: -0.2
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.814453
+  Right gradient after: -0.2
+
+=== propagate_gradient() #8 ===
+  Node[31] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.2
+  Value: 0.814453
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.62891)
+  Propagating to left: 1.62891
+  Propagating to right: 0.5
+  Left gradient after: 1.62891
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.62891
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.628907)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.628907
+  Unary operation: ERF
+  Left: Node[17] (value=0.632456)
+  Propagating to left: 0.378188
+  Left gradient after: 0.378188
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.378188
+  Value: 0.632456
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.894427)
+  Propagating to left: 0.338261
+  Propagating to right: 0.267419
+  Left gradient after: 0.338261
+  Right gradient after: 0.267419
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.2 × grad[0]=0.267419 = contrib=-0.0534838
+    arg[0] gradient: 0.0534838 -> -2.08167e-17
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #5 ===
+  Node[30] (op=MINUS)
+  Upstream gradient: 0.814453
+  Value: -0.2
+  Binary operation: MINUS
+  Left: Node[28] (value=0.8)
+  Right: Node[29] (value=1)
+  Propagating to left: 0.814453
+  Propagating to right: -0.814453
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.814453
+  Right gradient after: -0.814453
+  Leaf node 29 (op=CONST) - no propagation
+
+=== propagate_gradient() #6 ===
+  Node[28] (op=MUL)
+  Upstream gradient: 0.814453
+  Value: 0.8
+  Binary operation: MUL
+  Left: Node[26] (value=0.894427)
+  Right: Node[26] (value=0.894427)
+  Propagating to left: 0.728469
+  Propagating to right: 0.728469
+  Left gradient after: 1.45694
+  Right gradient after: 1.45694
+  Leaf node 26 (op=PARAM) - no propagation
+  Leaf node 27 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=5 × grad[0]=1.45694 = contrib=7.28469
+    arg[0] gradient: -8.11104 -> -0.826353
+
+=== propagate_gradient() #7 ===
+  Node[51] (op=MUL)
+  Upstream gradient: -0.826353
+  Value: 0.894427
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[50] (value=-0.894427)
+  Propagating to left: 0.739112
+  Propagating to right: 0.826353
+  Left gradient after: 0.84608
+  Right gradient after: 0.826353
+
+=== propagate_gradient() #8 ===
+  Node[50] (op=DIV)
+  Upstream gradient: 0.826353
+  Value: -0.894427
+  Binary operation: DIV
+  Left: Node[48] (value=-2)
+  Right: Node[49] (value=2.23607)
+  Propagating to left: 0.369556
+  Propagating to right: 0.330541
+  Left gradient after: 0.369556
+  Right gradient after: 0.330541
+  Leaf node 48 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+
+=== propagate_gradient() #9 ===
+  Node[54] (op=MUL)
+  Upstream gradient: 0.0845029
+  Value: 5
+  Binary operation: MUL
+  Left: Node[49] (value=2.23607)
+  Right: Node[49] (value=2.23607)
+  Propagating to left: 0.188954
+  Propagating to right: 0.188954
+  Left gradient after: 0.708449
+  Right gradient after: 0.708449
+  Leaf node 49 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.057403 × grad[0]=0.369556 = contrib=0.0212136
+    arg[0] gradient: 0.00602517 -> 0.0272388
+    arg[1]: upstream=0.057403 × grad[1]=0.708449 = contrib=0.0406671
+    arg[1] gradient: 0.00849202 -> 0.0491591
+
+=== propagate_gradient() #10 ===
+  Node[215] (op=PLUS)
+  Upstream gradient: 0.057403
+  Value: 2.51563
+  Binary operation: PLUS
+  Left: Node[185] (value=4)
+  Right: Node[214] (value=-1.48437)
+  Propagating to left: 0.057403
+  Propagating to right: 0.057403
+  Left gradient after: 0.0337454
+  Right gradient after: 0.057403
+
+=== propagate_gradient() #11 ===
+  Node[214] (op=MUL)
+  Upstream gradient: 0.057403
+  Value: -1.48437
+  Binary operation: MUL
+  Left: Node[213] (value=2)
+  Right: Node[212] (value=-0.742187)
+  Propagating to left: -0.0426037
+  Propagating to right: 0.114806
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.0426037
+  Right gradient after: 0.114806
+
+=== propagate_gradient() #12 ===
+  Node[212] (op=MUL)
+  Upstream gradient: 0.114806
+  Value: -0.742187
+  Binary operation: MUL
+  Left: Node[209] (value=-4)
+  Right: Node[211] (value=0.185547)
+  Propagating to left: 0.0213019
+  Propagating to right: -0.459224
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0213019
+  Right gradient after: -0.459224
+
+=== propagate_gradient() #13 ===
+  Node[211] (op=CUSTOM_FUNCTION)
+  Upstream gradient: -0.459224
+  Value: 0.185547
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.185547
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=0.371093)
+  Propagating to left: 0.371093
+  Propagating to right: 0.5
+  Left gradient after: 0.371093
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 0.371093
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=-0.628907)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: -0.628907
+  Unary operation: ERF
+  Left: Node[17] (value=-0.632456)
+  Propagating to left: 0.378188
+  Left gradient after: 0.378188
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.378188
+  Value: -0.632456
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=-0.894427)
+  Propagating to left: -0.338261
+  Propagating to right: 0.267419
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.338261
+  Right gradient after: 0.267419
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=-0.459224 × grad[0]=0.267419 = contrib=-0.122805
+    arg[0] gradient: 0 -> -0.122805
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+
+=== propagate_gradient() #5 ===
+  Node[210] (op=DIV)
+  Upstream gradient: -0.122805
+  Value: -0.894427
+  Binary operation: DIV
+  Left: Node[197] (value=-2)
+  Right: Node[204] (value=2.23607)
+  Propagating to left: -0.0549202
+  Propagating to right: -0.0491221
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.0276814
+  Right gradient after: 3.70456e-05
+
+=== propagate_gradient() #6 ===
+  Node[209] (op=MINUS)
+  Upstream gradient: 0.0213019
+  Value: -4
+  Binary operation: MINUS
+  Left: Node[199] (value=0)
+  Right: Node[185] (value=4)
+  Propagating to left: 0.0213019
+  Propagating to right: -0.0213019
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0211822
+  Right gradient after: 0.0124435
+  Leaf node 213 (op=CONST) - no propagation
+
+=== propagate_gradient() #7 ===
+  Node[207] (op=MINUS)
+  Upstream gradient: 0.123772
+  Value: -2.05911
+  Binary operation: MINUS
+  Left: Node[206] (value=10.2269)
+  Right: Node[194] (value=12.286)
+  Propagating to left: 0.123772
+  Propagating to right: -0.123772
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.123772
+  Right gradient after: 0.876228
+
+=== propagate_gradient() #8 ===
+  Node[206] (op=PLUS)
+  Upstream gradient: 0.123772
+  Value: 10.2269
+  Binary operation: PLUS
+  Left: Node[182] (value=10)
+  Right: Node[205] (value=0.226874)
+  Propagating to left: 0.123772
+  Propagating to right: 0.123772
+  Left gradient after: 0.123772
+  Right gradient after: 0.123772
+
+=== propagate_gradient() #9 ===
+  Node[205] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.123772
+  Value: 0.226874
+  CUSTOM_FUNCTION node
+  Args count: 2
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[47] (op=PLUS)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[41] (op=PARAM)
+  [1] Node[42] (op=PARAM)
+  [2] Node[2] (op=CONST)
+  [3] Node[43] (op=DIV)
+  [4] Node[44] (op=MUL)
+  [5] Node[45] (op=CUSTOM_FUNCTION)
+  [6] Node[46] (op=MUL)
+  [7] Node[47] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[47] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[41] (value=-2)
+  Right: Node[46] (value=2.22687)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[46] (op=MUL)
+  Upstream gradient: 1
+  Value: 2.22687
+  Binary operation: MUL
+  Left: Node[42] (value=2.23607)
+  Right: Node[45] (value=0.995888)
+  Propagating to left: 0.995888
+  Propagating to right: 2.23607
+  Left gradient after: 0.995888
+  Right gradient after: 2.23607
+
+=== propagate_gradient() #3 ===
+  Node[45] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 2.23607
+  Value: 0.995888
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[25] (op=PLUS)
+================================================================================
+
+Topological order (5 nodes):
+  [0] Node[21] (op=PARAM)
+  [1] Node[22] (op=CUSTOM_FUNCTION)
+  [2] Node[23] (op=CUSTOM_FUNCTION)
+  [3] Node[24] (op=MUL)
+  [4] Node[25] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[25] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[22] (value=0.267419)
+  Right: Node[24] (value=0.728469)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[24] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.728469
+  Binary operation: MUL
+  Left: Node[21] (value=0.894427)
+  Right: Node[23] (value=0.814453)
+  Propagating to left: 0.814453
+  Propagating to right: 0.894427
+  Left gradient after: 0.814453
+  Right gradient after: 0.894427
+
+=== propagate_gradient() #3 ===
+  Node[23] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.894427
+  Value: 0.814453
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.62891)
+  Propagating to left: 1.62891
+  Propagating to right: 0.5
+  Left gradient after: 1.62891
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.62891
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.628907)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.628907
+  Unary operation: ERF
+  Left: Node[17] (value=0.632456)
+  Propagating to left: 0.378188
+  Left gradient after: 0.378188
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.378188
+  Value: 0.632456
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.894427)
+  Propagating to left: 0.338261
+  Propagating to right: 0.267419
+  Left gradient after: 0.338261
+  Right gradient after: 0.267419
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.894427 × grad[0]=0.267419 = contrib=0.239187
+    arg[0] gradient: 0.814453 -> 1.05364
+
+=== propagate_gradient() #5 ===
+  Node[22] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.267419
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.67032)
+  Propagating to left: 0.67032
+  Propagating to right: 0.398942
+  Left gradient after: 0.67032
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.67032
+  Unary operation: EXP
+  Left: Node[9] (value=-0.4)
+  Propagating to left: 0.267419
+  Left gradient after: 0.267419
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.267419
+  Value: -0.4
+  Binary operation: DIV
+  Left: Node[7] (value=-0.8)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.13371
+  Propagating to right: 0.0534838
+  Left gradient after: 0.13371
+  Right gradient after: 0.0534838
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.13371
+  Value: -0.8
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.8)
+  Propagating to left: 0.106968
+  Propagating to right: -0.13371
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.106968
+  Right gradient after: -0.13371
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.13371
+  Value: 0.8
+  Binary operation: MUL
+  Left: Node[5] (value=0.894427)
+  Right: Node[5] (value=0.894427)
+  Propagating to left: -0.119593
+  Propagating to right: -0.119593
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.239187
+  Right gradient after: -0.239187
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=-0.239187 = contrib=-0.239187
+    arg[0] gradient: 1.05364 -> 0.814453
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+  Leaf node 21 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=2.23607 × grad[0]=0.814453 = contrib=1.82117
+    arg[0] gradient: 0 -> 1.82117
+
+=== propagate_gradient() #6 ===
+  Node[44] (op=MUL)
+  Upstream gradient: 1.82117
+  Value: 0.894427
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[43] (value=-0.894427)
+  Propagating to left: -1.62891
+  Propagating to right: -1.82117
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -1.52194
+  Right gradient after: -1.82117
+
+=== propagate_gradient() #7 ===
+  Node[43] (op=DIV)
+  Upstream gradient: -1.82117
+  Value: -0.894427
+  Binary operation: DIV
+  Left: Node[41] (value=-2)
+  Right: Node[42] (value=2.23607)
+  Propagating to left: -0.814453
+  Propagating to right: -0.728469
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.185547
+  Right gradient after: 0.267419
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 42 (op=PARAM) - no propagation
+  Leaf node 41 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.123772 × grad[0]=0.185547 = contrib=0.0229654
+    arg[0] gradient: -0.0276814 -> -0.00471593
+    arg[1]: upstream=0.123772 × grad[1]=0.267419 = contrib=0.0330989
+    arg[1] gradient: 3.70456e-05 -> 0.0331359
+
+=== propagate_gradient() #8 ===
+  Node[204] (op=SQRT)
+  Upstream gradient: 0.0331359
+  Value: 2.23607
+  Unary operation: SQRT
+  Left: Node[203] (value=5)
+  Propagating to left: 0.00740942
+  Left gradient after: 0.00740942
+
+=== propagate_gradient() #9 ===
+  Node[203] (op=PLUS)
+  Upstream gradient: 0.00740942
+  Value: 5
+  Binary operation: PLUS
+  Left: Node[202] (value=1)
+  Right: Node[185] (value=4)
+  Propagating to left: 0.00740942
+  Propagating to right: 0.00740942
+  Left gradient after: 0.00740942
+  Right gradient after: 0.0198529
+
+=== propagate_gradient() #10 ===
+  Node[202] (op=MINUS)
+  Upstream gradient: 0.00740942
+  Value: 1
+  Binary operation: MINUS
+  Left: Node[198] (value=1)
+  Right: Node[201] (value=0)
+  Propagating to left: 0.00740942
+  Propagating to right: -0.00740942
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.00740942
+  Right gradient after: -0.00740942
+
+=== propagate_gradient() #11 ===
+  Node[201] (op=MUL)
+  Upstream gradient: -0.00740942
+  Value: 0
+  Binary operation: MUL
+  Left: Node[200] (value=2)
+  Right: Node[199] (value=0)
+  Propagating to left: -0
+  Propagating to right: -0.0148188
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0
+  Right gradient after: 0.00636339
+  Leaf node 199 (op=CONST) - no propagation
+  Leaf node 200 (op=CONST) - no propagation
+
+=== propagate_gradient() #12 ===
+  Node[198] (op=MUL)
+  Upstream gradient: 0.00740942
+  Value: 1
+  Binary operation: MUL
+  Left: Node[196] (value=1)
+  Right: Node[196] (value=1)
+  Propagating to left: 0.00740942
+  Propagating to right: 0.00740942
+  Left gradient after: 0.0148188
+  Right gradient after: 0.0148188
+  Leaf node 196 (op=PARAM) - no propagation
+
+=== propagate_gradient() #13 ===
+  Node[197] (op=MINUS)
+  Upstream gradient: -0.00471593
+  Value: -2
+  Binary operation: MINUS
+  Left: Node[195] (value=8)
+  Right: Node[182] (value=10)
+  Propagating to left: -0.00471593
+  Propagating to right: 0.00471593
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  Left gradient after: -0.00471593
+  Right gradient after: 0.128488
+  Leaf node 195 (op=PARAM) - no propagation
+
+=== propagate_gradient() #14 ===
+  Node[194] (op=PLUS)
+  Upstream gradient: 0.876228
+  Value: 12.286
+  Binary operation: PLUS
+  Left: Node[180] (value=12)
+  Right: Node[193] (value=0.285982)
+  Propagating to left: 0.876228
+  Propagating to right: 0.876228
+  Left gradient after: 0.876228
+  Right gradient after: 0.876228
+
+=== propagate_gradient() #15 ===
+  Node[193] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.876228
+  Value: 0.285982
+  CUSTOM_FUNCTION node
+  Args count: 2
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[47] (op=PLUS)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[41] (op=PARAM)
+  [1] Node[42] (op=PARAM)
+  [2] Node[2] (op=CONST)
+  [3] Node[43] (op=DIV)
+  [4] Node[44] (op=MUL)
+  [5] Node[45] (op=CUSTOM_FUNCTION)
+  [6] Node[46] (op=MUL)
+  [7] Node[47] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[47] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0.285982
+  Binary operation: PLUS
+  Left: Node[41] (value=-2)
+  Right: Node[46] (value=2.28598)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[46] (op=MUL)
+  Upstream gradient: 1
+  Value: 2.28598
+  Binary operation: MUL
+  Left: Node[42] (value=2.44949)
+  Right: Node[45] (value=0.933248)
+  Propagating to left: 0.933248
+  Propagating to right: 2.44949
+  Left gradient after: 0.933248
+  Right gradient after: 2.44949
+
+=== propagate_gradient() #3 ===
+  Node[45] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 2.44949
+  Value: 0.933248
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[25] (op=PLUS)
+================================================================================
+
+Topological order (5 nodes):
+  [0] Node[21] (op=PARAM)
+  [1] Node[22] (op=CUSTOM_FUNCTION)
+  [2] Node[23] (op=CUSTOM_FUNCTION)
+  [3] Node[24] (op=MUL)
+  [4] Node[25] (op=PLUS)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[25] (op=PLUS)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: PLUS
+  Left: Node[22] (value=0.285855)
+  Right: Node[24] (value=0.647394)
+  Propagating to left: 1
+  Propagating to right: 1
+  Left gradient after: 1
+  Right gradient after: 1
+
+=== propagate_gradient() #2 ===
+  Node[24] (op=MUL)
+  Upstream gradient: 1
+  Value: 0.647394
+  Binary operation: MUL
+  Left: Node[21] (value=0.816497)
+  Right: Node[23] (value=0.792892)
+  Propagating to left: 0.792892
+  Propagating to right: 0.816497
+  Left gradient after: 0.792892
+  Right gradient after: 0.816497
+
+=== propagate_gradient() #3 ===
+  Node[23] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 0.816497
+  Value: 0.792892
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[20] (op=MUL)
+================================================================================
+
+Topological order (8 nodes):
+  [0] Node[14] (op=CONST)
+  [1] Node[15] (op=CONST)
+  [2] Node[16] (op=CONST)
+  [3] Node[13] (op=PARAM)
+  [4] Node[17] (op=MUL)
+  [5] Node[18] (op=ERF)
+  [6] Node[19] (op=PLUS)
+  [7] Node[20] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[20] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[14] (value=0.5)
+  Right: Node[19] (value=1.58578)
+  Propagating to left: 1.58578
+  Propagating to right: 0.5
+  Left gradient after: 1.58578
+  Right gradient after: 0.5
+
+=== propagate_gradient() #2 ===
+  Node[19] (op=PLUS)
+  Upstream gradient: 0.5
+  Value: 1.58578
+  Binary operation: PLUS
+  Left: Node[15] (value=1)
+  Right: Node[18] (value=0.585784)
+  Propagating to left: 0.5
+  Propagating to right: 0.5
+  Left gradient after: 0.5
+  Right gradient after: 0.5
+
+=== propagate_gradient() #3 ===
+  Node[18] (op=ERF)
+  Upstream gradient: 0.5
+  Value: 0.585784
+  Unary operation: ERF
+  Left: Node[17] (value=0.57735)
+  Propagating to left: 0.40426
+  Left gradient after: 0.40426
+
+=== propagate_gradient() #4 ===
+  Node[17] (op=MUL)
+  Upstream gradient: 0.40426
+  Value: 0.57735
+  Binary operation: MUL
+  Left: Node[16] (value=0.707107)
+  Right: Node[13] (value=0.816497)
+  Propagating to left: 0.330077
+  Propagating to right: 0.285855
+  Left gradient after: 0.330077
+  Right gradient after: 0.285855
+  Leaf node 13 (op=PARAM) - no propagation
+  Leaf node 16 (op=CONST) - no propagation
+  Leaf node 15 (op=CONST) - no propagation
+  Leaf node 14 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.816497 × grad[0]=0.285855 = contrib=0.233399
+    arg[0] gradient: 0.792892 -> 1.02629
+
+=== propagate_gradient() #5 ===
+  Node[22] (op=CUSTOM_FUNCTION)
+  Upstream gradient: 1
+  Value: 0.285855
+  CUSTOM_FUNCTION node
+  Args count: 1
+
+================================================================================
+backward() called with upstream = 1
+Root node: Node[12] (op=MUL)
+================================================================================
+
+Topological order (9 nodes):
+  [0] Node[11] (op=CONST)
+  [1] Node[2] (op=CONST)
+  [2] Node[5] (op=PARAM)
+  [3] Node[6] (op=MUL)
+  [4] Node[7] (op=MUL)
+  [5] Node[8] (op=CONST)
+  [6] Node[9] (op=DIV)
+  [7] Node[10] (op=EXP)
+  [8] Node[12] (op=MUL)
+
+Initial gradient at root: 1
+
+Processing nodes in reverse topological order:
+
+=== propagate_gradient() #1 ===
+  Node[12] (op=MUL)
+  Upstream gradient: 1
+  Value: 0
+  Binary operation: MUL
+  Left: Node[11] (value=0.398942)
+  Right: Node[10] (value=0.716531)
+  Propagating to left: 0.716531
+  Propagating to right: 0.398942
+  Left gradient after: 0.716531
+  Right gradient after: 0.398942
+
+=== propagate_gradient() #2 ===
+  Node[10] (op=EXP)
+  Upstream gradient: 0.398942
+  Value: 0.716531
+  Unary operation: EXP
+  Left: Node[9] (value=-0.333333)
+  Propagating to left: 0.285855
+  Left gradient after: 0.285855
+
+=== propagate_gradient() #3 ===
+  Node[9] (op=DIV)
+  Upstream gradient: 0.285855
+  Value: -0.333333
+  Binary operation: DIV
+  Left: Node[7] (value=-0.666667)
+  Right: Node[8] (value=2)
+  Propagating to left: 0.142927
+  Propagating to right: 0.0476424
+  Left gradient after: 0.142927
+  Right gradient after: 0.0476424
+  Leaf node 8 (op=CONST) - no propagation
+
+=== propagate_gradient() #4 ===
+  Node[7] (op=MUL)
+  Upstream gradient: 0.142927
+  Value: -0.666667
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[6] (value=0.666667)
+  Propagating to left: 0.0952849
+  Propagating to right: -0.142927
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0952849
+  Right gradient after: -0.142927
+
+=== propagate_gradient() #5 ===
+  Node[6] (op=MUL)
+  Upstream gradient: -0.142927
+  Value: 0.666667
+  Binary operation: MUL
+  Left: Node[5] (value=0.816497)
+  Right: Node[5] (value=0.816497)
+  Propagating to left: -0.1167
+  Propagating to right: -0.1167
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -0.233399
+  Right gradient after: -0.233399
+  Leaf node 5 (op=PARAM) - no propagation
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 11 (op=CONST) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=1 × grad[0]=-0.233399 = contrib=-0.233399
+    arg[0] gradient: 1.02629 -> 0.792892
+    ⚠️  NEGATIVE GRADIENT CONTRIBUTION!
+  Leaf node 21 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=2.44949 × grad[0]=0.792892 = contrib=1.94218
+    arg[0] gradient: 0 -> 1.94218
+
+=== propagate_gradient() #6 ===
+  Node[44] (op=MUL)
+  Upstream gradient: 1.94218
+  Value: 0.816497
+  Binary operation: MUL
+  Left: Node[2] (value=-1)
+  Right: Node[43] (value=-0.816497)
+  Propagating to left: -1.58578
+  Propagating to right: -1.94218
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: -1.4905
+  Right gradient after: -1.94218
+
+=== propagate_gradient() #7 ===
+  Node[43] (op=DIV)
+  Upstream gradient: -1.94218
+  Value: -0.816497
+  Binary operation: DIV
+  Left: Node[41] (value=-2)
+  Right: Node[42] (value=2.44949)
+  Propagating to left: -0.792892
+  Propagating to right: -0.647394
+  ⚠️  NEGATIVE LEFT GRADIENT!
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.207108
+  Right gradient after: 0.285855
+  Leaf node 2 (op=CONST) - no propagation
+  Leaf node 42 (op=PARAM) - no propagation
+  Leaf node 41 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
+  Gradients to propagate:
+    arg[0]: upstream=0.876228 × grad[0]=0.207108 = contrib=0.181474
+    arg[0] gradient: -0.0490203 -> 0.132454
+    arg[1]: upstream=0.876228 × grad[1]=0.285855 = contrib=0.250474
+    arg[1] gradient: -0.00959101 -> 0.240883
+
+=== propagate_gradient() #8 ===
+  Node[192] (op=SQRT)
+  Upstream gradient: 0.240883
+  Value: 2.44949
+  Unary operation: SQRT
+  Left: Node[191] (value=6)
+  Propagating to left: 0.04917
+  Left gradient after: 0.04917
+
+=== propagate_gradient() #9 ===
+  Node[191] (op=PLUS)
+  Upstream gradient: 0.04917
+  Value: 6
+  Binary operation: PLUS
+  Left: Node[190] (value=4)
+  Right: Node[186] (value=2)
+  Propagating to left: 0.04917
+  Propagating to right: 0.04917
+  Left gradient after: 0.04917
+  Right gradient after: 0.0827958
+
+=== propagate_gradient() #10 ===
+  Node[186] (op=MUL)
+  Upstream gradient: 0.0827958
+  Value: 2
+  Binary operation: MUL
+  Left: Node[181] (value=1.41421)
+  Right: Node[181] (value=1.41421)
+  Propagating to left: 0.117091
+  Propagating to right: 0.117091
+  Left gradient after: 0.234182
+  Right gradient after: 0.234182
+  Leaf node 181 (op=PARAM) - no propagation
+
+=== propagate_gradient() #11 ===
+  Node[190] (op=MINUS)
+  Upstream gradient: 0.04917
+  Value: 4
+  Binary operation: MINUS
+  Left: Node[185] (value=4)
+  Right: Node[189] (value=0)
+  Propagating to left: 0.04917
+  Propagating to right: -0.04917
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.0690229
+  Right gradient after: -0.04917
+
+=== propagate_gradient() #12 ===
+  Node[189] (op=MUL)
+  Upstream gradient: -0.04917
+  Value: 0
+  Binary operation: MUL
+  Left: Node[188] (value=2)
+  Right: Node[187] (value=0)
+  Propagating to left: -0
+  Propagating to right: -0.09834
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0
+  Right gradient after: -0.144409
+  Leaf node 187 (op=CONST) - no propagation
+  Leaf node 188 (op=CONST) - no propagation
+
+=== propagate_gradient() #13 ===
+  Node[185] (op=MUL)
+  Upstream gradient: 0.0690229
+  Value: 4
+  Binary operation: MUL
+  Left: Node[183] (value=2)
+  Right: Node[183] (value=2)
+  Propagating to left: 0.138046
+  Propagating to right: 0.138046
+  Left gradient after: 0.276092
+  Right gradient after: 0.276092
+  Leaf node 183 (op=PARAM) - no propagation
+
+=== propagate_gradient() #14 ===
+  Node[184] (op=MINUS)
+  Upstream gradient: 0.132454
+  Value: -2
+  Binary operation: MINUS
+  Left: Node[182] (value=10)
+  Right: Node[180] (value=12)
+  Propagating to left: 0.132454
+  Propagating to right: -0.132454
+  ⚠️  NEGATIVE RIGHT GRADIENT!
+  Left gradient after: 0.260941
+  Right gradient after: 0.743775
+  Leaf node 182 (op=PARAM) - no propagation
+  Leaf node 180 (op=PARAM) - no propagation
+
+================================================================================
+backward() completed
+================================================================================
+
