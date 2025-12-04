@@ -253,7 +253,7 @@ void Ssta::connect_instances() {
                 auto gi = gates_.find(gate_name);
                 if (gi == gates_.end()) {
                     std::ostringstream what;
-                    what << "gate \"" << gate_name << "\" not found in gate library";
+                    what << "Gate \"" << gate_name << "\" not found in gate library";
                     throw Nh::RuntimeException(what.str());
                 }
 
