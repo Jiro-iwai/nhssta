@@ -70,7 +70,7 @@ int main() {
     
     // Case 2: C has negative gradient
     test_case("Case 2: C has negative gradient",
-              10.0, 12.0, 8.0,  // mu_A, mu_B, mu_C
+              10.0, 12.0, 7.0,  // mu_A, mu_B, mu_C (mu_C must be smaller to get negative)
               4.0, 1.0, 2.0);   // var_A, var_B, var_C
     
     // Case 3: No negative gradient (A is maximum)
