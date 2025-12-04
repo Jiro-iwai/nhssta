@@ -484,10 +484,18 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
     };
     
     auto finalize_path = [&](std::vector<std::string>& node_path, std::vector<std::string>& instance_path, double output_lat) {
-        std::vector<std::string> reversed_nodes(node_path.rbegin(), node_path.rend());
-        std::vector<std::string> reversed_instances(instance_path.rbegin(), instance_path.rend());
+        // Reverse node_path and instance_path for correct ordering (input to output)
+        // Use reserve() to avoid unnecessary memory reallocations during construction
+        std::vector<std::string> reversed_nodes;
+        reversed_nodes.reserve(node_path.size());
+        reversed_nodes.assign(node_path.rbegin(), node_path.rend());
+        std::vector<std::string> reversed_instances;
+        reversed_instances.reserve(instance_path.size());
+        reversed_instances.assign(instance_path.rbegin(), instance_path.rend());
         auto stats = build_node_stats(reversed_nodes);
-        paths.emplace_back(reversed_nodes, reversed_instances, output_lat, stats);
+        // Use std::move() to transfer ownership and avoid copying vectors
+        // This reduces memory allocations and improves performance (Issue #221)
+        paths.emplace_back(std::move(reversed_nodes), std::move(reversed_instances), output_lat, std::move(stats));
         node_path.pop_back();
     };
     
@@ -522,10 +530,13 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
         const std::vector<std::string>& input_signals = inputs_it->second;
         
         // Get gate delays from saved data (gates_ may be cleared after read_bench())
+        // Use pointer to avoid copying the map when it's already available (Issue #221)
         auto delays_it = instance_to_delays_.find(instance_name);
+        const std::unordered_map<std::string, Normal>* delays_map_ptr = nullptr;
         std::unordered_map<std::string, Normal> delays_map;
         if (delays_it != instance_to_delays_.end()) {
-            delays_map = delays_it->second;
+            // Prefer using reference to avoid copying the entire map
+            delays_map_ptr = &delays_it->second;
         } else {
             // Delays not saved - try to get from gates_ if still available
             auto gate_type_it = instance_to_gate_type_.find(instance_name);
@@ -561,8 +572,10 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
             std::string pin_name = std::to_string(pin_index);
             
             // Try to find gate delay for this pin from saved delays
-            auto delay_it = delays_map.find(pin_name);
-            if (delay_it != delays_map.end()) {
+            // Use pointer to avoid copying the map (Issue #221)
+            const std::unordered_map<std::string, Normal>* map_to_search = delays_map_ptr ? delays_map_ptr : &delays_map;
+            auto delay_it = map_to_search->find(pin_name);
+            if (delay_it != map_to_search->end()) {
                 const Normal& gate_delay = delay_it->second;
                 double contribution = input_lat + gate_delay->mean();
                 
