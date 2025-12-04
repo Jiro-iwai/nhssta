@@ -341,11 +341,15 @@ double expected_prod_pos(double mu0, double sigma0,
     rho = clamp(rho, -1.0, 1.0);
 
     // Use analytical formulas for ρ ≈ ±1 to avoid numerical issues
+    // Note: After clamping, |rho| <= 1.0, so we check for |rho| >= RHO_THRESHOLD
+    // to allow perfect correlation cases (rho = 1.0 or -1.0)
     constexpr double RHO_THRESHOLD = 0.9999;
-    if (rho > RHO_THRESHOLD) {
+    if (rho >= RHO_THRESHOLD) {
+        // For rho >= RHO_THRESHOLD (including rho = 1.0), use analytical formula
         return expected_prod_pos_rho1(mu0, sigma0, mu1, sigma1);
     }
-    if (rho < -RHO_THRESHOLD) {
+    if (rho <= -RHO_THRESHOLD) {
+        // For rho <= -RHO_THRESHOLD (including rho = -1.0), use analytical formula
         return expected_prod_pos_rho_neg1(mu0, sigma0, mu1, sigma1);
     }
 
@@ -366,7 +370,16 @@ double expected_prod_pos(double mu0, double sigma0,
     // E[D1⁺ | Z=z] = s*φ(m(z)/s) + m(z)*Φ(m(z)/s)
 
     double one_minus_rho2 = 1.0 - (rho * rho);
+    // Check for negative value before sqrt (should not happen after rho clamping, but check for safety)
+    if (one_minus_rho2 <= 0.0) {
+        throw Nh::RuntimeException("expected_prod_pos: one_minus_rho2 must be positive");
+    }
     double s1_cond = sigma1 * std::sqrt(one_minus_rho2);
+    
+    // Check for zero s1_cond to avoid division by zero
+    if (s1_cond <= 0.0) {
+        throw Nh::RuntimeException("expected_prod_pos: s1_cond must be positive");
+    }
 
     double sum = 0.0;
     for (int i = 0; i < GH_N; ++i) {
@@ -387,6 +400,7 @@ double expected_prod_pos(double mu0, double sigma0,
         double m1z = mu1 + (rho * sigma1 * z);
 
         // E[D1⁺ | Z=z] using expected_positive_part formula
+        // s1_cond is already checked to be positive above
         double t = m1z / s1_cond;
         double E_D1pos_givenZ = (s1_cond * normal_pdf(t)) + (m1z * normal_cdf(t));
 
@@ -417,6 +431,11 @@ double bivariate_normal_pdf(double x, double y, double rho) {
         return 0.0;
     }
     double one_minus_rho2 = 1.0 - (rho * rho);
+    // Check for negative value before sqrt
+    if (one_minus_rho2 <= 0.0) {
+        // Degenerate case - return 0.0
+        return 0.0;
+    }
     double coeff = 1.0 / (2.0 * M_PI * std::sqrt(one_minus_rho2));
     double Q = (x * x - 2.0 * rho * x * y + y * y) / one_minus_rho2;
     return coeff * std::exp(-Q / 2.0);
@@ -437,7 +456,16 @@ double bivariate_normal_cdf(double h, double k, double rho, int n_points) {
     }
 
     // Integrate φ(x) × Φ((k - ρx)/σ') from -∞ to h
-    double sigma_prime = std::sqrt(1.0 - (rho * rho));
+    double one_minus_rho2_cdf = 1.0 - (rho * rho);
+    // Check for negative value before sqrt
+    if (one_minus_rho2_cdf <= 0.0) {
+        // Degenerate case - use special handling
+        if (rho > 0) {
+            return normal_cdf(std::min(h, k));
+        }
+        return std::max(0.0, normal_cdf(h) + normal_cdf(k) - 1.0);
+    }
+    double sigma_prime = std::sqrt(one_minus_rho2_cdf);
     double lower_bound = -8.0;  // Effectively -∞ for standard normal
     double upper_bound = h;
 
