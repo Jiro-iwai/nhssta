@@ -1,0 +1,281 @@
+# Issue #128: Sstaクラスの責務分離計画
+
+## 現状の問題
+
+`src/ssta.cpp`は約808行で、以下の複数の責務を担当しており、単一責任の原則（SRP）に違反しています。
+
+### 現在の責務
+
+1. **ファイルパース**
+   - `read_dlib()` / `read_dlib_line()`: .dlibファイルのパース
+   - `read_bench()` / `read_bench_input()` / `read_bench_output()` / `read_bench_net()`: .benchファイルのパース
+
+2. **グラフ構築**
+   - `connect_instances()`: インスタンスを接続してタイミング解析を実行
+   - `set_instance_input()`: インスタンスの入力信号を設定
+   - `set_dff_out()`: DFF出力信号を設定
+   - `is_line_ready()`: ネットラインの準備状態をチェック
+
+3. **クリティカルパス解析**
+   - `getCriticalPaths()`: クリティカルパスを取得
+   - `track_path()`: パスを追跡してデータ構造を構築
+
+4. **結果データ変換**
+   - `getLatResults()`: LAT結果を取得
+   - `getCorrelationMatrix()`: 相関行列を取得
+   - `getSensitivityResults()`: 感度解析結果を取得
+
+## 問題点
+
+- テストが困難（各機能を個別にテストしにくい）
+- コード変更時の影響範囲が広い
+- 新機能追加時にクラスが肥大化する
+- コードの可読性が低い
+
+## 推奨対策
+
+責務ごとにクラスを分離:
+
+```cpp
+class DlibParser { /* .dlib ファイルパース */ };
+class BenchParser { /* .bench ファイルパース */ };
+class CircuitGraph { /* グラフ構造の管理 */ };
+class CriticalPathAnalyzer { /* クリティカルパス解析 */ };
+class SstaResults { /* 結果データの生成 */ };
+
+class Ssta {
+    // 上記クラスを組み合わせて統合
+};
+```
+
+## 実装計画
+
+### Phase 1: ファイルパーサーの分離
+
+#### 1.1 DlibParserクラスの作成
+
+**責務**: .dlibファイルのパースとGateオブジェクトの構築
+
+**インターフェース**:
+```cpp
+class DlibParser {
+public:
+    explicit DlibParser(const std::string& dlib_file);
+    void parse();
+    const Gates& gates() const { return gates_; }
+    
+private:
+    void parse_line(Parser& parser);
+    std::string dlib_file_;
+    Gates gates_;
+};
+```
+
+**移行対象メソッド**:
+- `Ssta::read_dlib()` → `DlibParser::parse()`
+- `Ssta::read_dlib_line()` → `DlibParser::parse_line()`
+
+#### 1.2 BenchParserクラスの作成
+
+**責務**: .benchファイルのパースと回路構造の構築
+
+**インターフェース**:
+```cpp
+class BenchParser {
+public:
+    explicit BenchParser(const std::string& bench_file);
+    void parse();
+    const Pins& inputs() const { return inputs_; }
+    const Pins& outputs() const { return outputs_; }
+    const Pins& dff_outputs() const { return dff_outputs_; }
+    const Pins& dff_inputs() const { return dff_inputs_; }
+    const Net& net() const { return net_; }
+    
+private:
+    void parse_input(Parser& parser);
+    void parse_output(Parser& parser);
+    void parse_net(Parser& parser, const std::string& out_signal_name);
+    std::string bench_file_;
+    Pins inputs_;
+    Pins outputs_;
+    Pins dff_outputs_;
+    Pins dff_inputs_;
+    Net net_;
+};
+```
+
+**移行対象メソッド**:
+- `Ssta::read_bench()` → `BenchParser::parse()`
+- `Ssta::read_bench_input()` → `BenchParser::parse_input()`
+- `Ssta::read_bench_output()` → `BenchParser::parse_output()`
+- `Ssta::read_bench_net()` → `BenchParser::parse_net()`
+
+### Phase 2: グラフ構築の分離
+
+#### 2.1 CircuitGraphクラスの作成
+
+**責務**: 回路グラフの構築と管理
+
+**インターフェース**:
+```cpp
+class CircuitGraph {
+public:
+    void build(const Gates& gates, const Net& net, 
+               const Pins& inputs, const Pins& outputs,
+               const Pins& dff_outputs, const Pins& dff_inputs);
+    const Signals& signals() const { return signals_; }
+    const std::unordered_map<std::string, std::string>& signal_to_instance() const {
+        return signal_to_instance_;
+    }
+    const std::unordered_map<std::string, std::vector<std::string>>& instance_to_inputs() const {
+        return instance_to_inputs_;
+    }
+    const std::unordered_map<std::string, std::string>& instance_to_gate_type() const {
+        return instance_to_gate_type_;
+    }
+    const std::unordered_map<std::string, std::unordered_map<std::string, Normal>>& instance_to_delays() const {
+        return instance_to_delays_;
+    }
+    
+private:
+    void connect_instances(const Gates& gates, const Net& net);
+    void set_instance_input(const Instance& inst, const NetLineIns& ins);
+    void set_dff_out(const std::string& out_signal_name);
+    bool is_line_ready(const NetLine& line) const;
+    
+    Signals signals_;
+    std::unordered_map<std::string, std::string> signal_to_instance_;
+    std::unordered_map<std::string, std::vector<std::string>> instance_to_inputs_;
+    std::unordered_map<std::string, std::string> instance_to_gate_type_;
+    std::unordered_map<std::string, std::unordered_map<std::string, Normal>> instance_to_delays_;
+};
+```
+
+**移行対象メソッド**:
+- `Ssta::connect_instances()` → `CircuitGraph::connect_instances()`
+- `Ssta::set_instance_input()` → `CircuitGraph::set_instance_input()`
+- `Ssta::set_dff_out()` → `CircuitGraph::set_dff_out()`
+- `Ssta::is_line_ready()` → `CircuitGraph::is_line_ready()`
+
+### Phase 3: クリティカルパス解析の分離
+
+#### 3.1 CriticalPathAnalyzerクラスの作成
+
+**責務**: クリティカルパスの解析と追跡
+
+**インターフェース**:
+```cpp
+class CriticalPathAnalyzer {
+public:
+    explicit CriticalPathAnalyzer(const CircuitGraph& graph);
+    CriticalPaths analyze(size_t top_n) const;
+    
+private:
+    void track_path(const std::string& signal_name, const Instance& inst, 
+                    const NetLineIns& ins, const std::string& gate_type);
+    const CircuitGraph& graph_;
+};
+```
+
+**移行対象メソッド**:
+- `Ssta::getCriticalPaths()` → `CriticalPathAnalyzer::analyze()`
+- `Ssta::track_path()` → `CriticalPathAnalyzer::track_path()`
+
+### Phase 4: 結果データ生成の分離
+
+#### 4.1 SstaResultsクラスの作成
+
+**責務**: 結果データの生成と変換
+
+**インターフェース**:
+```cpp
+class SstaResults {
+public:
+    explicit SstaResults(const CircuitGraph& graph);
+    LatResults getLatResults() const;
+    CorrelationMatrix getCorrelationMatrix() const;
+    SensitivityResults getSensitivityResults(size_t top_n) const;
+    
+private:
+    const CircuitGraph& graph_;
+};
+```
+
+**移行対象メソッド**:
+- `Ssta::getLatResults()` → `SstaResults::getLatResults()`
+- `Ssta::getCorrelationMatrix()` → `SstaResults::getCorrelationMatrix()`
+- `Ssta::getSensitivityResults()` → `SstaResults::getSensitivityResults()`
+
+### Phase 5: Sstaクラスの統合
+
+**最終的なSstaクラス**:
+```cpp
+class Ssta {
+public:
+    Ssta();
+    ~Ssta();
+    
+    void check();
+    void read_dlib();
+    void read_bench();
+    
+    // 設定メソッド
+    void set_lat() { is_lat_ = true; }
+    void set_correlation() { is_correlation_ = true; }
+    void set_critical_path(size_t top_n = DEFAULT_CRITICAL_PATH_COUNT);
+    void set_sensitivity();
+    void set_sensitivity_top_n(size_t top_n);
+    
+    void set_dlib(const std::string& dlib);
+    void set_bench(const std::string& bench);
+    
+    // 結果取得メソッド（委譲）
+    LatResults getLatResults() const;
+    CorrelationMatrix getCorrelationMatrix() const;
+    CriticalPaths getCriticalPaths(size_t top_n) const;
+    SensitivityResults getSensitivityResults(size_t top_n) const;
+    
+private:
+    std::string dlib_;
+    std::string bench_;
+    bool is_lat_ = false;
+    bool is_correlation_ = false;
+    bool is_critical_path_ = false;
+    bool is_sensitivity_ = false;
+    size_t critical_path_count_ = DEFAULT_CRITICAL_PATH_COUNT;
+    size_t sensitivity_top_n_ = DEFAULT_CRITICAL_PATH_COUNT;
+    
+    // 分離されたコンポーネント
+    std::unique_ptr<DlibParser> dlib_parser_;
+    std::unique_ptr<BenchParser> bench_parser_;
+    std::unique_ptr<CircuitGraph> circuit_graph_;
+    std::unique_ptr<CriticalPathAnalyzer> path_analyzer_;
+    std::unique_ptr<SstaResults> results_;
+};
+```
+
+## 実装ステップ
+
+1. ✅ 実装計画ドキュメントの作成（このファイル）
+2. ⏳ Phase 1: DlibParserクラスの作成とテスト
+3. ⏳ Phase 1: BenchParserクラスの作成とテスト
+4. ⏳ Phase 2: CircuitGraphクラスの作成とテスト
+5. ⏳ Phase 3: CriticalPathAnalyzerクラスの作成とテスト
+6. ⏳ Phase 4: SstaResultsクラスの作成とテスト
+7. ⏳ Phase 5: Sstaクラスの統合と既存テストの確認
+8. ⏳ リファクタリング完了後のクリーンアップ
+
+## メリット
+
+1. **テスト容易性**: 各クラスを個別にテスト可能
+2. **保守性**: 責務が明確で変更の影響範囲が限定的
+3. **拡張性**: 新機能追加時に既存コードへの影響が少ない
+4. **可読性**: コードの構造が明確で理解しやすい
+
+## 注意点
+
+1. **段階的な移行**: 一度にすべてを変更せず、段階的に移行する
+2. **後方互換性**: 既存のAPIを維持し、内部実装のみを変更する
+3. **テスト**: 各フェーズで既存テストがパスすることを確認する
+4. **パフォーマンス**: 分離によるオーバーヘッドを最小限に抑える
+
