@@ -761,22 +761,30 @@ void CustomFunctionImpl::collect_nodes_dfs(ExpressionImpl* node,
 
 void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
     // Graph type only - early return for Native type
+    // Native type functions don't have an internal expression tree to manage
     if (kind_ != ImplKind::Graph) {
         return;  // Native type doesn't need this
     }
 
+    // Validate input size matches expected dimension
     if (x.size() != input_dim_) {
         throw Nh::RuntimeException(
             "CustomFunctionImpl::set_inputs_and_clear: size mismatch");
     }
 
     // 1. Clear value cache and gradients in internal expression tree
+    //    This ensures that when new input values are set, all cached computations
+    //    and gradients from previous evaluations are invalidated
     for (auto* node : nodes_) {
-        // 1.1. 勾配は全ノードでクリア
+        // 1.1. Clear gradients for all nodes
+        //      Gradients accumulate during backward pass and must be reset
+        //      before the next forward evaluation
         node->zero_grad();
 
-        // 1.2. ローカル入力変数は value を直接上書きするので、
-        //      キャッシュクリアは上流側（root）からやればいい。
+        // 1.2. Check if this node is a local input variable
+        //      Local input variables directly overwrite their value in step 2,
+        //      so cache clearing should be done from upstream (root) side.
+        //      Skipping them here avoids unnecessary work.
         bool is_local_var = false;
         for (size_t i = 0; i < input_dim_; ++i) {
             if (node == local_vars_[i].get()) {
@@ -788,18 +796,21 @@ void CustomFunctionImpl::set_inputs_and_clear(const std::vector<double>& x) {
             continue;
         }
 
-        // 1.3. CONST ノードはグローバル共有なので value_ を触らない
+        // 1.3. CONST nodes are globally shared across all expressions,
+        //      so we must not modify their value_ to avoid side effects
         if (node->op() == ExpressionImpl::CONST) {
             continue;
         }
 
-        // 1.4. それ以外のノードのキャッシュは無条件でクリア
-        //      unset_value() 側ですでに if (!is_set_value()) return; ガードが入っているので、
-        //      呼ぶ前に is_set_value() を見る必要はない
+        // 1.4. Clear cache for all other nodes unconditionally.
+        //      unset_value() already has a guard: if (!is_set_value()) return;
+        //      so we don't need to check is_set_value() before calling it
         node->unset_value();
     }
 
-    // 2. 最後にローカル入力変数に値を入れる
+    // 2. Finally, set new input values to local input variables
+    //    This must be done after clearing caches to ensure the new values
+    //    trigger recomputation of dependent nodes during the next evaluation
     for (size_t i = 0; i < input_dim_; ++i) {
         local_vars_[i] = x[i];
     }
