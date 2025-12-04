@@ -121,7 +121,10 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
     }
 
     // Compute correlation coefficient ρ = Cov(D0,D1) / (σ0 * σ1)
-    // Clamp to [-1, 1] for numerical stability (also clamped in expected_prod_pos)
+    // Check for zero denominator to avoid division by zero
+    if (sigma0 * sigma1 <= 0.0) {
+        throw Nh::RuntimeException("covariance_max0_max0: sigma0 * sigma1 must be positive");
+    }
     double rho = covD / (sigma0 * sigma1);
     rho = std::min(rho, 1.0);
     rho = std::max(rho, -1.0);
@@ -152,7 +155,13 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
 // instead of the previous complex logic with dimension mismatches and
 // redundant correlation coefficient calculations.
 static void check_covariance(double& cov, const RandomVariable& a, const RandomVariable& b) {
-    double max_cov = std::sqrt(a->variance() * b->variance());
+    double var_a = a->variance();
+    double var_b = b->variance();
+    // Check for negative variance before sqrt
+    if (var_a < 0.0 || var_b < 0.0) {
+        throw Nh::RuntimeException("check_covariance: variance must be non-negative");
+    }
+    double max_cov = std::sqrt(var_a * var_b);
     
     // Clamp covariance to valid range: [-max_cov, max_cov]
     // This ensures |cov| <= max_cov, which is equivalent to |correlation| <= 1

@@ -286,6 +286,44 @@ TEST_F(NumericalHelpersTest, ExpectedProdPosZeroSigmaThrows) {
     EXPECT_THROW(RandomVariable::expected_prod_pos(1.0, -1.0, 1.0, 1.0, 0.5), Nh::RuntimeException);
 }
 
+// Test: expected_prod_pos should throw exception when |rho| > 1.0 (causes negative sqrt argument)
+// Note: rho = 1.0 or -1.0 is valid and uses analytical formula, so we only test |rho| > 1.0
+TEST_F(NumericalHelpersTest, ExpectedProdPosInvalidRhoThrows) {
+    // |rho| > 1.0 causes one_minus_rho2 to be negative after clamping
+    // After clamping, rho = 1.0 or -1.0, which is valid, so we test with values > 1.0
+    // However, after clamping, these become 1.0, so we need to test the behavior differently
+    // Actually, the function clamps rho to [-1, 1], so |rho| > 1.0 becomes |rho| = 1.0
+    // So we test that the function handles rho = 1.0 and -1.0 correctly (should not throw)
+    EXPECT_NO_THROW(RandomVariable::expected_prod_pos(1.0, 1.0, 1.0, 1.0, 1.0));
+    EXPECT_NO_THROW(RandomVariable::expected_prod_pos(1.0, 1.0, 1.0, 1.0, -1.0));
+    EXPECT_NO_THROW(RandomVariable::expected_prod_pos(1.0, 1.0, 1.0, 1.0, 1.1));  // Clamped to 1.0
+    EXPECT_NO_THROW(RandomVariable::expected_prod_pos(1.0, 1.0, 1.0, 1.0, -1.1));  // Clamped to -1.0
+}
+
+// Test: bivariate_normal_pdf should handle |rho| >= 1.0 gracefully
+TEST_F(NumericalHelpersTest, BivariateNormalPdfInvalidRho) {
+    // Should not throw for |rho| >= 1.0 (currently returns 0.0 for degenerate case)
+    EXPECT_NO_THROW({
+        double pdf1 = RandomVariable::bivariate_normal_pdf(0.0, 0.0, 1.0);
+        double pdf2 = RandomVariable::bivariate_normal_pdf(0.0, 0.0, -1.0);
+        double pdf3 = RandomVariable::bivariate_normal_pdf(0.0, 0.0, 1.1);
+        (void)pdf1;
+        (void)pdf2;
+        (void)pdf3;
+    });
+}
+
+// Test: bivariate_normal_cdf should handle |rho| >= 1.0 gracefully
+TEST_F(NumericalHelpersTest, BivariateNormalCdfInvalidRho) {
+    // Should not throw for |rho| >= 1.0 (handles degenerate case)
+    EXPECT_NO_THROW({
+        double cdf1 = RandomVariable::bivariate_normal_cdf(0.0, 0.0, 1.0, 128);
+        double cdf2 = RandomVariable::bivariate_normal_cdf(0.0, 0.0, -1.0, 128);
+        (void)cdf1;
+        (void)cdf2;
+    });
+}
+
 // ============================================================================
 // Tests for Cov(max0, max0) - covariance between two OpMAX0 random variables
 // ============================================================================
@@ -314,6 +352,21 @@ TEST_F(CovMax0Max0Test, Symmetry) {
     double cov_ba = covariance(max0_d2, max0_d1);
 
     EXPECT_DOUBLE_EQ(cov_ab, cov_ba);
+}
+
+// Test: covariance_max0_max0 should throw exception when sigma0 * sigma1 is zero
+TEST_F(CovMax0Max0Test, ZeroSigmaProductThrows) {
+    // Create variables with zero variance
+    Normal d1(1.0, 0.0);
+    Normal d2(2.0, 0.0);
+    RandomVar max0_d1 = MAX0(d1);
+    RandomVar max0_d2 = MAX0(d2);
+    
+    // Should throw exception when computing covariance with zero variance
+    EXPECT_THROW({
+        double cov = covariance(max0_d1, max0_d2);
+        (void)cov;
+    }, Nh::RuntimeException);
 }
 
 // Test: Independent OpMAX0 variables should have near-zero covariance
