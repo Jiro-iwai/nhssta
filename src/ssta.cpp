@@ -1,22 +1,12 @@
 // -*- c++ -*-
 // Authors: IWAI Jiro
 
-#include <algorithm>
-#include <cassert>
-#include <cmath>
-#include <iostream>
-#include <limits>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
 #include <sstream>
 #include <string>
-#include <vector>
 
-#include "add.hpp"
 #include "covariance.hpp"
-#include "expression.hpp"
-#include "parser.hpp"
-#include "util_numerical.hpp"
 #include "dlib_parser.hpp"
 #include "bench_parser.hpp"
 #include "circuit_graph.hpp"
