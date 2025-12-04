@@ -37,15 +37,15 @@ size_t parse_count(int argc, char* argv[], int& i, size_t default_value) {
             try {
                 // Check if the string contains a decimal point (invalid for unsigned integer)
                 if (next_arg.find('.') != std::string::npos) {
-                    throw Nh::ConfigurationException("Invalid number format: " + next_arg + " (decimal numbers are not allowed)");
+                    throw Nh::ConfigurationException("Invalid number format: \"" + next_arg + "\" (decimal numbers are not allowed)");
                 }
                 auto count = static_cast<size_t>(std::stoul(next_arg));
                 i++;  // Consume the number argument
                 return count;
             } catch (const std::invalid_argument& e) {
-                throw Nh::ConfigurationException("Invalid number format: " + next_arg);
+                throw Nh::ConfigurationException("Invalid number format: \"" + next_arg + "\"");
             } catch (const std::out_of_range& e) {
-                throw Nh::ConfigurationException("Number out of range: " + next_arg);
+                throw Nh::ConfigurationException("Number out of range: \"" + next_arg + "\"");
             } catch (const Nh::ConfigurationException&) {
                 // Re-throw ConfigurationException
                 throw;

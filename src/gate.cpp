@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <nhssta/exception.hpp>
+#include <sstream>
 #include <string>
 
 #include "add.hpp"
@@ -44,14 +45,9 @@ const Normal& GateImpl::delay(const std::string& in, const std::string& out) con
 
     auto i = delays_.find(io);
     if (i == delays_.end()) {
-        std::string what = "delay from pin \"";
-        what += in;
-        what += "\" to pin \"";
-        what += out;
-        what += "\" is not set on gate \"";
-        what += type_name();
-        what += "\"";
-        throw Nh::RuntimeException(what);
+        std::ostringstream what;
+        what << "Delay from pin \"" << in << "\" to pin \"" << out << "\" is not set on gate \"" << type_name() << "\"";
+        throw Nh::RuntimeException(what.str());
     }
 
     return i->second;
