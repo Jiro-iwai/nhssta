@@ -60,7 +60,7 @@ const Normal& GateImpl::delay(const std::string& in, const std::string& out) con
 /////
 
 void InstanceImpl::set_input(const std::string& in_name, const RandomVariable& signal) {
-    (void)gate_->delay(in_name);  // error check
+    [[maybe_unused]] const Normal& delay = gate_->delay(in_name);  // error check: throws exception if delay not found
     inputs_[in_name] = signal;
 }
 
