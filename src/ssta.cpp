@@ -669,7 +669,6 @@ SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
     
     // Step 1: Collect output signals for objective function
     // Note: DFF D terminals are not included due to Expression tree complexity
-    // TODO: Issue for future improvement - optimize Expression tree for deep RandomVariables
     std::vector<SensitivityPath> endpoint_paths;
     for (const auto& endpoint : outputs_) {
         auto sig_it = signals_.find(endpoint);
