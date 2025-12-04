@@ -27,6 +27,7 @@ void usage(const char* first, const char* last) {
 // Helper function to parse optional numeric argument for -p/--path and -n/--top options
 // Returns the parsed count, or default if no valid number is available
 // Updates index i if a number argument was consumed
+// Throws ConfigurationException if number format is invalid or out of range
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
 size_t parse_count(int argc, char* argv[], int& i, size_t default_value) {
     if (i + 1 < argc) {
@@ -34,11 +35,23 @@ size_t parse_count(int argc, char* argv[], int& i, size_t default_value) {
         // Check if it's a number (not another option starting with '-')
         if (!next_arg.empty() && next_arg[0] != '-') {
             try {
+                // Check if the string contains a decimal point (invalid for unsigned integer)
+                if (next_arg.find('.') != std::string::npos) {
+                    throw Nh::ConfigurationException("Invalid number format: " + next_arg + " (decimal numbers are not allowed)");
+                }
                 auto count = static_cast<size_t>(std::stoul(next_arg));
                 i++;  // Consume the number argument
                 return count;
+            } catch (const std::invalid_argument& e) {
+                throw Nh::ConfigurationException("Invalid number format: " + next_arg);
+            } catch (const std::out_of_range& e) {
+                throw Nh::ConfigurationException("Number out of range: " + next_arg);
+            } catch (const Nh::ConfigurationException&) {
+                // Re-throw ConfigurationException
+                throw;
             } catch (...) {
-                // Conversion failed, use default
+                // Other exceptions: use default
+                // This preserves backward compatibility for edge cases
             }
         }
     }
