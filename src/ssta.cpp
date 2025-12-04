@@ -8,6 +8,7 @@
 #include <limits>
 #include <nhssta/ssta.hpp>
 #include <nhssta/ssta_results.hpp>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -39,37 +40,34 @@ void Ssta::check() {
     // Validate configuration and throw exception if invalid
     // Error messages should be handled by CLI layer
 
-    std::string error_msg;
+    std::ostringstream error_msg;
 
     if (dlib_.empty()) {
-        if (!error_msg.empty()) {
-            error_msg += "; ";
+        if (error_msg.tellp() > 0) {
+            error_msg << "; ";
         }
-        error_msg += "please specify `-d' properly";
+        error_msg << "please specify `-d' properly";
     }
 
     if (bench_.empty()) {
-        if (!error_msg.empty()) {
-            error_msg += "; ";
+        if (error_msg.tellp() > 0) {
+            error_msg << "; ";
         }
-        error_msg += "please specify `-b' properly";
+        error_msg << "please specify `-b' properly";
     }
 
-    if (!error_msg.empty()) {
-        throw Nh::ConfigurationException(error_msg);
+    std::string error_str = error_msg.str();
+    if (!error_str.empty()) {
+        throw Nh::ConfigurationException(error_str);
     }
 }
 
 //// read ////
 
 void Ssta::node_error(const std::string& head, const std::string& signal_name) const {
-    std::string what(head);
-    what += " \"";
-    what += signal_name;
-    what += "\" is multiply defined in file \"";
-    what += bench_;
-    what += "\"";
-    throw Nh::RuntimeException(what);
+    std::ostringstream what;
+    what << head << " \"" << signal_name << "\" is multiply defined in file \"" << bench_ << "\"";
+    throw Nh::RuntimeException(what.str());
 }
 
 // dlib //
@@ -254,10 +252,9 @@ void Ssta::connect_instances() {
                 const std::string& gate_name = line->gate();
                 auto gi = gates_.find(gate_name);
                 if (gi == gates_.end()) {
-                    std::string what = "gate \"";
-                    what += gate_name;
-                    what += "\" not found in gate library";
-                    throw Nh::RuntimeException(what);
+                    std::ostringstream what;
+                    what << "gate \"" << gate_name << "\" not found in gate library";
+                    throw Nh::RuntimeException(what.str());
                 }
 
                 Gate gate = gi->second;
@@ -285,14 +282,14 @@ void Ssta::connect_instances() {
 
         // floating circuit
         if (size == net_.size()) {
-            std::string what = "following node is floating\n";
+            std::ostringstream what;
+            what << "following node is floating\n";
             ni = net_.begin();
             for (; ni != net_.end(); ni++) {
                 const NetLine& line = *ni;
-                what += line->out();
-                what += "\n";
+                what << line->out() << "\n";
             }
-            throw Nh::RuntimeException(what);
+            throw Nh::RuntimeException(what.str());
         }
     }
 }
