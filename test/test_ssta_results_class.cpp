@@ -89,7 +89,7 @@ TEST_F(SstaResultsTest, GetLatResultsSimple) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Get LAT results
-    SstaResults results(graph);
+    SstaResults results(&graph);
     LatResults lat_results = results.getLatResults();
     
     EXPECT_EQ(lat_results.size(), 2);  // A and Y
@@ -127,14 +127,15 @@ TEST_F(SstaResultsTest, GetLatResultsMultiple) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Get LAT results
-    SstaResults results(graph);
+    SstaResults results(&graph);
     LatResults lat_results = results.getLatResults();
     
-    EXPECT_EQ(lat_results.size(), 3);  // A, N1, Y
+    EXPECT_EQ(lat_results.size(), 4);  // A, B, N1, Y
     // Results should be sorted alphabetically
     EXPECT_EQ(lat_results[0].node_name, "A");
-    EXPECT_EQ(lat_results[1].node_name, "N1");
-    EXPECT_EQ(lat_results[2].node_name, "Y");
+    EXPECT_EQ(lat_results[1].node_name, "B");
+    EXPECT_EQ(lat_results[2].node_name, "N1");
+    EXPECT_EQ(lat_results[3].node_name, "Y");
     
     deleteTestFile("test_lat_multiple.bench");
 }
@@ -163,7 +164,7 @@ TEST_F(SstaResultsTest, GetCorrelationMatrixSimple) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Get correlation matrix
-    SstaResults results(graph);
+    SstaResults results(&graph);
     CorrelationMatrix matrix = results.getCorrelationMatrix();
     
     EXPECT_EQ(matrix.node_names.size(), 2);  // A and Y
@@ -203,10 +204,10 @@ TEST_F(SstaResultsTest, GetCorrelationMatrixMultiple) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Get correlation matrix
-    SstaResults results(graph);
+    SstaResults results(&graph);
     CorrelationMatrix matrix = results.getCorrelationMatrix();
     
-    EXPECT_EQ(matrix.node_names.size(), 3);  // A, N1, Y
+    EXPECT_EQ(matrix.node_names.size(), 4);  // A, B, N1, Y
     
     // Check correlations are calculated
     double corr_ay = matrix.getCorrelation("A", "Y");
@@ -241,7 +242,7 @@ TEST_F(SstaResultsTest, GetCorrelationMatrixSymmetry) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Get correlation matrix
-    SstaResults results(graph);
+    SstaResults results(&graph);
     CorrelationMatrix matrix = results.getCorrelationMatrix();
     
     // Correlation should be symmetric
@@ -275,7 +276,7 @@ TEST_F(SstaResultsTest, GetLatResultsEmpty) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Get LAT results
-    SstaResults results(graph);
+    SstaResults results(&graph);
     LatResults lat_results = results.getLatResults();
     
     EXPECT_EQ(lat_results.size(), 2);  // A and B (inputs)
