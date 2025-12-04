@@ -20,7 +20,7 @@ public:
     
     explicit DlibParser(const std::string& dlib_file);
     void parse();
-    const Gates& gates() const { return gates_; }
+    [[nodiscard]] const Gates& gates() const { return gates_; }
     
 private:
     void parse_line(Parser& parser);
