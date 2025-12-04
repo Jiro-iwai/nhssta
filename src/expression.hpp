@@ -204,6 +204,9 @@ class ExpressionImpl : public std::enable_shared_from_this<ExpressionImpl> {
     void zero_grad();
     static void zero_all_grad();
     static size_t node_count();
+    
+    // Debug support for backward()
+    static void enable_backward_debug(bool enable, const std::string& log_file = "backward_debug.log");
 
     // Value computation
     virtual double value();
