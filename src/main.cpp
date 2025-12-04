@@ -272,7 +272,7 @@ std::string formatSensitivityResults(const Nh::SensitivityResults& results) {
         << std::setw(8) << "type"
         << std::right << std::setw(12) << "dF/dmu" 
         << std::setw(12) << "dF/dsigma" << std::endl;
-    oss << "#-------------------------------------------------------------" << std::endl;
+    formatSeparator(oss, 60);  // 61 characters total: "#" + 60 "-"
     
     for (const auto& sens : results.gate_sensitivities) {
         oss << std::left << std::setw(12) << sens.instance;
