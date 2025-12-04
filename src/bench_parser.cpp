@@ -17,7 +17,7 @@ BenchParser::BenchParser(const std::string& bench_file)
     : bench_file_(bench_file) {
 }
 
-void BenchParser::parse() {
+void BenchParser::parse(const Gates& gates) {
     Parser parser(bench_file_, '#', "(),=", " \t\r");
     parser.checkFile();
 
@@ -30,7 +30,7 @@ void BenchParser::parse() {
         } else if (keyword == "OUTPUT") {
             parse_output(parser);
         } else {
-            parse_net(parser, keyword);  // NET
+            parse_net(parser, keyword, gates);  // NET
         }
     }
 }
@@ -71,7 +71,7 @@ static void tolower_string(std::string& token) {
     }
 }
 
-void BenchParser::parse_net(Parser& parser, const std::string& out_signal_name) {
+void BenchParser::parse_net(Parser& parser, const std::string& out_signal_name, const Gates& gates) {
     NetLine l;
     l->set_out(out_signal_name);
 
@@ -81,8 +81,12 @@ void BenchParser::parse_net(Parser& parser, const std::string& out_signal_name) 
     parser.getToken(gate_name);
     tolower_string(gate_name);
     
-    // Note: Gate existence check is deferred to CircuitGraph::build()
-    // This allows BenchParser to be independent of gates_
+    // Check if gate exists in gate library (for ParseException compatibility)
+    auto gi = gates.find(gate_name);
+    if (gi == gates.end()) {
+        throw Nh::ParseException(parser.getFileName(), parser.getNumLine(),
+                                 "unknown gate \"" + gate_name + "\"");
+    }
 
     l->set_gate(gate_name);
 

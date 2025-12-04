@@ -77,7 +77,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeSimpleCircuit) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_simple_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -117,7 +117,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeMultiplePaths) {
         "Y2 = INV(B)\n";
     std::string bench_path = createTestFile("test_multiple_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -159,7 +159,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeWithTopN) {
         "Y3 = INV(C)\n";
     std::string bench_path = createTestFile("test_topn_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -191,7 +191,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeWithZeroTopN) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_zero_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -225,7 +225,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeComplexPath) {
         "Y = INV(N2)\n";
     std::string bench_path = createTestFile("test_complex_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -264,7 +264,7 @@ TEST_F(CriticalPathAnalyzerTest, PathOrdering) {
         "Y2 = INV(N1)\n";  // Longer path (2 gates, should have higher delay)
     std::string bench_path = createTestFile("test_ordering_cpa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;

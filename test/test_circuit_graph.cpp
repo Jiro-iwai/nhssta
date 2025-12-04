@@ -79,7 +79,7 @@ TEST_F(CircuitGraphTest, BuildSimpleCircuit) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_simple.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -118,7 +118,7 @@ TEST_F(CircuitGraphTest, BuildMultipleGates) {
         "Y = NAND(N1, N2)\n";
     std::string bench_path = createTestFile("test_multiple.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -151,7 +151,7 @@ TEST_F(CircuitGraphTest, BuildWithTrackPathCallback) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_callback.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Track path callback
     std::vector<std::string> tracked_signals;
@@ -199,7 +199,7 @@ TEST_F(CircuitGraphTest, BuildWithDFF) {
         "Q = DFF(D, CLK)\n";
     std::string bench_path = createTestFile("test_dff.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -221,22 +221,18 @@ TEST_F(CircuitGraphTest, BuildWithUnknownGate) {
     dlib_parser.parse();
     const auto& gates = dlib_parser.gates();
     
-    // Parse bench with unknown gate
+    // Parse bench with unknown gate - should throw ParseException during parsing
     std::string bench_content = 
         "INPUT(A)\n"
         "OUTPUT(Y)\n"
         "Y = UNKNOWN(A)\n";
     std::string bench_path = createTestFile("test_unknown.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
     
-    // Build circuit graph should throw
-    CircuitGraph graph;
+    // Parse should throw ParseException for unknown gate
     EXPECT_THROW({
-        graph.build(gates, bench_parser.net(), 
-                    bench_parser.inputs(), bench_parser.outputs(),
-                    bench_parser.dff_outputs(), bench_parser.dff_inputs());
-    }, Nh::RuntimeException);
+        bench_parser.parse(gates);
+    }, Nh::ParseException);
     
     deleteTestFile("test_unknown.bench");
 }
@@ -255,7 +251,7 @@ TEST_F(CircuitGraphTest, BuildWithFloatingNode) {
         "Y = INV(Z)\n";  // Z is not defined
     std::string bench_path = createTestFile("test_floating.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph should throw
     CircuitGraph graph;
@@ -282,7 +278,7 @@ TEST_F(CircuitGraphTest, PathTrackingDataStructures) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_tracking.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Track path callback
     CircuitGraph::TrackPathCallback callback = 

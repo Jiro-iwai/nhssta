@@ -10,9 +10,11 @@
 #include <sstream>
 
 #include "../src/bench_parser.hpp"
+#include "../src/dlib_parser.hpp"
 #include <nhssta/net_line.hpp>
 
 using Nh::BenchParser;
+using Nh::DlibParser;
 
 class BenchParserTest : public ::testing::Test {
    protected:
@@ -77,6 +79,13 @@ TEST_F(BenchParserTest, ParseSimpleInputOutput) {
 
 // Test: BenchParser with NET definition
 TEST_F(BenchParserTest, ParseNet) {
+    // Create dlib with INV gate
+    std::string dlib_content = "inv 0 y gauss (5.0, 1.0)\n";
+    std::string dlib_path = createTestFile("test_net.dlib", dlib_content);
+    DlibParser dlib_parser(dlib_path);
+    dlib_parser.parse();
+    const auto& gates = dlib_parser.gates();
+    
     std::string content = 
         "INPUT(A)\n"
         "OUTPUT(Y)\n"
@@ -84,7 +93,7 @@ TEST_F(BenchParserTest, ParseNet) {
     std::string filepath = createTestFile("test_net.bench", content);
 
     BenchParser parser(filepath);
-    parser.parse();
+    parser.parse(gates);
 
     const auto& inputs = parser.inputs();
     const auto& outputs = parser.outputs();
@@ -134,6 +143,13 @@ TEST_F(BenchParserTest, ParseMultipleInputsOutputs) {
 
 // Test: BenchParser with DFF
 TEST_F(BenchParserTest, ParseDFF) {
+    // Create dlib with DFF gate
+    std::string dlib_content = "dff ck q gauss (5.0, 1.0)\n";
+    std::string dlib_path = createTestFile("test_dff.dlib", dlib_content);
+    DlibParser dlib_parser(dlib_path);
+    dlib_parser.parse();
+    const auto& gates = dlib_parser.gates();
+    
     std::string content = 
         "INPUT(CLK)\n"
         "OUTPUT(Q)\n"
@@ -141,7 +157,7 @@ TEST_F(BenchParserTest, ParseDFF) {
     std::string filepath = createTestFile("test_dff.bench", content);
 
     BenchParser parser(filepath);
-    parser.parse();
+    parser.parse(gates);
 
     const auto& inputs = parser.inputs();
     const auto& outputs = parser.outputs();
@@ -190,6 +206,17 @@ TEST_F(BenchParserTest, ParseWithComments) {
 
 // Test: BenchParser with complex circuit
 TEST_F(BenchParserTest, ParseComplexCircuit) {
+    // Create dlib with required gates
+    std::string dlib_content = 
+        "nand 0 y gauss (10.0, 2.0)\n"
+        "inv 0 y gauss (5.0, 1.0)\n"
+        "or 0 y gauss (12.0, 2.0)\n"
+        "and 0 y gauss (15.0, 3.0)\n";
+    std::string dlib_path = createTestFile("test_complex.dlib", dlib_content);
+    DlibParser dlib_parser(dlib_path);
+    dlib_parser.parse();
+    const auto& gates = dlib_parser.gates();
+    
     std::string content = 
         "INPUT(A)\n"
         "INPUT(B)\n"
@@ -203,7 +230,7 @@ TEST_F(BenchParserTest, ParseComplexCircuit) {
     std::string filepath = createTestFile("test_complex.bench", content);
 
     BenchParser parser(filepath);
-    parser.parse();
+    parser.parse(gates);
 
     const auto& inputs = parser.inputs();
     const auto& outputs = parser.outputs();

@@ -80,7 +80,7 @@ void Ssta::read_dlib() {
 void Ssta::read_bench() {
     // Use BenchParser and CircuitGraph (Phase 5: refactoring)
     bench_parser_ = std::make_unique<BenchParser>(bench_);
-    bench_parser_->parse();
+    bench_parser_->parse(gates_);
     
     // Build circuit graph with track_path callback if needed
     circuit_graph_ = std::make_unique<CircuitGraph>();
@@ -142,7 +142,7 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
         return CriticalPaths();
     }
     if (!path_analyzer_) {
-        throw Nh::RuntimeException("read_bench() must be called before getCriticalPaths()");
+        return CriticalPaths();  // Return empty paths if read_bench() hasn't been called
     }
     return path_analyzer_->analyze(top_n);
 }

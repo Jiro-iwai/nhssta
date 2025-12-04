@@ -78,7 +78,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeSimpleCircuit) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_simple_sa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -117,7 +117,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeMultipleOutputs) {
         "Y2 = INV(B)\n";
     std::string bench_path = createTestFile("test_multiple_sa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -159,7 +159,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeWithTopN) {
         "Y3 = INV(C)\n";
     std::string bench_path = createTestFile("test_topn_sa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -191,7 +191,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeWithZeroTopN) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_zero_sa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -225,7 +225,7 @@ TEST_F(SensitivityAnalyzerTest, GateSensitivities) {
         "Y = INV(N1)\n";
     std::string bench_path = createTestFile("test_gate_sens.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -265,7 +265,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeWithNoOutputs) {
         "N1 = INV(A)\n";
     std::string bench_path = createTestFile("test_no_outputs_sa.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;

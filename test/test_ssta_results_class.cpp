@@ -79,7 +79,7 @@ TEST_F(SstaResultsTest, GetLatResultsSimple) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_lat.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -117,7 +117,7 @@ TEST_F(SstaResultsTest, GetLatResultsMultiple) {
         "Y = INV(N1)\n";
     std::string bench_path = createTestFile("test_lat_multiple.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -154,7 +154,7 @@ TEST_F(SstaResultsTest, GetCorrelationMatrixSimple) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_corr.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -194,7 +194,7 @@ TEST_F(SstaResultsTest, GetCorrelationMatrixMultiple) {
         "Y = INV(N1)\n";
     std::string bench_path = createTestFile("test_corr_multiple.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -232,7 +232,7 @@ TEST_F(SstaResultsTest, GetCorrelationMatrixSymmetry) {
         "Y = INV(A)\n";
     std::string bench_path = createTestFile("test_corr_symmetry.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
@@ -266,7 +266,7 @@ TEST_F(SstaResultsTest, GetLatResultsEmpty) {
         "INPUT(B)\n";
     std::string bench_path = createTestFile("test_lat_empty.bench", bench_content);
     BenchParser bench_parser(bench_path);
-    bench_parser.parse();
+    bench_parser.parse(gates);
     
     // Build circuit graph
     CircuitGraph graph;
