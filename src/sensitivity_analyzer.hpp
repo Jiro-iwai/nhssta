@@ -16,7 +16,7 @@ public:
     [[nodiscard]] SensitivityResults analyze(size_t top_n) const;
     
 private:
-    std::vector<SensitivityPath> collect_endpoint_paths() const;
+    [[nodiscard]] std::vector<SensitivityPath> collect_endpoint_paths() const;
     void build_objective_function(const std::vector<SensitivityPath>& endpoint_paths, SensitivityResults& results) const;
     void collect_gate_sensitivities(SensitivityResults& results) const;
     
