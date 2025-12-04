@@ -145,9 +145,9 @@ std::string get_version_string() {
     auto now = std::time(nullptr);
     std::tm timeinfo{};  // Initialize to zero
 #ifdef _WIN32
-    localtime_s(&timeinfo, &now);  // Windows thread-safe version
+    localtime_s(&timeinfo, &now);  // Windows thread-safe version: localtime_s(struct tm *result, const time_t *timep)
 #else
-    localtime_r(&now, &timeinfo);  // POSIX thread-safe version
+    localtime_r(&now, &timeinfo);  // POSIX thread-safe version: localtime_r(const time_t *timep, struct tm *result)
 #endif
     
     std::ostringstream oss;
