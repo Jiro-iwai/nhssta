@@ -13,8 +13,8 @@
 
 namespace Nh {
 
-CriticalPathAnalyzer::CriticalPathAnalyzer(const CircuitGraph& graph)
-    : graph_(&graph) {
+CriticalPathAnalyzer::CriticalPathAnalyzer(const CircuitGraph* graph)
+    : graph_(graph) {
 }
 
 CriticalPaths CriticalPathAnalyzer::analyze(size_t top_n) const {

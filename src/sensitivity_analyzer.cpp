@@ -13,8 +13,8 @@
 
 namespace Nh {
 
-SensitivityAnalyzer::SensitivityAnalyzer(const CircuitGraph& graph)
-    : graph_(&graph) {
+SensitivityAnalyzer::SensitivityAnalyzer(const CircuitGraph* graph)
+    : graph_(graph) {
 }
 
 SensitivityResults SensitivityAnalyzer::analyze(size_t top_n) const {

@@ -12,7 +12,7 @@ namespace Nh {
 
 class SensitivityAnalyzer {
 public:
-    explicit SensitivityAnalyzer(const CircuitGraph& graph);
+    explicit SensitivityAnalyzer(const CircuitGraph* graph);
     [[nodiscard]] SensitivityResults analyze(size_t top_n) const;
     
 private:

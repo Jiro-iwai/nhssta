@@ -12,7 +12,7 @@ namespace Nh {
 
 class CriticalPathAnalyzer {
 public:
-    explicit CriticalPathAnalyzer(const CircuitGraph& graph);
+    explicit CriticalPathAnalyzer(const CircuitGraph* graph);
     [[nodiscard]] CriticalPaths analyze(size_t top_n) const;
     
 private:

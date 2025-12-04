@@ -88,7 +88,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeSimpleCircuit) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze sensitivity
-    SensitivityAnalyzer analyzer(graph);
+    SensitivityAnalyzer analyzer(&graph);
     SensitivityResults results = analyzer.analyze(5);
     
     EXPECT_EQ(results.top_paths.size(), 1);
@@ -127,7 +127,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeMultipleOutputs) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze sensitivity
-    SensitivityAnalyzer analyzer(graph);
+    SensitivityAnalyzer analyzer(&graph);
     SensitivityResults results = analyzer.analyze(5);
     
     EXPECT_EQ(results.top_paths.size(), 2);
@@ -169,7 +169,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeWithTopN) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze sensitivity with top_n = 2
-    SensitivityAnalyzer analyzer(graph);
+    SensitivityAnalyzer analyzer(&graph);
     SensitivityResults results = analyzer.analyze(2);
     
     EXPECT_LE(results.top_paths.size(), 2);
@@ -201,7 +201,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeWithZeroTopN) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze sensitivity with top_n = 0
-    SensitivityAnalyzer analyzer(graph);
+    SensitivityAnalyzer analyzer(&graph);
     SensitivityResults results = analyzer.analyze(0);
     
     EXPECT_EQ(results.top_paths.size(), 0);
@@ -235,7 +235,7 @@ TEST_F(SensitivityAnalyzerTest, GateSensitivities) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze sensitivity
-    SensitivityAnalyzer analyzer(graph);
+    SensitivityAnalyzer analyzer(&graph);
     SensitivityResults results = analyzer.analyze(5);
     
     // Should have gate sensitivities
@@ -275,7 +275,7 @@ TEST_F(SensitivityAnalyzerTest, AnalyzeWithNoOutputs) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze sensitivity
-    SensitivityAnalyzer analyzer(graph);
+    SensitivityAnalyzer analyzer(&graph);
     SensitivityResults results = analyzer.analyze(5);
     
     EXPECT_EQ(results.top_paths.size(), 0);

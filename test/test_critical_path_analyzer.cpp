@@ -87,7 +87,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeSimpleCircuit) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze critical paths
-    CriticalPathAnalyzer analyzer(graph);
+    CriticalPathAnalyzer analyzer(&graph);
     CriticalPaths paths = analyzer.analyze(5);
     
     EXPECT_EQ(paths.size(), 1);
@@ -127,7 +127,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeMultiplePaths) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze critical paths
-    CriticalPathAnalyzer analyzer(graph);
+    CriticalPathAnalyzer analyzer(&graph);
     CriticalPaths paths = analyzer.analyze(5);
     
     EXPECT_GE(paths.size(), 2);
@@ -169,7 +169,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeWithTopN) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze critical paths with top_n = 2
-    CriticalPathAnalyzer analyzer(graph);
+    CriticalPathAnalyzer analyzer(&graph);
     CriticalPaths paths = analyzer.analyze(2);
     
     EXPECT_LE(paths.size(), 2);
@@ -201,7 +201,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeWithZeroTopN) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze critical paths with top_n = 0
-    CriticalPathAnalyzer analyzer(graph);
+    CriticalPathAnalyzer analyzer(&graph);
     CriticalPaths paths = analyzer.analyze(0);
     
     EXPECT_EQ(paths.size(), 0);
@@ -235,7 +235,7 @@ TEST_F(CriticalPathAnalyzerTest, AnalyzeComplexPath) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze critical paths
-    CriticalPathAnalyzer analyzer(graph);
+    CriticalPathAnalyzer analyzer(&graph);
     CriticalPaths paths = analyzer.analyze(5);
     
     EXPECT_EQ(paths.size(), 1);
@@ -274,7 +274,7 @@ TEST_F(CriticalPathAnalyzerTest, PathOrdering) {
                 bench_parser.dff_outputs(), bench_parser.dff_inputs());
     
     // Analyze critical paths
-    CriticalPathAnalyzer analyzer(graph);
+    CriticalPathAnalyzer analyzer(&graph);
     CriticalPaths paths = analyzer.analyze(5);
     
     EXPECT_GE(paths.size(), 2);
