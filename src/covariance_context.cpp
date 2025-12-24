@@ -37,31 +37,33 @@ class CovarianceContextImpl {
 
     // ========================================================================
     // Helper functions (same logic as in covariance.cpp)
+    // These are static as they don't access instance data
     // ========================================================================
 
     // covariance_x_max0_y: Computes Cov(x, max(0, Z))
-    double covariance_x_max0_y(const RandomVariable& x, const RandomVariable& y);
+    static double covariance_x_max0_y(const RandomVariable& x, const RandomVariable& y);
 
     // covariance_max0_max0: Computes Cov(max(0,D0), max(0,D1))
-    double covariance_max0_max0(const RandomVariable& a, const RandomVariable& b);
+    static double covariance_max0_max0(const RandomVariable& a, const RandomVariable& b);
 
     // covariance_max_max: Computes Cov(MAX(A,B), MAX(C,D))
-    double covariance_max_max(const RandomVariable& max1, const RandomVariable& max2);
+    static double covariance_max_max(const RandomVariable& max1, const RandomVariable& max2);
 
     // covariance_max_w: Computes Cov(MAX(A,B), W)
-    double covariance_max_w(const RandomVariable& max_ab, const RandomVariable& w);
+    static double covariance_max_w(const RandomVariable& max_ab, const RandomVariable& w);
 
     // check_covariance: Clamps covariance to valid range
-    void check_covariance(double& cov, const RandomVariable& a, const RandomVariable& b);
+    static void check_covariance(double& cov, const RandomVariable& a, const RandomVariable& b);
 
     // ========================================================================
     // Expression-based helper functions
+    // These are static as they don't access instance data
     // ========================================================================
 
-    Expression cov_x_max0_expr(const RandomVariable& x, const RandomVariable& y_max0);
-    Expression cov_max0_max0_expr(const RandomVariable& a, const RandomVariable& b);
-    Expression cov_max_max_expr(const RandomVariable& max1, const RandomVariable& max2);
-    Expression cov_max_w_expr(const RandomVariable& max_ab, const RandomVariable& w);
+    static Expression cov_x_max0_expr(const RandomVariable& x, const RandomVariable& y_max0);
+    static Expression cov_max0_max0_expr(const RandomVariable& a, const RandomVariable& b);
+    static Expression cov_max_max_expr(const RandomVariable& max1, const RandomVariable& max2);
+    static Expression cov_max_w_expr(const RandomVariable& max_ab, const RandomVariable& w);
 };
 
 // ============================================================================
@@ -390,13 +392,13 @@ double CovarianceContext::covariance(const RandomVariable& a, const RandomVariab
 
         } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr &&
                    dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-            cov = impl_->covariance_max_max(a, b);
+            cov = CovarianceContextImpl::covariance_max_max(a, b);
 
         } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
-            cov = impl_->covariance_max_w(a, b);
+            cov = CovarianceContextImpl::covariance_max_w(a, b);
 
         } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-            cov = impl_->covariance_max_w(b, a);
+            cov = CovarianceContextImpl::covariance_max_w(b, a);
 
         } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
                    dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr) {
@@ -411,14 +413,14 @@ double CovarianceContext::covariance(const RandomVariable& a, const RandomVariab
             if (a->left() == b->left()) {
                 cov = a->variance();
             } else {
-                cov = impl_->covariance_max0_max0(a, b);
+                cov = CovarianceContextImpl::covariance_max0_max0(a, b);
             }
 
         } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr) {
-            cov = impl_->covariance_x_max0_y(b, a);
+            cov = CovarianceContextImpl::covariance_x_max0_y(b, a);
 
         } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
-            cov = impl_->covariance_x_max0_y(a, b);
+            cov = CovarianceContextImpl::covariance_x_max0_y(a, b);
 
         } else if (dynamic_cast<const NormalImpl*>(a.get()) != nullptr &&
                    dynamic_cast<const NormalImpl*>(b.get()) != nullptr) {
@@ -430,7 +432,7 @@ double CovarianceContext::covariance(const RandomVariable& a, const RandomVariab
                 "calculation");
         }
 
-        impl_->check_covariance(cov, a, b);
+        CovarianceContextImpl::check_covariance(cov, a, b);
     }
 
     // Always store in cache to ensure consistent behavior
@@ -470,11 +472,11 @@ Expression CovarianceContext::cov_expr(const RandomVariable& a, const RandomVari
         result = cov_expr(a, b->left()) - cov_expr(a, b->right());
     } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr &&
                dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-        result = impl_->cov_max_max_expr(a, b);
+        result = CovarianceContextImpl::cov_max_max_expr(a, b);
     } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
-        result = impl_->cov_max_w_expr(a, b);
+        result = CovarianceContextImpl::cov_max_w_expr(a, b);
     } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-        result = impl_->cov_max_w_expr(b, a);
+        result = CovarianceContextImpl::cov_max_w_expr(b, a);
     } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
                dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr) {
         result = cov_expr(a->left(), b);
@@ -486,12 +488,12 @@ Expression CovarianceContext::cov_expr(const RandomVariable& a, const RandomVari
         if (a->left() == b->left()) {
             result = a->var_expr();
         } else {
-            result = impl_->cov_max0_max0_expr(a, b);
+            result = CovarianceContextImpl::cov_max0_max0_expr(a, b);
         }
     } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr) {
-        result = impl_->cov_x_max0_expr(b, a);
+        result = CovarianceContextImpl::cov_x_max0_expr(b, a);
     } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
-        result = impl_->cov_x_max0_expr(a, b);
+        result = CovarianceContextImpl::cov_x_max0_expr(a, b);
     } else if (dynamic_cast<const NormalImpl*>(a.get()) != nullptr &&
                dynamic_cast<const NormalImpl*>(b.get()) != nullptr) {
         result = Const(0.0);

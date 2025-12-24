@@ -94,7 +94,7 @@ double OpMAX::calc_variance() const {
     double mu_Z = (mu_A * T) + (mu_B * (1.0 - T)) + (theta * p);
 
     // Var(Z) = E[Z²] - μ_Z²
-    double var_Z = E_Z_sq - mu_Z * mu_Z;
+    double var_Z = E_Z_sq - (mu_Z * mu_Z);
 
     RandomVariableImpl::check_variance(var_Z);
     return var_Z;
