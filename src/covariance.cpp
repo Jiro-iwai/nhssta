@@ -463,7 +463,11 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
         result = cov_expr(a, b->left()) - cov_expr(a, b->right());
     }
     // C-5.6: MAX using Gaussian closure rule
-    else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
+    else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr &&
+             dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
+        // Both are OpMAX: use dedicated function for exact 4-term expansion
+        result = cov_max_max_expr(a, b);
+    } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
         result = cov_max_w_expr(a, b);
     } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
         result = cov_max_w_expr(b, a);
