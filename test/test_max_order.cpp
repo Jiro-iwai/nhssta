@@ -136,13 +136,12 @@ TEST_F(MaxOrderTest, InternalStructureComparison) {
     auto opmax_BA = std::dynamic_pointer_cast<OpMAX>(max_BA.shared());
 
     if (opmax_AB && opmax_BA) {
-        // MAX(A,B) = left + MAX0(right - left)
+        // Note: After sym_mod_2 implementation, MAX no longer uses MAX0 decomposition
+        // It now uses direct Clark formula: μ_Z = μ_A * T + μ_B * (1-T) + θ * p
         std::cout << "\nMAX(A,B):" << std::endl;
         std::cout << "  left (A): mean=" << opmax_AB->left()->mean() << ", var=" << opmax_AB->left()->variance()
                   << std::endl;
         std::cout << "  right (B): mean=" << opmax_AB->right()->mean() << ", var=" << opmax_AB->right()->variance()
-                  << std::endl;
-        std::cout << "  max0 (B-A): mean=" << opmax_AB->max0()->mean() << ", var=" << opmax_AB->max0()->variance()
                   << std::endl;
 
         std::cout << "\nMAX(B,A):" << std::endl;
@@ -150,21 +149,9 @@ TEST_F(MaxOrderTest, InternalStructureComparison) {
                   << std::endl;
         std::cout << "  right (A): mean=" << opmax_BA->right()->mean() << ", var=" << opmax_BA->right()->variance()
                   << std::endl;
-        std::cout << "  max0 (A-B): mean=" << opmax_BA->max0()->mean() << ", var=" << opmax_BA->max0()->variance()
-                  << std::endl;
 
-        // Compare the max0 components
-        double max0_AB_mean = opmax_AB->max0()->mean();
-        double max0_BA_mean = opmax_BA->max0()->mean();
-        double max0_AB_var = opmax_AB->max0()->variance();
-        double max0_BA_var = opmax_BA->max0()->variance();
-
-        std::cout << "\nmax0 comparison:" << std::endl;
-        std::cout << "  MAX(A,B).max0 = MAX0(B-A): mean=" << max0_AB_mean << ", var=" << max0_AB_var << std::endl;
-        std::cout << "  MAX(B,A).max0 = MAX0(A-B): mean=" << max0_BA_mean << ", var=" << max0_BA_var << std::endl;
-
-        // B-A and A-B have opposite means but same variance
-        // So MAX0(B-A) and MAX0(A-B) have different distributions
+        // Note: max0() accessor removed after sym_mod_2 implementation
+        // MAX now uses Gaussian closure rule instead of MAX0 decomposition
     }
 }
 

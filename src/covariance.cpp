@@ -146,6 +146,118 @@ static double covariance_max0_max0(const RandomVariable& a, const RandomVariable
     return cov;
 }
 
+// covariance_max_max(max1, max2):
+// Computes Cov(MAX(A,B), MAX(C,D)) using Gaussian closure rule:
+// Expands to 4 terms to avoid recursive calls and ensure exact calculation
+// Cov(MAX(A,B), MAX(C,D)) = T1·T2·Cov(A,C) + T1·(1-T2)·Cov(A,D)
+//                          + (1-T1)·T2·Cov(B,C) + (1-T1)·(1-T2)·Cov(B,D)
+static double covariance_max_max(const RandomVariable& max1, const RandomVariable& max2) {
+    const auto* max1_ptr = dynamic_cast<const OpMAX*>(max1.get());
+    const auto* max2_ptr = dynamic_cast<const OpMAX*>(max2.get());
+
+    if (max1_ptr == nullptr || max2_ptr == nullptr) {
+        throw Nh::RuntimeException("covariance_max_max: both arguments must be OpMAX type");
+    }
+
+    const RandomVariable& A = max1->left();
+    const RandomVariable& B = max1->right();
+    const RandomVariable& C = max2->left();
+    const RandomVariable& D = max2->right();
+
+    // Compute T1 = Φ(α1) for MAX(A,B)
+    double mu_A = A->mean();
+    double mu_B = B->mean();
+    double var_A = A->variance();
+    double var_B = B->variance();
+    double cov_AB = covariance(A, B);
+
+    double theta1_sq = var_A + var_B - 2.0 * cov_AB;
+    if (theta1_sq < MINIMUM_VARIANCE) {
+        theta1_sq = MINIMUM_VARIANCE;
+    }
+    double theta1 = std::sqrt(theta1_sq);
+    double alpha1 = (mu_A - mu_B) / theta1;
+    double T1 = normal_cdf(alpha1);
+
+    // Compute T2 = Φ(α2) for MAX(C,D)
+    double mu_C = C->mean();
+    double mu_D = D->mean();
+    double var_C = C->variance();
+    double var_D = D->variance();
+    double cov_CD = covariance(C, D);
+
+    double theta2_sq = var_C + var_D - 2.0 * cov_CD;
+    if (theta2_sq < MINIMUM_VARIANCE) {
+        theta2_sq = MINIMUM_VARIANCE;
+    }
+    double theta2 = std::sqrt(theta2_sq);
+    double alpha2 = (mu_C - mu_D) / theta2;
+    double T2 = normal_cdf(alpha2);
+
+    // Compute all 4 covariance terms
+    double cov_AC = covariance(A, C);
+    double cov_AD = covariance(A, D);
+    double cov_BC = covariance(B, C);
+    double cov_BD = covariance(B, D);
+
+    // Combine: Cov(MAX(A,B), MAX(C,D)) = T1·T2·Cov(A,C) + T1·(1-T2)·Cov(A,D)
+    //                                    + (1-T1)·T2·Cov(B,C) + (1-T1)·(1-T2)·Cov(B,D)
+    double cov = T1 * T2 * cov_AC +
+                 T1 * (1.0 - T2) * cov_AD +
+                 (1.0 - T1) * T2 * cov_BC +
+                 (1.0 - T1) * (1.0 - T2) * cov_BD;
+
+    if (std::isnan(cov)) {
+        throw Nh::RuntimeException("covariance_max_max: result is NaN");
+    }
+
+    return cov;
+}
+
+// covariance_max_w(max_ab, w):
+// Computes Cov(MAX(A,B), W) using Gaussian closure rule:
+// Cov(MAX(A,B), W) = T·Cov(A,W) + (1-T)·Cov(B,W)
+// where T = Φ(α), α = (μ_A - μ_B) / θ, θ = √(Var(A) + Var(B) - 2Cov(A,B))
+static double covariance_max_w(const RandomVariable& max_ab, const RandomVariable& w) {
+    const auto* max_ptr = dynamic_cast<const OpMAX*>(max_ab.get());
+    if (max_ptr == nullptr) {
+        throw Nh::RuntimeException("covariance_max_w: first argument must be OpMAX type");
+    }
+
+    const RandomVariable& A = max_ab->left();
+    const RandomVariable& B = max_ab->right();
+
+    double mu_A = A->mean();
+    double mu_B = B->mean();
+    double var_A = A->variance();
+    double var_B = B->variance();
+    double cov_AB = covariance(A, B);
+
+    // θ² = Var(A) + Var(B) - 2*Cov(A,B)
+    double theta_sq = var_A + var_B - 2.0 * cov_AB;
+    if (theta_sq < MINIMUM_VARIANCE) {
+        theta_sq = MINIMUM_VARIANCE;
+    }
+    double theta = std::sqrt(theta_sq);
+
+    // α = (μ_A - μ_B) / θ
+    double alpha = (mu_A - mu_B) / theta;
+
+    // T = Φ(α)
+    double T = normal_cdf(alpha);
+
+    // Cov(MAX(A,B), W) = T·Cov(A,W) + (1-T)·Cov(B,W)
+    double cov_AW = covariance(A, w);
+    double cov_BW = covariance(B, w);
+    double cov = T * cov_AW + (1.0 - T) * cov_BW;
+
+    if (std::isnan(cov)) {
+        throw Nh::RuntimeException("covariance_max_w: result is NaN");
+    }
+
+    return cov;
+}
+
 // Check and clamp covariance to valid range: [-max_cov, max_cov]
 // where max_cov = sqrt(variance(a) * variance(b)) = σ_a * σ_b
 // This ensures |cov| <= max_cov, which is equivalent to |correlation| <= 1
@@ -236,8 +348,85 @@ static Expression cov_max0_max0_expr(const RandomVariable& a, const RandomVariab
 
     // Cov(D0⁺, D1⁺) = E[D0⁺ D1⁺] - E[D0⁺] × E[D1⁺]
     Expression result = E_prod - E_D0_pos * E_D1_pos;
-    
+
     return result;
+}
+
+// Helper: Cov(MAX(A,B), MAX(C,D)) as Expression using Gaussian closure rule
+// Expands to 4 terms to avoid recursive calls and ensure exact calculation
+// Cov(MAX(A,B), MAX(C,D)) = T1·T2·Cov(A,C) + T1·(1-T2)·Cov(A,D)
+//                          + (1-T1)·T2·Cov(B,C) + (1-T1)·(1-T2)·Cov(B,D)
+static Expression cov_max_max_expr(const RandomVariable& max1, const RandomVariable& max2) {
+    const RandomVariable& A = max1->left();
+    const RandomVariable& B = max1->right();
+    const RandomVariable& C = max2->left();
+    const RandomVariable& D = max2->right();
+
+    // Compute T1 = Φ(α1) for MAX(A,B)
+    Expression mu_A = A->mean_expr();
+    Expression mu_B = B->mean_expr();
+    Expression var_A = A->var_expr();
+    Expression var_B = B->var_expr();
+    Expression cov_AB = cov_expr(A, B);
+
+    Expression theta1_sq = var_A + var_B - Const(2.0) * cov_AB + Const(MINIMUM_VARIANCE);
+    Expression theta1 = sqrt(theta1_sq);
+    Expression alpha1 = (mu_A - mu_B) / theta1;
+    Expression T1 = Phi_expr(alpha1);
+
+    // Compute T2 = Φ(α2) for MAX(C,D)
+    Expression mu_C = C->mean_expr();
+    Expression mu_D = D->mean_expr();
+    Expression var_C = C->var_expr();
+    Expression var_D = D->var_expr();
+    Expression cov_CD = cov_expr(C, D);
+
+    Expression theta2_sq = var_C + var_D - Const(2.0) * cov_CD + Const(MINIMUM_VARIANCE);
+    Expression theta2 = sqrt(theta2_sq);
+    Expression alpha2 = (mu_C - mu_D) / theta2;
+    Expression T2 = Phi_expr(alpha2);
+
+    // Compute all 4 covariance terms
+    Expression cov_AC = cov_expr(A, C);
+    Expression cov_AD = cov_expr(A, D);
+    Expression cov_BC = cov_expr(B, C);
+    Expression cov_BD = cov_expr(B, D);
+
+    // Combine: Cov(MAX(A,B), MAX(C,D)) = T1·T2·Cov(A,C) + T1·(1-T2)·Cov(A,D)
+    //                                    + (1-T1)·T2·Cov(B,C) + (1-T1)·(1-T2)·Cov(B,D)
+    return T1 * T2 * cov_AC +
+           T1 * (Const(1.0) - T2) * cov_AD +
+           (Const(1.0) - T1) * T2 * cov_BC +
+           (Const(1.0) - T1) * (Const(1.0) - T2) * cov_BD;
+}
+
+// Helper: Cov(MAX(A,B), W) as Expression using Gaussian closure rule
+// Cov(MAX(A,B), W) = T·Cov(A,W) + (1-T)·Cov(B,W)
+// where T = Φ(α), α = (μ_A - μ_B) / θ, θ = √(Var(A) + Var(B) - 2Cov(A,B))
+static Expression cov_max_w_expr(const RandomVariable& max_ab, const RandomVariable& w) {
+    const RandomVariable& A = max_ab->left();
+    const RandomVariable& B = max_ab->right();
+
+    Expression mu_A = A->mean_expr();
+    Expression mu_B = B->mean_expr();
+    Expression var_A = A->var_expr();
+    Expression var_B = B->var_expr();
+    Expression cov_AB = cov_expr(A, B);
+
+    // θ² = Var(A) + Var(B) - 2*Cov(A,B), with minimum variance protection
+    Expression theta_sq = var_A + var_B - Const(2.0) * cov_AB + Const(MINIMUM_VARIANCE);
+    Expression theta = sqrt(theta_sq);
+
+    // α = (μ_A - μ_B) / θ
+    Expression alpha = (mu_A - mu_B) / theta;
+
+    // T = Φ(α)
+    Expression T = Phi_expr(alpha);
+
+    // Cov(MAX(A,B), W) = T·Cov(A,W) + (1-T)·Cov(B,W)
+    Expression cov_AW = cov_expr(A, w);
+    Expression cov_BW = cov_expr(B, w);
+    return T * cov_AW + (Const(1.0) - T) * cov_BW;
 }
 
 Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
@@ -273,17 +462,11 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
     } else if (dynamic_cast<const OpSUB*>(b.get()) != nullptr) {
         result = cov_expr(a, b->left()) - cov_expr(a, b->right());
     }
-    // C-5.6: MAX expansion - MAX(A,B) = A + MAX0(B-A)
+    // C-5.6: MAX using Gaussian closure rule
     else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
-        const RandomVariable& x = a->left();
-        auto m = a.dynamic_pointer_cast<const OpMAX>();
-        const RandomVariable& z = m->max0();
-        result = cov_expr(x, b) + cov_expr(z, b);
+        result = cov_max_w_expr(a, b);
     } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-        const RandomVariable& x = b->left();
-        auto m = b.dynamic_pointer_cast<const OpMAX>();
-        const RandomVariable& z = m->max0();
-        result = cov_expr(a, x) + cov_expr(a, z);
+        result = cov_max_w_expr(b, a);
     }
     // Handle nested MAX0(MAX0(...)) - pass through
     else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
@@ -353,21 +536,20 @@ double covariance(const RandomVariable& a, const RandomVariable& b) {
             double cov1 = covariance(a, b->right());
             cov = cov0 - cov1;
 
+        } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr &&
+                   dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
+            // Both are OpMAX: use dedicated function for exact 4-term expansion
+            // Cov(MAX(A,B), MAX(C,D)) = T1·T2·Cov(A,C) + T1·(1-T2)·Cov(A,D)
+            //                          + (1-T1)·T2·Cov(B,C) + (1-T1)·(1-T2)·Cov(B,D)
+            cov = covariance_max_max(a, b);
+
         } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
-            const RandomVariable& x = a->left();
-            auto m = a.dynamic_pointer_cast<const OpMAX>();
-            const RandomVariable& z = m->max0();
-            double cov0 = covariance(z, b);
-            double cov1 = covariance(x, b);
-            cov = cov0 + cov1;
+            // Only a is OpMAX: Cov(MAX(A,B), W) using Gaussian closure rule
+            cov = covariance_max_w(a, b);
 
         } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-            const RandomVariable& x = b->left();
-            auto m = b.dynamic_pointer_cast<const OpMAX>();
-            const RandomVariable& z = m->max0();
-            double cov0 = covariance(z, a);
-            double cov1 = covariance(x, a);
-            cov = cov0 + cov1;
+            // Only b is OpMAX: Cov(W, MAX(A,B)) = Cov(MAX(A,B), W) (symmetry)
+            cov = covariance_max_w(b, a);
 
         } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
                    dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr) {
