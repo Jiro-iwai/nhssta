@@ -42,10 +42,8 @@ double OpMAX::calc_mean() const {
     double cov_AB = covariance(A, B);
 
     // θ² = Var(A) + Var(B) - 2*Cov(A,B)
-    double theta_sq = var_A + var_B - 2.0 * cov_AB;
-    if (theta_sq < MINIMUM_VARIANCE) {
-        theta_sq = MINIMUM_VARIANCE;
-    }
+    double theta_sq = var_A + var_B - (2.0 * cov_AB);
+    theta_sq = std::max(theta_sq, MINIMUM_VARIANCE);
     double theta = std::sqrt(theta_sq);
 
     // α = (μ_A - μ_B) / θ
@@ -56,7 +54,7 @@ double OpMAX::calc_mean() const {
     double p = normal_pdf(alpha);
 
     // μ_Z = μ_A * T + μ_B * (1-T) + θ * p
-    double mu_Z = mu_A * T + mu_B * (1.0 - T) + theta * p;
+    double mu_Z = (mu_A * T) + (mu_B * (1.0 - T)) + (theta * p);
 
     return mu_Z;
 }
@@ -76,10 +74,8 @@ double OpMAX::calc_variance() const {
     double cov_AB = covariance(A, B);
 
     // θ² = Var(A) + Var(B) - 2*Cov(A,B)
-    double theta_sq = var_A + var_B - 2.0 * cov_AB;
-    if (theta_sq < MINIMUM_VARIANCE) {
-        theta_sq = MINIMUM_VARIANCE;
-    }
+    double theta_sq = var_A + var_B - (2.0 * cov_AB);
+    theta_sq = std::max(theta_sq, MINIMUM_VARIANCE);
     double theta = std::sqrt(theta_sq);
 
     // α = (μ_A - μ_B) / θ
@@ -90,12 +86,12 @@ double OpMAX::calc_variance() const {
     double p = normal_pdf(alpha);
 
     // E[Z²] = (Var(A) + μ_A²) * T + (Var(B) + μ_B²) * (1-T) + (μ_A + μ_B) * θ * p
-    double E_Z_sq = (var_A + mu_A * mu_A) * T +
-                     (var_B + mu_B * mu_B) * (1.0 - T) +
-                     (mu_A + mu_B) * theta * p;
+    double E_Z_sq = ((var_A + mu_A * mu_A) * T) +
+                     ((var_B + mu_B * mu_B) * (1.0 - T)) +
+                     ((mu_A + mu_B) * theta * p);
 
     // μ_Z (recompute to avoid dependency on calc_mean())
-    double mu_Z = mu_A * T + mu_B * (1.0 - T) + theta * p;
+    double mu_Z = (mu_A * T) + (mu_B * (1.0 - T)) + (theta * p);
 
     // Var(Z) = E[Z²] - μ_Z²
     double var_Z = E_Z_sq - mu_Z * mu_Z;

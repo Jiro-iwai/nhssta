@@ -35,16 +35,14 @@ void ExpressionImpl::enable_backward_debug(bool enable, const std::string& log_f
     DEBUG_BACKWARD = enable;
     DEBUG_NODE_COUNT = 0;
     if (enable) {
-        if (DEBUG_LOG_FILE) {
-            delete DEBUG_LOG_FILE;
-        }
+        delete DEBUG_LOG_FILE;
         DEBUG_LOG_FILE = new std::ofstream(log_file);
     } else {
         if (DEBUG_LOG_FILE) {
             DEBUG_LOG_FILE->close();
-            delete DEBUG_LOG_FILE;
-            DEBUG_LOG_FILE = nullptr;
         }
+        delete DEBUG_LOG_FILE;
+        DEBUG_LOG_FILE = nullptr;
     }
 }
 

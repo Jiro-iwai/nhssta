@@ -171,10 +171,8 @@ static double covariance_max_max(const RandomVariable& max1, const RandomVariabl
     double var_B = B->variance();
     double cov_AB = covariance(A, B);
 
-    double theta1_sq = var_A + var_B - 2.0 * cov_AB;
-    if (theta1_sq < MINIMUM_VARIANCE) {
-        theta1_sq = MINIMUM_VARIANCE;
-    }
+    double theta1_sq = var_A + var_B - (2.0 * cov_AB);
+    theta1_sq = std::max(theta1_sq, MINIMUM_VARIANCE);
     double theta1 = std::sqrt(theta1_sq);
     double alpha1 = (mu_A - mu_B) / theta1;
     double T1 = normal_cdf(alpha1);
@@ -186,10 +184,8 @@ static double covariance_max_max(const RandomVariable& max1, const RandomVariabl
     double var_D = D->variance();
     double cov_CD = covariance(C, D);
 
-    double theta2_sq = var_C + var_D - 2.0 * cov_CD;
-    if (theta2_sq < MINIMUM_VARIANCE) {
-        theta2_sq = MINIMUM_VARIANCE;
-    }
+    double theta2_sq = var_C + var_D - (2.0 * cov_CD);
+    theta2_sq = std::max(theta2_sq, MINIMUM_VARIANCE);
     double theta2 = std::sqrt(theta2_sq);
     double alpha2 = (mu_C - mu_D) / theta2;
     double T2 = normal_cdf(alpha2);
@@ -202,10 +198,10 @@ static double covariance_max_max(const RandomVariable& max1, const RandomVariabl
 
     // Combine: Cov(MAX(A,B), MAX(C,D)) = T1·T2·Cov(A,C) + T1·(1-T2)·Cov(A,D)
     //                                    + (1-T1)·T2·Cov(B,C) + (1-T1)·(1-T2)·Cov(B,D)
-    double cov = T1 * T2 * cov_AC +
-                 T1 * (1.0 - T2) * cov_AD +
-                 (1.0 - T1) * T2 * cov_BC +
-                 (1.0 - T1) * (1.0 - T2) * cov_BD;
+    double cov = (T1 * T2 * cov_AC) +
+                 (T1 * (1.0 - T2) * cov_AD) +
+                 ((1.0 - T1) * T2 * cov_BC) +
+                 ((1.0 - T1) * (1.0 - T2) * cov_BD);
 
     if (std::isnan(cov)) {
         throw Nh::RuntimeException("covariance_max_max: result is NaN");
@@ -234,10 +230,8 @@ static double covariance_max_w(const RandomVariable& max_ab, const RandomVariabl
     double cov_AB = covariance(A, B);
 
     // θ² = Var(A) + Var(B) - 2*Cov(A,B)
-    double theta_sq = var_A + var_B - 2.0 * cov_AB;
-    if (theta_sq < MINIMUM_VARIANCE) {
-        theta_sq = MINIMUM_VARIANCE;
-    }
+    double theta_sq = var_A + var_B - (2.0 * cov_AB);
+    theta_sq = std::max(theta_sq, MINIMUM_VARIANCE);
     double theta = std::sqrt(theta_sq);
 
     // α = (μ_A - μ_B) / θ
@@ -249,7 +243,7 @@ static double covariance_max_w(const RandomVariable& max_ab, const RandomVariabl
     // Cov(MAX(A,B), W) = T·Cov(A,W) + (1-T)·Cov(B,W)
     double cov_AW = covariance(A, w);
     double cov_BW = covariance(B, w);
-    double cov = T * cov_AW + (1.0 - T) * cov_BW;
+    double cov = (T * cov_AW) + ((1.0 - T) * cov_BW);
 
     if (std::isnan(cov)) {
         throw Nh::RuntimeException("covariance_max_w: result is NaN");
