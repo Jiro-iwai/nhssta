@@ -17,10 +17,6 @@ class OpMAX : public RandomVariableImpl {
     OpMAX(const RandomVariable& left, const RandomVariable& right);
     ~OpMAX() override;
 
-    [[nodiscard]] const RandomVariable& max0() const {
-        return max0_;
-    }
-
     // Sensitivity analysis support
     [[nodiscard]] Expression calc_mean_expr() const override;
     [[nodiscard]] Expression calc_var_expr() const override;
@@ -28,8 +24,6 @@ class OpMAX : public RandomVariableImpl {
    private:
     [[nodiscard]] double calc_mean() const override;
     [[nodiscard]] double calc_variance() const override;
-
-    RandomVariable max0_;
 };
 
 RandomVariable MAX(const RandomVariable& a, const RandomVariable& b);

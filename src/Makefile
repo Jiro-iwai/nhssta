@@ -71,7 +71,8 @@ TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_expression_node_count.cpp ../test/test_expression_cache_investigation.cpp \
 	../test/test_expression_helpers.cpp ../test/test_custom_function.cpp \
 	../test/test_custom_function_native.cpp ../test/test_simple_circuit.cpp \
-	../test/test_covariance_cache_normalization.cpp ../test/test_dlib_parser.cpp ../test/test_bench_parser.cpp ../test/test_circuit_graph.cpp ../test/test_critical_path_analyzer.cpp ../test/test_sensitivity_analyzer.cpp
+	../test/test_covariance_cache_normalization.cpp ../test/test_dlib_parser.cpp ../test/test_bench_parser.cpp ../test/test_circuit_graph.cpp ../test/test_critical_path_analyzer.cpp ../test/test_sensitivity_analyzer.cpp \
+	../test/test_meanphimax_verification.cpp ../test/test_max_order_invariance.cpp
 TEST_OBJS = $(patsubst ../test/%.cpp,../build/test/%.o,$(TEST_SRCS))
 TEST_DEPS = $(patsubst ../test/%.cpp,../build/test/%.d,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
