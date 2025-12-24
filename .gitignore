@@ -27,3 +27,6 @@ tags
 
 # Temporary PR message files
 PR_MESSAGE.md
+
+# macOS
+.DS_Store
