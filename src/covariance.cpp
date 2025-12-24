@@ -20,19 +20,19 @@
 
 namespace RandomVariable {
 
-static CovarianceMatrix covariance_matrix;
-CovarianceMatrix& get_covariance_matrix() {
-    return covariance_matrix;
-}
-
 // ============================================================================
-// Context-based API implementation (Phase 1: Removing global state)
+// Context-based API implementation (Phase 1 continued: Complete global state removal)
 // ============================================================================
 
 // Thread-local pointer to active CovarianceContext
-// When set, covariance() functions will use this context instead of
-// the global covariance_matrix
+// When set via ActiveContextGuard, covariance() functions will use this
+// context instead of the default context
 thread_local CovarianceContext* active_context_ = nullptr;
+
+// Thread-local default CovarianceContext
+// Each thread gets its own default context, ensuring thread safety
+// This replaces the previous static global CovarianceMatrix
+thread_local std::unique_ptr<CovarianceContext> default_context_ = nullptr;
 
 void set_active_context(CovarianceContext* context) {
     active_context_ = context;
@@ -40,6 +40,29 @@ void set_active_context(CovarianceContext* context) {
 
 CovarianceContext* get_active_context() {
     return active_context_;
+}
+
+CovarianceContext* get_default_context() {
+    // Lazy initialization: create default context on first access
+    if (default_context_ == nullptr) {
+        default_context_ = std::make_unique<CovarianceContext>();
+    }
+    return default_context_.get();
+}
+
+// Helper function: get active context or default context
+// This is used internally by covariance() and cov_expr()
+static CovarianceContext* get_context() {
+    if (active_context_ != nullptr) {
+        return active_context_;
+    }
+    return get_default_context();
+}
+
+// Backward compatibility: get_covariance_matrix() now returns
+// the matrix from the current context (active or default)
+CovarianceMatrix& get_covariance_matrix() {
+    return get_context()->matrix();
 }
 
 bool CovarianceMatrixImpl::lookup(const RandomVariable& a, const RandomVariable& b,
@@ -293,26 +316,19 @@ static void check_covariance(double& cov, const RandomVariable& a, const RandomV
 }
 
 double covariance(const Normal& a, const Normal& b) {
-    // If a context is active, use it; otherwise use global covariance_matrix
-    if (active_context_ != nullptr) {
-        return active_context_->covariance(a, b);
-    }
-
-    double cov = 0.0;
-    covariance_matrix->lookup(a, b, cov);
-    return cov;
+    // Use active context or default context
+    // All covariance logic is now in CovarianceContext
+    return get_context()->covariance(a, b);
 }
 
 // ============================================================================
 // Expression-based covariance (Phase C-5 of #167)
 // ============================================================================
 
-// Cache for Expression-based covariance (similar to CovarianceMatrixImpl)
-static std::unordered_map<std::pair<RandomVariable, RandomVariable>, Expression, PairHash>
-    cov_expr_cache;
-
+// Backward compatibility: clear_cov_expr_cache() now clears
+// the expression cache from the current context (active or default)
 void clear_cov_expr_cache() {
-    cov_expr_cache.clear();
+    get_context()->clear_expr_cache();
 }
 
 // Helper: Cov(X, MAX0(Z)) as Expression
@@ -447,180 +463,14 @@ static Expression cov_max_w_expr(const RandomVariable& max_ab, const RandomVaria
 }
 
 Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
-    // If a context is active, use it; otherwise use global cov_expr_cache
-    if (active_context_ != nullptr) {
-        return active_context_->cov_expr(a, b);
-    }
-
-    // Check cache first (with symmetry)
-    auto it = cov_expr_cache.find({a, b});
-    if (it != cov_expr_cache.end()) {
-        return it->second;
-    }
-    it = cov_expr_cache.find({b, a});
-    if (it != cov_expr_cache.end()) {
-        return it->second;
-    }
-
-    Expression result;
-
-    // C-5.2: Same variable → Variance
-    if (a == b) {
-        result = a->var_expr();
-    }
-    // C-5.3: ADD linear expansion - Cov(A+B, X) = Cov(A,X) + Cov(B,X)
-    else if (dynamic_cast<const OpADD*>(a.get()) != nullptr) {
-        Expression cov_left = cov_expr(a->left(), b);
-        Expression cov_right = cov_expr(a->right(), b);
-        result = cov_left + cov_right;
-    } else if (dynamic_cast<const OpADD*>(b.get()) != nullptr) {
-        Expression cov_left = cov_expr(a, b->left());
-        Expression cov_right = cov_expr(a, b->right());
-        result = cov_left + cov_right;
-    }
-    // C-5.3: SUB linear expansion - Cov(A-B, X) = Cov(A,X) - Cov(B,X)
-    else if (dynamic_cast<const OpSUB*>(a.get()) != nullptr) {
-        result = cov_expr(a->left(), b) - cov_expr(a->right(), b);
-    } else if (dynamic_cast<const OpSUB*>(b.get()) != nullptr) {
-        result = cov_expr(a, b->left()) - cov_expr(a, b->right());
-    }
-    // C-5.6: MAX using Gaussian closure rule
-    else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr &&
-             dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-        // Both are OpMAX: use dedicated function for exact 4-term expansion
-        result = cov_max_max_expr(a, b);
-    } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
-        result = cov_max_w_expr(a, b);
-    } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-        result = cov_max_w_expr(b, a);
-    }
-    // Handle nested MAX0(MAX0(...)) - pass through
-    else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
-             dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr) {
-        result = cov_expr(a->left(), b);
-    } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr &&
-               dynamic_cast<const OpMAX0*>(b->left().get()) != nullptr) {
-        result = cov_expr(a, b->left());
-    }
-    // C-5.5: MAX0 × MAX0
-    else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
-             dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
-        if (a->left() == b->left()) {
-            // max0(D) with itself: Cov = Var(max0(D))
-            result = a->var_expr();
-        } else {
-            result = cov_max0_max0_expr(a, b);
-        }
-    }
-    // C-5.4: MAX0 × X (X is not MAX0)
-    else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr) {
-        result = cov_x_max0_expr(b, a);
-    } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
-        result = cov_x_max0_expr(a, b);
-    }
-    // C-5.2: Normal × Normal (independent)
-    else if (dynamic_cast<const NormalImpl*>(a.get()) != nullptr &&
-             dynamic_cast<const NormalImpl*>(b.get()) != nullptr) {
-        result = Const(0.0);
-    }
-    // Unsupported combination
-    else {
-        throw Nh::RuntimeException(
-            "cov_expr: unsupported RandomVariable type combination");
-    }
-
-    // Cache the result
-    cov_expr_cache[{a, b}] = result;
-
-    return result;
+    // Use active context or default context
+    // All covariance logic is now in CovarianceContext
+    return get_context()->cov_expr(a, b);
 }
 
 double covariance(const RandomVariable& a, const RandomVariable& b) {
-    // If a context is active, use it; otherwise use global covariance_matrix
-    if (active_context_ != nullptr) {
-        return active_context_->covariance(a, b);
-    }
-
-    double cov = 0.0;
-
-    if (!covariance_matrix->lookup(a, b, cov)) {
-        if (a == b) {
-            cov = a->variance();
-
-        } else if (dynamic_cast<const OpADD*>(a.get()) != nullptr) {
-            double cov0 = covariance(a->left(), b);
-            double cov1 = covariance(a->right(), b);
-            cov = cov0 + cov1;
-
-        } else if (dynamic_cast<const OpADD*>(b.get()) != nullptr) {
-            double cov0 = covariance(a, b->left());
-            double cov1 = covariance(a, b->right());
-            cov = cov0 + cov1;
-
-        } else if (dynamic_cast<const OpSUB*>(a.get()) != nullptr) {
-            double cov0 = covariance(a->left(), b);
-            double cov1 = covariance(a->right(), b);
-            cov = cov0 - cov1;
-
-        } else if (dynamic_cast<const OpSUB*>(b.get()) != nullptr) {
-            double cov0 = covariance(a, b->left());
-            double cov1 = covariance(a, b->right());
-            cov = cov0 - cov1;
-
-        } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr &&
-                   dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-            // Both are OpMAX: use dedicated function for exact 4-term expansion
-            // Cov(MAX(A,B), MAX(C,D)) = T1·T2·Cov(A,C) + T1·(1-T2)·Cov(A,D)
-            //                          + (1-T1)·T2·Cov(B,C) + (1-T1)·(1-T2)·Cov(B,D)
-            cov = covariance_max_max(a, b);
-
-        } else if (dynamic_cast<const OpMAX*>(a.get()) != nullptr) {
-            // Only a is OpMAX: Cov(MAX(A,B), W) using Gaussian closure rule
-            cov = covariance_max_w(a, b);
-
-        } else if (dynamic_cast<const OpMAX*>(b.get()) != nullptr) {
-            // Only b is OpMAX: Cov(W, MAX(A,B)) = Cov(MAX(A,B), W) (symmetry)
-            cov = covariance_max_w(b, a);
-
-        } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
-                   dynamic_cast<const OpMAX0*>(a->left().get()) != nullptr) {
-            cov = covariance(a->left(), b);
-
-        } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr &&
-                   dynamic_cast<const OpMAX0*>(b->left().get()) != nullptr) {
-            cov = covariance(a, b->left());
-
-        } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr &&
-                   dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
-            // Both a and b are OpMAX0: use dedicated covariance_max0_max0
-            // which uses Gauss-Hermite quadrature for correct bivariate normal handling
-            if (a->left() == b->left()) {
-                // max(0,D) with itself: Cov = Var(max(0,D))
-                cov = a->variance();
-            } else {
-                cov = covariance_max0_max0(a, b);
-            }
-
-        } else if (dynamic_cast<const OpMAX0*>(a.get()) != nullptr) {
-            cov = covariance_x_max0_y(b, a);
-
-        } else if (dynamic_cast<const OpMAX0*>(b.get()) != nullptr) {
-            cov = covariance_x_max0_y(a, b);
-
-        } else if (dynamic_cast<const NormalImpl*>(a.get()) != nullptr &&
-                   dynamic_cast<const NormalImpl*>(b.get()) != nullptr) {
-            cov = 0.0;
-
-        } else {
-            throw Nh::RuntimeException(
-                "covariance: unsupported RandomVariable type combination for covariance "
-                "calculation");
-        }
-
-        check_covariance(cov, a, b);
-        covariance_matrix->set(a, b, cov);
-    }
-
-    return cov;
+    // Use active context or default context
+    // All covariance logic is now in CovarianceContext
+    return get_context()->covariance(a, b);
 }
 }  // namespace RandomVariable

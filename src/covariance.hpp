@@ -145,6 +145,24 @@ void set_active_context(CovarianceContext* context);
 CovarianceContext* get_active_context();
 
 /**
+ * Get the default (thread-local) CovarianceContext for the current thread
+ *
+ * This function returns a thread-local default context that is used when
+ * no explicit context is set via ActiveContextGuard. Each thread gets its
+ * own default context, ensuring thread safety.
+ *
+ * The default context is created lazily on first access and persists for
+ * the lifetime of the thread.
+ *
+ * @return Pointer to the thread-local default context (never nullptr)
+ *
+ * Usage:
+ *   auto* ctx = get_default_context();
+ *   ctx->clear();  // Clear the default context
+ */
+CovarianceContext* get_default_context();
+
+/**
  * RAII helper to set and automatically clear the active context
  *
  * Usage:
