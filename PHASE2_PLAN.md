@@ -258,29 +258,40 @@ Performance baseline: 2.111s for s820.bench (not yet tested with unified impleme
 
 ### Decision
 
-**Status**: ⚠️ **BLOCKED - Requires Design Decision**
+**Status**: ✅ **DECIDED - Option B (Keep Separate Implementations)**
 
-Two paths forward:
+### Performance Measurement Results (2025-12-24)
 
-#### Option A: Proceed with Unification (Recommended)
-- ✅ Unify `covariance()` to use `cov_expr()->value()`
-- ✅ Improved numerical accuracy for MAX0×MAX0
-- ✅ Single source of truth (~300 lines removed)
-- ⚠️ Potential performance impact (needs measurement)
-- ⚠️ Behavioral change: Results will be more accurate but slightly different
+**Benchmark**: s820.bench with gaussdelay.dlib (-l -c -p)
 
-#### Option B: Keep Separate Implementations
-- ✅ No behavioral changes
-- ✅ No performance risk
-- ❌ Ongoing maintenance burden
-- ❌ Duplicate code (~300 lines)
-- ❌ Less accurate for MAX0×MAX0
+| Implementation | Run 1 | Run 2 | Run 3 | Average | vs Baseline |
+|---------------|-------|-------|-------|---------|-------------|
+| **Baseline (Separate)** | 2.46s | 1.80s | 1.80s | **2.02s** | - |
+| **Option A (Unified)** | 21.14s | 19.73s | 19.63s | **20.2s** | **+1000%** ❌ |
 
-**Recommendation**: Proceed with Option A, but:
-1. Measure performance impact
-2. Document the accuracy improvement
-3. Update any tests that depend on specific numerical values
-4. Consider this a bug fix (improved accuracy) rather than a breaking change
+**Conclusion**: Option A causes **10x performance degradation** (1000%), far exceeding the 5% acceptance threshold.
+
+### Final Decision: Option B (Keep Separate Implementations)
+
+#### Reasons for Rejection of Option A:
+1. ❌ **Unacceptable performance impact**: 10x slower (1000% vs 5% threshold)
+2. ❌ **Expression tree overhead**: Constant cov_expr() calls create/evaluate Expression trees
+3. ❌ **Cache inefficiency**: Expression value() evaluation is expensive
+
+#### Option B Benefits (Retained):
+- ✅ **Performance preserved**: No degradation
+- ✅ **Stability**: No behavioral changes
+- ✅ **Battle-tested**: Current implementation is well-validated
+- ⚠️ **Trade-off accepted**: Maintenance burden of ~300 duplicate lines
+
+#### Future Optimization Opportunities:
+If performance can be improved to <5% impact:
+1. Optimize Expression tree creation (lazy evaluation)
+2. Improve cov_expr_cache effectiveness
+3. Fast-path for simple operations (Normal × Normal)
+4. Profile and optimize Expression::value() evaluation
+
+**For now, duplicate code is the lesser evil compared to 10x performance loss.**
 
 ## Notes
 
