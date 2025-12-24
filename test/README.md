@@ -67,7 +67,7 @@ Tests are compiled into a single test binary:
 
 ## Current Test Coverage
 
-- **781 tests** across **70 test suites**
+- **791 tests** across **72 test suites**
 - Unit tests for core components (RandomVariable, Gate, Parser, Ssta)
 - Expression tests (将来の感度解析機能用)
 - Integration tests for end-to-end functionality
