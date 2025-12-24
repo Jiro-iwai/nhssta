@@ -18,6 +18,11 @@
 #include <nhssta/gate.hpp>
 #include <nhssta/net_line.hpp>
 
+// Forward declaration for CovarianceContext (Phase 1: Global state removal)
+namespace RandomVariable {
+    class CovarianceContext;
+}
+
 namespace Nh {
 
 // Forward declarations for refactored components (Phase 5)
@@ -67,7 +72,11 @@ class Ssta {
     std::unique_ptr<CriticalPathAnalyzer> path_analyzer_;
     std::unique_ptr<SensitivityAnalyzer> sensitivity_analyzer_;
     std::unique_ptr<SstaResults> results_;
-    
+
+    // Covariance computation context (Phase 1: Global state removal)
+    // Each Ssta instance has its own context for isolated computation
+    std::shared_ptr<::RandomVariable::CovarianceContext> cov_context_;
+
     // Gatesは感度解析が有効な場合のみ保持（メモリ最適化）
     Gates gates_;  // DlibParserから取得後、感度解析が無効ならクリア
 

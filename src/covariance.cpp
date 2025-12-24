@@ -10,6 +10,7 @@
 
 #include "add.hpp"
 #include "covariance.hpp"
+#include "covariance_context.hpp"
 #include "expression.hpp"
 #include "max.hpp"
 #include "statistical_functions.hpp"
@@ -22,6 +23,23 @@ namespace RandomVariable {
 static CovarianceMatrix covariance_matrix;
 CovarianceMatrix& get_covariance_matrix() {
     return covariance_matrix;
+}
+
+// ============================================================================
+// Context-based API implementation (Phase 1: Removing global state)
+// ============================================================================
+
+// Thread-local pointer to active CovarianceContext
+// When set, covariance() functions will use this context instead of
+// the global covariance_matrix
+thread_local CovarianceContext* active_context_ = nullptr;
+
+void set_active_context(CovarianceContext* context) {
+    active_context_ = context;
+}
+
+CovarianceContext* get_active_context() {
+    return active_context_;
 }
 
 bool CovarianceMatrixImpl::lookup(const RandomVariable& a, const RandomVariable& b,
@@ -275,6 +293,11 @@ static void check_covariance(double& cov, const RandomVariable& a, const RandomV
 }
 
 double covariance(const Normal& a, const Normal& b) {
+    // If a context is active, use it; otherwise use global covariance_matrix
+    if (active_context_ != nullptr) {
+        return active_context_->covariance(a, b);
+    }
+
     double cov = 0.0;
     covariance_matrix->lookup(a, b, cov);
     return cov;
@@ -424,6 +447,11 @@ static Expression cov_max_w_expr(const RandomVariable& max_ab, const RandomVaria
 }
 
 Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
+    // If a context is active, use it; otherwise use global cov_expr_cache
+    if (active_context_ != nullptr) {
+        return active_context_->cov_expr(a, b);
+    }
+
     // Check cache first (with symmetry)
     auto it = cov_expr_cache.find({a, b});
     if (it != cov_expr_cache.end()) {
@@ -508,6 +536,11 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b) {
 }
 
 double covariance(const RandomVariable& a, const RandomVariable& b) {
+    // If a context is active, use it; otherwise use global covariance_matrix
+    if (active_context_ != nullptr) {
+        return active_context_->covariance(a, b);
+    }
+
     double cov = 0.0;
 
     if (!covariance_matrix->lookup(a, b, cov)) {
