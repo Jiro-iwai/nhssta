@@ -112,6 +112,85 @@ Expression cov_expr(const RandomVariable& a, const RandomVariable& b);
 void clear_cov_expr_cache();
 
 CovarianceMatrix& get_covariance_matrix();
+
+// ============================================================================
+// Context-based API (Phase 1: Removing global state)
+// ============================================================================
+
+// Forward declaration
+class CovarianceContext;
+
+/**
+ * Set the active CovarianceContext for the current thread
+ *
+ * This allows gradual migration from global covariance_matrix to
+ * context-based computation. When a context is set, all covariance()
+ * calls will use that context instead of the global matrix.
+ *
+ * @param context Pointer to the context to use (nullptr to clear)
+ *
+ * Usage:
+ *   auto context = std::make_shared<CovarianceContext>();
+ *   set_active_context(context.get());
+ *   // ... perform computations ...
+ *   set_active_context(nullptr);  // Clear when done
+ */
+void set_active_context(CovarianceContext* context);
+
+/**
+ * Get the active CovarianceContext for the current thread
+ *
+ * @return Pointer to active context, or nullptr if none is set
+ */
+CovarianceContext* get_active_context();
+
+/**
+ * Get the default (thread-local) CovarianceContext for the current thread
+ *
+ * This function returns a thread-local default context that is used when
+ * no explicit context is set via ActiveContextGuard. Each thread gets its
+ * own default context, ensuring thread safety.
+ *
+ * The default context is created lazily on first access and persists for
+ * the lifetime of the thread.
+ *
+ * @return Pointer to the thread-local default context (never nullptr)
+ *
+ * Usage:
+ *   auto* ctx = get_default_context();
+ *   ctx->clear();  // Clear the default context
+ */
+CovarianceContext* get_default_context();
+
+/**
+ * RAII helper to set and automatically clear the active context
+ *
+ * Usage:
+ *   auto context = std::make_shared<CovarianceContext>();
+ *   ActiveContextGuard guard(context.get());
+ *   // ... context is active ...
+ *   // ... context is automatically cleared when guard goes out of scope
+ */
+class ActiveContextGuard {
+public:
+    explicit ActiveContextGuard(CovarianceContext* context)
+        : previous_context_(get_active_context()) {
+        set_active_context(context);
+    }
+
+    ~ActiveContextGuard() {
+        set_active_context(previous_context_);
+    }
+
+    // Disable copy and move
+    ActiveContextGuard(const ActiveContextGuard&) = delete;
+    ActiveContextGuard& operator=(const ActiveContextGuard&) = delete;
+    ActiveContextGuard(ActiveContextGuard&&) = delete;
+    ActiveContextGuard& operator=(ActiveContextGuard&&) = delete;
+
+private:
+    CovarianceContext* previous_context_;
+};
 }  // namespace RandomVariable
 
 #endif  // NH_COVARIANCE__H

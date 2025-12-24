@@ -7,6 +7,7 @@
 #include <string>
 
 #include "covariance.hpp"
+#include "covariance_context.hpp"
 #include "dlib_parser.hpp"
 #include "bench_parser.hpp"
 #include "circuit_graph.hpp"
@@ -19,7 +20,10 @@ namespace Nh {
 // DFF gate name constant
 static const std::string DFF_GATE_NAME = "dff";
 
-Ssta::Ssta() = default;
+Ssta::Ssta()
+    : cov_context_(std::make_shared<::RandomVariable::CovarianceContext>()) {
+    // Initialize covariance context for isolated computation
+}
 
 Ssta::~Ssta() {
     // Clear static caches to prevent crash during static destruction
@@ -68,26 +72,30 @@ void Ssta::read_dlib() {
 // bench //
 
 void Ssta::read_bench() {
+    // Set active covariance context for this Ssta instance
+    // All covariance computations during read_bench() will use this context
+    ::RandomVariable::ActiveContextGuard context_guard(cov_context_.get());
+
     // Use BenchParser and CircuitGraph (Phase 5: refactoring)
     bench_parser_ = std::make_unique<BenchParser>(bench_);
     bench_parser_->parse(gates_);
-    
+
     // Build circuit graph with track_path callback if needed
     circuit_graph_ = std::make_unique<CircuitGraph>();
     circuit_graph_->set_bench_file(bench_);
-    
+
     // Create track_path callback if critical path or sensitivity analysis is enabled
     CircuitGraph::TrackPathCallback track_callback = nullptr;
     if (is_critical_path_ || is_sensitivity_) {
         // This callback is handled by CircuitGraph internally
         // No additional action needed here
     }
-    
+
     circuit_graph_->build(gates_, bench_parser_->net(),
                           bench_parser_->inputs(), bench_parser_->outputs(),
                           bench_parser_->dff_outputs(), bench_parser_->dff_inputs(),
                           track_callback);
-    
+
     // Create analyzers and results generator
     if (is_critical_path_) {
         path_analyzer_ = std::make_unique<CriticalPathAnalyzer>(circuit_graph_.get());
@@ -96,7 +104,7 @@ void Ssta::read_bench() {
         sensitivity_analyzer_ = std::make_unique<SensitivityAnalyzer>(circuit_graph_.get());
     }
     results_ = std::make_unique<SstaResults>(circuit_graph_.get());
-    
+
     // Clear gates_ to free memory, unless sensitivity analysis is enabled
     // (sensitivity analysis needs the gate delays for gradient computation)
     if (!is_sensitivity_) {
@@ -121,6 +129,9 @@ CorrelationMatrix Ssta::getCorrelationMatrix() const {
 }
 
 CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
+    // Set active context for this operation
+    ::RandomVariable::ActiveContextGuard context_guard(cov_context_.get());
+
     // Use CriticalPathAnalyzer (Phase 5: refactoring)
     if (!is_critical_path_) {
         return CriticalPaths();
@@ -132,6 +143,9 @@ CriticalPaths Ssta::getCriticalPaths(size_t top_n) const {
 }
 
 SensitivityResults Ssta::getSensitivityResults(size_t top_n) const {
+    // Set active context for this operation
+    ::RandomVariable::ActiveContextGuard context_guard(cov_context_.get());
+
     // Use SensitivityAnalyzer (Phase 5: refactoring)
     if (!is_sensitivity_) {
         return SensitivityResults();
