@@ -18,7 +18,7 @@ CXXFLAGS = -g -Wall -std=c++17
 # BOOST_DIR = /opt/homebrew/opt/boost
 # INCLUDE = -I$(BOOST_DIR)/include
 INCLUDE = -I../include 
-CXXSRCS = covariance.cpp max.cpp sub.cpp normal.cpp \
+CXXSRCS = covariance.cpp covariance_context.cpp max.cpp sub.cpp normal.cpp \
 	random_variable.cpp add.cpp util_numerical.cpp gate.cpp \
 	parser.cpp dlib_parser.cpp bench_parser.cpp circuit_graph.cpp critical_path_analyzer.cpp sensitivity_analyzer.cpp ssta_results.cpp ssta.cpp expression.cpp statistical_functions.cpp main.cpp
 OBJS = $(addprefix ../build/src/,$(CXXSRCS:.cpp=.o))
@@ -42,6 +42,7 @@ GTEST_LIBS := -L$(GTEST_DIR)/lib -lgtest -lgtest_main -pthread
 # Test sources (relative to src directory)
 TEST_SRCS = ../test/test_randomvariable.cpp ../test/test_normal.cpp \
 	../test/test_add.cpp ../test/test_max.cpp ../test/test_covariance.cpp \
+	../test/test_covariance_context.cpp \
 	../test/test_integration.cpp \
 	../test/test_error_handling.cpp ../test/test_ssta_results_class.cpp \
 	../test/test_ssta_logic_integration.cpp ../test/test_parser.cpp \
@@ -78,7 +79,7 @@ TEST_DEPS = $(patsubst ../test/%.cpp,../build/test/%.d,$(TEST_SRCS))
 TEST_TARGET = ../build/bin/nhssta_test
 
 # Core library objects (without main.cpp)
-LIB_OBJS = ../build/src/covariance.o ../build/src/max.o ../build/src/sub.o ../build/src/normal.o \
+LIB_OBJS = ../build/src/covariance.o ../build/src/covariance_context.o ../build/src/max.o ../build/src/sub.o ../build/src/normal.o \
 	../build/src/random_variable.o ../build/src/add.o ../build/src/util_numerical.o ../build/src/gate.o \
 	../build/src/parser.o ../build/src/dlib_parser.o ../build/src/bench_parser.o ../build/src/circuit_graph.o ../build/src/critical_path_analyzer.o ../build/src/sensitivity_analyzer.o ../build/src/ssta_results.o ../build/src/ssta.o ../build/src/expression.o ../build/src/statistical_functions.o
 
