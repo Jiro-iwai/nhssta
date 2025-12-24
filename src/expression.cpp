@@ -27,7 +27,7 @@ static bool eTbl_destroyed = false;
 
 // Debug flags for backward() tracing
 static bool DEBUG_BACKWARD = false;
-static std::ofstream* DEBUG_LOG_FILE = nullptr;
+static std::unique_ptr<std::ofstream> DEBUG_LOG_FILE = nullptr;
 static int DEBUG_NODE_COUNT = 0;
 
 // Enable/disable debug output for backward()
@@ -35,19 +35,17 @@ void ExpressionImpl::enable_backward_debug(bool enable, const std::string& log_f
     DEBUG_BACKWARD = enable;
     DEBUG_NODE_COUNT = 0;
     if (enable) {
-        delete DEBUG_LOG_FILE;
-        DEBUG_LOG_FILE = new std::ofstream(log_file);
+        DEBUG_LOG_FILE = std::make_unique<std::ofstream>(log_file);
     } else {
-        if (DEBUG_LOG_FILE) {
+        if (DEBUG_LOG_FILE != nullptr) {
             DEBUG_LOG_FILE->close();
         }
-        delete DEBUG_LOG_FILE;
         DEBUG_LOG_FILE = nullptr;
     }
 }
 
 std::ostream& get_debug_log() {
-    if (DEBUG_BACKWARD && DEBUG_LOG_FILE && DEBUG_LOG_FILE->is_open()) {
+    if (DEBUG_BACKWARD && DEBUG_LOG_FILE != nullptr && DEBUG_LOG_FILE->is_open()) {
         return *DEBUG_LOG_FILE;
     }
     return std::cout;
